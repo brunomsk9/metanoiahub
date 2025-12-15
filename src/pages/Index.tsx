@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame, Heart } from "lucide-react";
+import { Sparkles, ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,19 +32,19 @@ export default function Index() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center p-4">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           {/* Logo */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-primary shadow-glow mb-8 animate-scale-in">
-            <GraduationCap className="w-10 h-10 text-primary-foreground" />
+            <Sparkles className="w-10 h-10 text-primary-foreground" />
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-foreground mb-4 animate-fade-in">
-            Universidade do{" "}
-            <span className="text-gradient-primary">Discipulador</span>
+            METANOIA{" "}
+            <span className="text-gradient-primary">HUB</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-2 animate-slide-up" style={{ animationDelay: '100ms' }}>
@@ -92,25 +92,25 @@ export default function Index() {
                 icon: BookOpen,
                 title: "Jornada Metanoia",
                 description: "4 encontros fundamentais para firmar a fé e transformar vidas.",
-                color: "bg-primary/20",
+                color: "bg-primary/10",
               },
               {
                 icon: Flame,
                 title: "Hábitos Diários",
                 description: "Acompanhe sua vida devocional com leitura bíblica e oração.",
-                color: "bg-gradient-streak",
+                color: "bg-warning/10",
               },
               {
                 icon: LifeBuoy,
                 title: "S.O.S. Discipulador",
                 description: "Recursos de apoio para situações como luto, ansiedade e desânimo.",
-                color: "bg-accent/20",
+                color: "bg-accent/10",
               },
               {
                 icon: MessageCircle,
                 title: "Mentor IA",
                 description: "Assistente para tirar dúvidas sobre discipulado a qualquer momento.",
-                color: "bg-success/20",
+                color: "bg-success/10",
               },
             ].map((feature, index) => (
               <div
@@ -162,9 +162,9 @@ export default function Index() {
       <footer className="py-8 px-4 border-t border-border">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-primary" />
+            <Sparkles className="w-5 h-5 text-primary" />
             <span className="font-display font-semibold text-foreground">
-              Universidade do Discipulador
+              Metanoia Hub
             </span>
           </div>
           <p className="text-sm text-muted-foreground">

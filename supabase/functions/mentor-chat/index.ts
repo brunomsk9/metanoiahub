@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `Você é o Mentor IA da Universidade do Discipulador, um assistente cristão especializado em discipulado e mentoria espiritual.
+const SYSTEM_PROMPT = `Você é o Mentor IA do Metanoia Hub, um assistente cristão especializado em discipulado e mentoria espiritual.
 
 ## Sua Identidade
 - Você é um mentor experiente, sábio e acolhedor

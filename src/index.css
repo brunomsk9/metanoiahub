@@ -2,83 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Universidade do Discipulador - Light Premium Design System */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+/* Metanoia Hub - Modern Blue Design System */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
   :root {
-    /* Light Cream/White Background */
-    --background: 40 30% 98%;
-    --foreground: 220 20% 20%;
+    /* Clean White Background */
+    --background: 220 20% 98%;
+    --foreground: 222 47% 11%;
 
-    /* Card surfaces with subtle warmth */
+    /* Card surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
-    --card-hover: 40 20% 96%;
+    --card-foreground: 222 47% 11%;
+    --card-hover: 220 20% 97%;
 
     /* Popover/Dialog */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 20%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Gold/Amber Primary - cor dos Playbooks */
-    --primary: 38 92% 50%;
+    /* Indigo Primary - Modern & Professional */
+    --primary: 245 85% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 38 95% 60%;
+    --primary-glow: 245 90% 65%;
 
-    /* Soft Blue Secondary */
-    --secondary: 220 20% 96%;
-    --secondary-foreground: 220 20% 30%;
+    /* Light Blue Secondary */
+    --secondary: 220 30% 96%;
+    --secondary-foreground: 222 47% 30%;
 
     /* Muted surfaces */
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 220 20% 94%;
+    --muted-foreground: 220 15% 50%;
 
-    /* Warm Accent */
-    --accent: 25 90% 48%;
+    /* Cyan Accent */
+    --accent: 200 95% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Success */
-    --success: 152 70% 40%;
+    --success: 152 70% 45%;
     --success-foreground: 0 0% 100%;
 
     /* Warning */
     --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 15%;
+    --warning-foreground: 222 47% 11%;
 
     /* Destructive */
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders - subtle and soft */
-    --border: 220 15% 90%;
-    --input: 220 15% 92%;
-    --ring: 38 92% 50%;
+    /* Borders - clean and subtle */
+    --border: 220 20% 92%;
+    --input: 220 20% 94%;
+    --ring: 245 85% 55%;
 
     --radius: 0.75rem;
 
-    /* Soft Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(25 90% 48%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(25 85% 55%) 0%, hsl(15 80% 50%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 30% 98%) 100%);
-    --gradient-surface: linear-gradient(135deg, hsl(40 25% 99%) 0%, hsl(220 20% 97%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(38 50% 97%) 0%, hsl(220 30% 97%) 50%, hsl(40 30% 98%) 100%);
+    /* Modern Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(245 85% 55%) 0%, hsl(270 80% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(200 95% 50%) 0%, hsl(180 90% 45%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
+    --gradient-surface: linear-gradient(135deg, hsl(220 30% 99%) 0%, hsl(245 20% 98%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(245 40% 97%) 0%, hsl(220 30% 97%) 50%, hsl(200 30% 97%) 100%);
 
-    /* Shadows - softer for light theme */
-    --shadow-sm: 0 1px 3px hsl(220 20% 20% / 0.06);
-    --shadow-md: 0 4px 12px hsl(220 20% 20% / 0.08);
-    --shadow-lg: 0 8px 24px hsl(220 20% 20% / 0.1);
-    --shadow-glow: 0 4px 20px hsl(38 92% 50% / 0.15);
-    --shadow-accent-glow: 0 4px 20px hsl(25 90% 48% / 0.2);
+    /* Shadows - modern and soft */
+    --shadow-sm: 0 1px 3px hsl(222 47% 11% / 0.05);
+    --shadow-md: 0 4px 12px hsl(222 47% 11% / 0.08);
+    --shadow-lg: 0 8px 24px hsl(222 47% 11% / 0.1);
+    --shadow-glow: 0 4px 20px hsl(245 85% 55% / 0.2);
+    --shadow-accent-glow: 0 4px 20px hsl(200 95% 50% / 0.25);
 
-    /* Sidebar - light with subtle gradient */
+    /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 20% 30%;
-    --sidebar-primary: 38 92% 50%;
+    --sidebar-foreground: 222 47% 30%;
+    --sidebar-primary: 245 85% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 30% 96%;
-    --sidebar-accent-foreground: 220 20% 20%;
-    --sidebar-border: 220 15% 92%;
-    --sidebar-ring: 38 92% 50%;
+    --sidebar-accent: 220 30% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 20% 94%;
+    --sidebar-ring: 245 85% 55%;
   }
 }
 
@@ -93,7 +93,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     @apply font-semibold tracking-tight;
   }
 }
@@ -101,7 +101,7 @@
 @layer components {
   /* Premium Card Styles */
   .card-premium {
-    @apply relative overflow-hidden rounded-xl border border-border/60 bg-card;
+    @apply relative overflow-hidden rounded-2xl border border-border/60 bg-card;
     box-shadow: var(--shadow-md);
   }
 
@@ -129,7 +129,7 @@
     @apply absolute -top-1 -right-1 text-lg animate-bounce;
   }
 
-  /* Glow Effects - subtle for light theme */
+  /* Glow Effects */
   .glow-primary {
     box-shadow: var(--shadow-glow);
   }
@@ -149,7 +149,7 @@
 
   /* Netflix-style Continue Watching */
   .continue-card {
-    @apply relative aspect-video overflow-hidden rounded-xl cursor-pointer transition-all duration-300 bg-card border border-border/50;
+    @apply relative aspect-video overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 bg-card border border-border/50;
     box-shadow: var(--shadow-sm);
   }
 
@@ -201,12 +201,12 @@
   }
 
   .fab:hover {
-    box-shadow: 0 8px 30px hsl(38 92% 50% / 0.3);
+    box-shadow: 0 8px 30px hsl(245 85% 55% / 0.35);
   }
 
   /* Video Player Container */
   .video-container {
-    @apply relative aspect-video w-full overflow-hidden rounded-xl bg-muted;
+    @apply relative aspect-video w-full overflow-hidden rounded-2xl bg-muted;
     box-shadow: var(--shadow-lg);
   }
 
@@ -327,10 +327,10 @@
 
   @keyframes pulseGlow {
     0%, 100% {
-      box-shadow: 0 4px 20px hsl(var(--primary) / 0.15);
+      box-shadow: 0 4px 20px hsl(var(--primary) / 0.2);
     }
     50% {
-      box-shadow: 0 4px 30px hsl(var(--primary) / 0.25);
+      box-shadow: 0 4px 30px hsl(var(--primary) / 0.35);
     }
   }
 

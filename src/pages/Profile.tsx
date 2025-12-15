@@ -6,7 +6,7 @@ import { StreakDisplay, HealthRadial } from "@/components/StreakDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Trophy, Flame, Calendar, Edit2, Save, Loader2 } from "lucide-react";
+import { User, Mail, Trophy, Calendar, Edit2, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Profile() {
@@ -99,7 +99,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <Sidebar onLogout={handleLogout} userName={profile.nome} />
       
       <main className="pt-14 lg:pt-16">
@@ -120,7 +120,7 @@ export default function Profile() {
                       type="text"
                       value={editedNome}
                       onChange={(e) => setEditedNome(e.target.value)}
-                      className="text-2xl font-display font-bold bg-muted border border-border rounded-lg px-3 py-1 text-foreground focus:outline-none focus:border-primary"
+                      className="text-2xl font-display font-bold bg-secondary border border-border rounded-lg px-3 py-1 text-foreground focus:outline-none focus:border-primary"
                       autoFocus
                     />
                     <Button size="icon" onClick={handleSave} disabled={isSaving}>
@@ -166,7 +166,7 @@ export default function Profile() {
             </div>
 
             <div className="card-premium p-4 flex items-center justify-center">
-              <HealthRadial percentage={75} label="Saúde do Discipulador" />
+              <HealthRadial percentage={75} label="Saúde Espiritual" />
             </div>
           </section>
 
