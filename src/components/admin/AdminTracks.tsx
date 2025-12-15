@@ -3,11 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, BookOpen } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -133,69 +132,74 @@ export function AdminTracks() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground">Trilhas ({tracks.length})</h2>
+        <p className="text-gray-500">{tracks.length} trilha(s) cadastrada(s)</p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Nova Trilha
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
-              <DialogTitle>{editing ? 'Editar Trilha' : 'Nova Trilha'}</DialogTitle>
+              <DialogTitle className="text-gray-900">{editing ? 'Editar Trilha' : 'Nova Trilha'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Título *</Label>
+                <Label className="text-gray-700">Título *</Label>
                 <Input
                   value={form.titulo}
                   onChange={(e) => setForm({ ...form, titulo: e.target.value })}
                   placeholder="Ex: Jornada Metanoia"
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Categoria *</Label>
+                <Label className="text-gray-700">Categoria *</Label>
                 <Input
                   value={form.categoria}
                   onChange={(e) => setForm({ ...form, categoria: e.target.value })}
                   placeholder="Ex: Fundamentos"
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Descrição</Label>
+                <Label className="text-gray-700">Descrição</Label>
                 <Textarea
                   value={form.descricao}
                   onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                   placeholder="Descrição da trilha..."
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL da Capa</Label>
+                <Label className="text-gray-700">URL da Capa</Label>
                 <Input
                   value={form.cover_image}
                   onChange={(e) => setForm({ ...form, cover_image: e.target.value })}
                   placeholder="https://..."
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Ordem</Label>
+                <Label className="text-gray-700">Ordem</Label>
                 <Input
                   type="number"
                   value={form.ordem}
                   onChange={(e) => setForm({ ...form, ordem: parseInt(e.target.value) || 0 })}
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full">
+              <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {editing ? 'Salvar Alterações' : 'Criar Trilha'}
               </Button>
@@ -204,37 +208,60 @@ export function AdminTracks() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {tracks.map((track) => (
-          <Card key={track.id} className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{track.titulo}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{track.categoria}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(track)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(track.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            {track.descricao && (
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{track.descricao}</p>
-              </CardContent>
-            )}
-          </Card>
-        ))}
-
-        {tracks.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            Nenhuma trilha cadastrada ainda.
-          </p>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {tracks.length === 0 ? (
+          <div className="p-12 text-center">
+            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Nenhuma trilha cadastrada ainda.</p>
+            <Button 
+              onClick={() => handleOpenDialog()} 
+              variant="outline" 
+              className="mt-4 border-gray-300 text-gray-700"
+            >
+              Criar primeira trilha
+            </Button>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ordem</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {tracks.map((track) => (
+                <tr key={track.id} className="hover:bg-gray-50">
+                  <td className="py-3 px-4 text-gray-500">{track.ordem}</td>
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{track.titulo}</p>
+                      {track.descricao && (
+                        <p className="text-sm text-gray-500 truncate max-w-xs">{track.descricao}</p>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 hidden sm:table-cell">
+                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700">
+                      {track.categoria}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(track)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(track.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

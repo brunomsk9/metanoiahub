@@ -3,13 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, LifeBuoy } from 'lucide-react';
 
 interface Resource {
   id: string;
@@ -26,6 +24,13 @@ const categoriaLabels = {
   apoio: 'Apoio',
   devocional: 'Devocional',
   estudo: 'Estudo'
+};
+
+const categoriaColors = {
+  sos: 'bg-red-100 text-red-700',
+  apoio: 'bg-blue-100 text-blue-700',
+  devocional: 'bg-purple-100 text-purple-700',
+  estudo: 'bg-green-100 text-green-700'
 };
 
 export function AdminResources() {
@@ -134,43 +139,44 @@ export function AdminResources() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground">Recursos ({resources.length})</h2>
+        <p className="text-gray-500">{resources.length} recurso(s) cadastrado(s)</p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Novo Recurso
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-white border-gray-200">
             <DialogHeader>
-              <DialogTitle>{editing ? 'Editar Recurso' : 'Novo Recurso'}</DialogTitle>
+              <DialogTitle className="text-gray-900">{editing ? 'Editar Recurso' : 'Novo Recurso'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Título *</Label>
+                <Label className="text-gray-700">Título *</Label>
                 <Input
                   value={form.titulo}
                   onChange={(e) => setForm({ ...form, titulo: e.target.value })}
                   placeholder="Ex: Como lidar com o luto"
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Categoria</Label>
+                <Label className="text-gray-700">Categoria</Label>
                 <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v as any })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-300 bg-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-gray-200">
                     <SelectItem value="sos">S.O.S.</SelectItem>
                     <SelectItem value="apoio">Apoio</SelectItem>
                     <SelectItem value="devocional">Devocional</SelectItem>
@@ -179,38 +185,42 @@ export function AdminResources() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Descrição</Label>
+                <Label className="text-gray-700">Descrição</Label>
                 <Textarea
                   value={form.descricao}
                   onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                   placeholder="Descrição do recurso..."
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL do Vídeo</Label>
+                <Label className="text-gray-700">URL do Vídeo</Label>
                 <Input
                   value={form.video_url}
                   onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                   placeholder="https://youtube.com/..."
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL do PDF</Label>
+                <Label className="text-gray-700">URL do PDF</Label>
                 <Input
                   value={form.url_pdf}
                   onChange={(e) => setForm({ ...form, url_pdf: e.target.value })}
                   placeholder="https://..."
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Tags (separadas por vírgula)</Label>
+                <Label className="text-gray-700">Tags (separadas por vírgula)</Label>
                 <Input
                   value={form.tags}
                   onChange={(e) => setForm({ ...form, tags: e.target.value })}
                   placeholder="luto, ansiedade, medo"
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full">
+              <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {editing ? 'Salvar Alterações' : 'Criar Recurso'}
               </Button>
@@ -219,46 +229,64 @@ export function AdminResources() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {resources.map((resource) => (
-          <Card key={resource.id} className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{resource.titulo}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{categoriaLabels[resource.categoria]}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(resource.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {resource.descricao && (
-                <p className="text-sm text-muted-foreground">{resource.descricao}</p>
-              )}
-              {resource.tags && resource.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {resource.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {resources.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            Nenhum recurso cadastrado ainda.
-          </p>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {resources.length === 0 ? (
+          <div className="p-12 text-center">
+            <LifeBuoy className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Nenhum recurso cadastrado ainda.</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Tags</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {resources.map((resource) => (
+                <tr key={resource.id} className="hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{resource.titulo}</p>
+                      {resource.descricao && (
+                        <p className="text-sm text-gray-500 truncate max-w-xs">{resource.descricao}</p>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 hidden sm:table-cell">
+                    <span className={`inline-flex px-2 py-1 text-xs rounded-full ${categoriaColors[resource.categoria]}`}>
+                      {categoriaLabels[resource.categoria]}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 hidden md:table-cell">
+                    <div className="flex flex-wrap gap-1">
+                      {(resource.tags || []).slice(0, 3).map((tag) => (
+                        <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-600">
+                          {tag}
+                        </span>
+                      ))}
+                      {(resource.tags || []).length > 3 && (
+                        <span className="text-xs text-gray-400">+{(resource.tags || []).length - 3}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(resource.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>
