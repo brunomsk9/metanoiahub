@@ -22,7 +22,7 @@ export function MentorChatButton() {
         onClick={() => setIsOpen(true)}
         className={cn(
           "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center",
-          "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg",
+          "bg-gradient-primary text-primary-foreground shadow-glow",
           "hover:scale-110 hover:shadow-xl transition-all duration-300",
           isOpen && "scale-0 opacity-0"
         )}
@@ -46,7 +46,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
     {
       id: '1',
       role: 'assistant',
-      content: 'Olá! Sou o Mentor IA da Universidade do Discipulador. Como posso ajudá-lo hoje em sua jornada de discipulado? 🙏',
+      content: 'Olá! Sou o Mentor IA do Metanoia Hub. Como posso ajudá-lo hoje em sua jornada de discipulado? 🙏',
       timestamp: new Date(),
     }
   ]);
@@ -121,28 +121,28 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] animate-scale-in">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
+      <div className="bg-card rounded-2xl overflow-hidden shadow-2xl border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500 to-orange-500">
+        <div className="flex items-center justify-between p-4 bg-gradient-primary">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-white">Mentor IA</h3>
-              <p className="text-xs text-white/80">Powered by ChatGPT</p>
+              <h3 className="font-display font-semibold text-primary-foreground">Mentor IA</h3>
+              <p className="text-xs text-primary-foreground/80">Powered by ChatGPT</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-5 h-5 text-primary-foreground" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="h-[350px] overflow-y-auto p-4 space-y-4 bg-gray-50">
+        <div className="h-[350px] overflow-y-auto p-4 space-y-4 bg-secondary/30">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -154,20 +154,20 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
                 message.role === 'user' 
-                  ? "bg-gradient-to-br from-amber-500 to-orange-500" 
-                  : "bg-gray-200"
+                  ? "bg-gradient-primary" 
+                  : "bg-secondary"
               )}>
                 {message.role === 'user' ? (
-                  <User className="w-4 h-4 text-white" />
+                  <User className="w-4 h-4 text-primary-foreground" />
                 ) : (
-                  <Bot className="w-4 h-4 text-gray-600" />
+                  <Bot className="w-4 h-4 text-muted-foreground" />
                 )}
               </div>
               <div className={cn(
                 "max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap",
                 message.role === 'user' 
-                  ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-br-md" 
-                  : "bg-white border border-gray-100 text-gray-700 rounded-bl-md shadow-sm"
+                  ? "bg-gradient-primary text-primary-foreground rounded-br-md" 
+                  : "bg-card border border-border text-foreground rounded-bl-md shadow-sm"
               )}>
                 <p>{message.content}</p>
               </div>
@@ -175,13 +175,13 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
           ))}
           {isLoading && (
             <div className="flex gap-3 animate-slide-up">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-gray-600" />
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                <Bot className="w-4 h-4 text-muted-foreground" />
               </div>
-              <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-md shadow-sm">
+              <div className="bg-card border border-border p-3 rounded-2xl rounded-bl-md shadow-sm">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
-                  <span className="text-xs text-gray-500">Pensando...</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-xs text-muted-foreground">Pensando...</span>
                 </div>
               </div>
             </div>
@@ -190,7 +190,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white border-t border-gray-100">
+        <div className="p-4 bg-card border-t border-border">
           <form 
             onSubmit={(e) => { e.preventDefault(); handleSend(); }}
             className="flex gap-2"
@@ -200,14 +200,14 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 h-10 px-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
+              className="flex-1 h-10 px-4 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
               disabled={isLoading}
             />
             <Button 
               type="submit" 
               size="icon" 
               disabled={!input.trim() || isLoading}
-              className="bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+              className="bg-gradient-primary hover:opacity-90"
             >
               <Send className="w-4 h-4" />
             </Button>

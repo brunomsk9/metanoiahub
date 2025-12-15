@@ -32,7 +32,6 @@ export default function Tracks() {
         return;
       }
 
-      // Fetch tracks with course count
       const { data: tracksData, error } = await supabase
         .from('tracks')
         .select(`
@@ -62,7 +61,6 @@ export default function Tracks() {
 
       setTracks(formattedTracks);
 
-      // Extract unique categories
       const uniqueCategories = ['Todos', ...new Set(formattedTracks.map(t => t.categoria))];
       setCategories(uniqueCategories);
       setLoading(false);
@@ -81,7 +79,7 @@ export default function Tracks() {
     : tracks.filter(t => t.categoria === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
+    <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} />
       
       <main className="pt-14 lg:pt-16">
@@ -89,14 +87,14 @@ export default function Tracks() {
           {/* Header */}
           <section className="animate-fade-in">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
-                <BookOpen className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
+                <BookOpen className="w-5 h-5 text-primary-foreground" />
               </div>
-              <h1 className="text-2xl lg:text-3xl font-display font-bold text-gray-900">
+              <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
                 Trilhas de Aprendizado
               </h1>
             </div>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               Explore nossas trilhas e avance em sua jornada de discipulado
             </p>
           </section>
@@ -110,8 +108,8 @@ export default function Tracks() {
                 size="sm"
                 onClick={() => setSelectedCategory(category)}
                 className={selectedCategory === category 
-                  ? "bg-amber-500 hover:bg-amber-600 text-white" 
-                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  ? "bg-gradient-primary hover:opacity-90 text-primary-foreground" 
+                  : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }
               >
                 {category}
@@ -123,10 +121,10 @@ export default function Tracks() {
           {loading && (
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-                  <Skeleton className="h-40 w-full rounded-xl bg-gray-100" />
-                  <Skeleton className="h-5 w-3/4 bg-gray-100" />
-                  <Skeleton className="h-4 w-full bg-gray-100" />
+                <div key={i} className="card-premium p-4 space-y-3">
+                  <Skeleton className="h-40 w-full rounded-xl bg-secondary" />
+                  <Skeleton className="h-5 w-3/4 bg-secondary" />
+                  <Skeleton className="h-4 w-full bg-secondary" />
                 </div>
               ))}
             </section>
@@ -156,7 +154,7 @@ export default function Tracks() {
 
           {!loading && filteredTracks.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 Nenhuma trilha encontrada nesta categoria.
               </p>
             </div>
