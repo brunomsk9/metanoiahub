@@ -72,8 +72,8 @@ export default function SOS() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
       <Sidebar onLogout={handleLogout} />
       
-      <main className="pt-14 pb-20 lg:pt-16 lg:pb-8">
-        <div className="min-h-[calc(100vh-136px)] lg:min-h-[calc(100vh-96px)] flex flex-col">
+      <main className="pt-14 lg:pt-16">
+        <div className="min-h-[calc(100vh-56px)] lg:min-h-[calc(100vh-64px)] flex flex-col">
           {/* Hero Section */}
           <section className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8">
             <div className="text-center mb-8 animate-fade-in">

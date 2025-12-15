@@ -8,7 +8,9 @@ import {
   LogOut, 
   GraduationCap,
   Shield,
-  ChevronDown
+  ChevronDown,
+  Menu,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +21,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   onLogout: () => void;
@@ -34,11 +44,17 @@ const navItems = [
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     checkAdminRole();
   }, []);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   const checkAdminRole = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -146,68 +162,97 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
       </header>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4">
+        {/* Hamburger Menu */}
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-gray-700">
+              <Menu className="w-5 h-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 bg-white p-0">
+            <SheetHeader className="p-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </div>
+                <SheetTitle className="text-left text-gray-900">
+                  Universidade do Discipulador
+                </SheetTitle>
+              </div>
+            </SheetHeader>
+            
+            <nav className="p-4 space-y-1">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                      isActive 
+                        ? "bg-amber-100 text-amber-700" 
+                        : "text-gray-600 hover:bg-gray-50"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+              
+              {isAdmin && (
+                <NavLink
+                  to="/admin"
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                    location.pathname === '/admin' 
+                      ? "bg-amber-100 text-amber-700" 
+                      : "text-gray-600 hover:bg-gray-50"
+                  )}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Painel Admin</span>
+                </NavLink>
+              )}
+            </nav>
+
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-medium">
+                  {userName?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{userName || 'Usuário'}</p>
+                  <p className="text-xs text-gray-500">Discípulo</p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                onClick={onLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
             <GraduationCap className="w-4 h-4 text-white" />
           </div>
           <span className="font-semibold text-gray-900 text-sm">UDisc</span>
         </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-medium">
-              {userName?.charAt(0).toUpperCase() || 'U'}
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-white">
-            <div className="px-3 py-2 border-b border-gray-100">
-              <p className="text-xs text-gray-500">Conectado como</p>
-              <p className="font-medium text-gray-900 truncate text-sm">{userName || 'Usuário'}</p>
-            </div>
-            {isAdmin && (
-              <DropdownMenuItem asChild>
-                <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
-                  <Shield className="w-4 h-4" />
-                  Painel Admin
-                </NavLink>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={onLogout}
-              className="flex items-center gap-2 text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50"
-            >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-white border-t border-gray-200 lg:hidden">
-        <div className="h-full flex items-center justify-around px-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200",
-                  isActive 
-                    ? "text-amber-600" 
-                    : "text-gray-400"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </NavLink>
-            );
-          })}
+        {/* User Avatar */}
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-medium">
+          {userName?.charAt(0).toUpperCase() || 'U'}
         </div>
-      </nav>
+      </header>
     </>
   );
 }

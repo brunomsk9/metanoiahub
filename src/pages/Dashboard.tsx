@@ -160,7 +160,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
       <Sidebar onLogout={handleLogout} userName={userName} />
       
-      <main className="pt-14 pb-20 lg:pt-16 lg:pb-8">
+      <main className="pt-14 lg:pt-16">
         <div className="p-4 lg:p-8 space-y-8 max-w-7xl mx-auto">
           {/* Header Stats */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
