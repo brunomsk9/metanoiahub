@@ -28,16 +28,14 @@ export default function Admin() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nome, role')
-      .eq('id', session.user.id)
-      .single();
+    // Check if user has admin role in user_roles table
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('role', 'admin');
 
-    if (profile) {
-      setIsAdmin(profile.role === 'admin');
-    }
-    
+    setIsAdmin(roles && roles.length > 0);
     setLoading(false);
   };
 

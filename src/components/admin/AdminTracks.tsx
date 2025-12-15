@@ -5,8 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, BookOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, BookOpen, Users, UserCheck } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+
+type AppRole = Database['public']['Enums']['app_role'];
 
 interface Track {
   id: string;
@@ -15,6 +19,7 @@ interface Track {
   categoria: string;
   cover_image: string | null;
   ordem: number;
+  publico_alvo: AppRole[];
 }
 
 export function AdminTracks() {
@@ -29,7 +34,8 @@ export function AdminTracks() {
     descricao: '',
     categoria: '',
     cover_image: '',
-    ordem: 0
+    ordem: 0,
+    publico_alvo: ['discipulo'] as AppRole[]
   });
 
   useEffect(() => {
@@ -58,13 +64,26 @@ export function AdminTracks() {
         descricao: track.descricao || '',
         categoria: track.categoria,
         cover_image: track.cover_image || '',
-        ordem: track.ordem
+        ordem: track.ordem,
+        publico_alvo: track.publico_alvo || ['discipulo']
       });
     } else {
       setEditing(null);
-      setForm({ titulo: '', descricao: '', categoria: '', cover_image: '', ordem: tracks.length });
+      setForm({ titulo: '', descricao: '', categoria: '', cover_image: '', ordem: tracks.length, publico_alvo: ['discipulo'] });
     }
     setDialogOpen(true);
+  };
+
+  const togglePublicoAlvo = (role: AppRole) => {
+    const current = form.publico_alvo;
+    if (current.includes(role)) {
+      // Don't allow removing all roles
+      if (current.length > 1) {
+        setForm({ ...form, publico_alvo: current.filter(r => r !== role) });
+      }
+    } else {
+      setForm({ ...form, publico_alvo: [...current, role] });
+    }
   };
 
   const handleSave = async () => {
@@ -75,16 +94,19 @@ export function AdminTracks() {
 
     setSaving(true);
 
+    const payload = {
+      titulo: form.titulo,
+      descricao: form.descricao || null,
+      categoria: form.categoria,
+      cover_image: form.cover_image || null,
+      ordem: form.ordem,
+      publico_alvo: form.publico_alvo
+    };
+
     if (editing) {
       const { error } = await supabase
         .from('tracks')
-        .update({
-          titulo: form.titulo,
-          descricao: form.descricao || null,
-          categoria: form.categoria,
-          cover_image: form.cover_image || null,
-          ordem: form.ordem
-        })
+        .update(payload)
         .eq('id', editing.id);
 
       if (error) {
@@ -97,13 +119,7 @@ export function AdminTracks() {
     } else {
       const { error } = await supabase
         .from('tracks')
-        .insert({
-          titulo: form.titulo,
-          descricao: form.descricao || null,
-          categoria: form.categoria,
-          cover_image: form.cover_image || null,
-          ordem: form.ordem
-        });
+        .insert(payload);
 
       if (error) {
         toast.error('Erro ao criar trilha');
@@ -128,6 +144,16 @@ export function AdminTracks() {
       toast.success('Trilha excluída!');
       fetchTracks();
     }
+  };
+
+  const getPublicoAlvoLabel = (publico_alvo: AppRole[]) => {
+    if (publico_alvo.includes('discipulo') && publico_alvo.includes('discipulador')) {
+      return 'Todos';
+    }
+    if (publico_alvo.includes('discipulador')) {
+      return 'Discipuladores';
+    }
+    return 'Discípulos';
   };
 
   if (loading) {
@@ -171,6 +197,34 @@ export function AdminTracks() {
                   placeholder="Ex: Fundamentos"
                   className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-700">Público Alvo *</Label>
+                <div className="flex gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="discipulo"
+                      checked={form.publico_alvo.includes('discipulo')}
+                      onCheckedChange={() => togglePublicoAlvo('discipulo')}
+                    />
+                    <label htmlFor="discipulo" className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer">
+                      <Users className="h-4 w-4" />
+                      Discípulos
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="discipulador"
+                      checked={form.publico_alvo.includes('discipulador')}
+                      onCheckedChange={() => togglePublicoAlvo('discipulador')}
+                    />
+                    <label htmlFor="discipulador" className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer">
+                      <UserCheck className="h-4 w-4" />
+                      Discipuladores
+                    </label>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Selecione quem terá acesso a esta trilha</p>
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700">Descrição</Label>
@@ -228,6 +282,7 @@ export function AdminTracks() {
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ordem</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Público</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
               </tr>
             </thead>
@@ -246,6 +301,11 @@ export function AdminTracks() {
                   <td className="py-3 px-4 hidden sm:table-cell">
                     <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700">
                       {track.categoria}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 hidden md:table-cell">
+                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                      {getPublicoAlvoLabel(track.publico_alvo)}
                     </span>
                   </td>
                   <td className="py-3 px-4">

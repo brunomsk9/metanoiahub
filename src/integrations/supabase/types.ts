@@ -21,6 +21,7 @@ export type Database = {
           duracao_minutos: number | null
           id: string
           ordem: number
+          publico_alvo: Database["public"]["Enums"]["app_role"][]
           thumbnail: string | null
           titulo: string
           track_id: string
@@ -31,6 +32,7 @@ export type Database = {
           duracao_minutos?: number | null
           id?: string
           ordem?: number
+          publico_alvo?: Database["public"]["Enums"]["app_role"][]
           thumbnail?: string | null
           titulo: string
           track_id: string
@@ -41,6 +43,7 @@ export type Database = {
           duracao_minutos?: number | null
           id?: string
           ordem?: number
+          publico_alvo?: Database["public"]["Enums"]["app_role"][]
           thumbnail?: string | null
           titulo?: string
           track_id?: string
@@ -271,6 +274,7 @@ export type Database = {
           descricao: string | null
           id: string
           ordem: number
+          publico_alvo: Database["public"]["Enums"]["app_role"][]
           titulo: string
         }
         Insert: {
@@ -280,6 +284,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           ordem?: number
+          publico_alvo?: Database["public"]["Enums"]["app_role"][]
           titulo: string
         }
         Update: {
@@ -289,6 +294,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           ordem?: number
+          publico_alvo?: Database["public"]["Enums"]["app_role"][]
           titulo?: string
         }
         Relationships: []
@@ -369,12 +375,51 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      user_can_access_content: {
+        Args: {
+          _publico_alvo: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "discipulo" | "discipulador" | "admin"
