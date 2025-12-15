@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame, Heart } from "lucide-react";
+import { ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -38,8 +39,8 @@ export default function Index() {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           {/* Logo */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-primary shadow-glow mb-8 animate-scale-in">
-            <Sparkles className="w-10 h-10 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center mb-8 animate-scale-in">
+            <img src={metanoiaLogo} alt="Metanoia Hub" className="w-28 h-28 object-contain" />
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-foreground mb-4 animate-fade-in">
@@ -162,7 +163,7 @@ export default function Index() {
       <footer className="py-8 px-4 border-t border-border">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
+            <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
             <span className="font-display font-semibold text-foreground">
               Metanoia Hub
             </span>

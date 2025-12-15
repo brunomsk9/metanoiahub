@@ -6,11 +6,11 @@ import {
   LifeBuoy, 
   User, 
   LogOut, 
-  Sparkles,
   Shield,
   ChevronDown,
   Menu
 } from "lucide-react";
+import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -74,9 +74,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-sm">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={metanoiaLogo} alt="Metanoia Hub" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="font-display font-semibold text-foreground leading-tight">
                 Metanoia Hub
@@ -172,9 +170,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
           <SheetContent side="left" className="w-72 bg-card p-0">
             <SheetHeader className="p-4 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary-foreground" />
-                </div>
+                <img src={metanoiaLogo} alt="Metanoia Hub" className="w-10 h-10 object-contain" />
                 <SheetTitle className="text-left text-foreground">
                   Metanoia Hub
                 </SheetTitle>
@@ -241,9 +237,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
 
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary-foreground" />
-          </div>
+          <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
           <span className="font-display font-semibold text-foreground text-sm">Metanoia</span>
         </div>
 
