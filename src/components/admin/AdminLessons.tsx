@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, FileText, Video, ListChecks } from 'lucide-react';
 import { FileUpload } from './FileUpload';
+import { RichTextEditor } from './RichTextEditor';
 interface Lesson {
   id: string;
   titulo: string;
@@ -241,31 +242,31 @@ export function AdminLessons() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-gray-700">Material de Apoio (PDF ou Imagem)</Label>
-                <FileUpload
+                <Label className="text-gray-700">Conteúdo de Texto</Label>
+                <RichTextEditor
                   value={form.texto_apoio}
-                  onChange={(url) => setForm({ ...form, texto_apoio: url })}
-                  accept=".pdf,.png,.jpg,.jpeg,.webp"
-                  folder="licoes"
-                  placeholder="Cole uma URL ou faça upload do material"
+                  onChange={(html) => setForm({ ...form, texto_apoio: html })}
+                  placeholder="Escreva o conteúdo da lição aqui..."
                 />
                 <p className="text-xs text-gray-500">
-                  Você pode colar um link ou fazer upload de PDF/imagem (máx. 10MB)
+                  Use a barra de ferramentas para formatar o texto com negrito, listas, títulos, etc.
                 </p>
               </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">Checklist Items (JSON)</Label>
-                <Textarea
-                  value={form.checklist_items}
-                  onChange={(e) => setForm({ ...form, checklist_items: e.target.value })}
-                  placeholder='[{"id": "1", "label": "Item 1"}]'
-                  rows={4}
-                  className="font-mono text-sm border-gray-300 focus:border-amber-500 focus:ring-amber-500"
-                />
-                <p className="text-xs text-gray-500">
-                  Formato: [{"{"}"id": "1", "label": "Texto do item"{"}"}]
-                </p>
-              </div>
+              {form.tipo === 'checklist_interativo' && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Checklist Items (JSON)</Label>
+                  <Textarea
+                    value={form.checklist_items}
+                    onChange={(e) => setForm({ ...form, checklist_items: e.target.value })}
+                    placeholder='[{"id": "1", "label": "Item 1"}]'
+                    rows={4}
+                    className="font-mono text-sm border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Formato: [{"{"}"id": "1", "label": "Texto do item"{"}"}]
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-700">Duração (min)</Label>
