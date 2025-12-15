@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, FileText, Video, ListChecks } from 'lucide-react';
-import { FileUpload } from './FileUpload';
+import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
+
 interface Lesson {
   id: string;
   titulo: string;
@@ -20,7 +20,7 @@ interface Lesson {
   checklist_items: any;
   duracao_minutos: number | null;
   ordem: number;
-  material_url: string | null;
+  materiais: string[];
 }
 
 interface Course {
@@ -47,6 +47,7 @@ export function AdminLessons() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Lesson | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   const [form, setForm] = useState({
     titulo: '',
@@ -57,7 +58,7 @@ export function AdminLessons() {
     checklist_items: '[]',
     duracao_minutos: 0,
     ordem: 0,
-    material_url: ''
+    materiais: [] as string[]
   });
 
   useEffect(() => {
@@ -71,7 +72,15 @@ export function AdminLessons() {
     ]);
 
     if (lessonsRes.error) toast.error('Erro ao carregar aulas');
-    else setLessons(lessonsRes.data || []);
+    else {
+      const lessonsData = (lessonsRes.data || []).map(lesson => ({
+        ...lesson,
+        materiais: Array.isArray(lesson.materiais) 
+          ? (lesson.materiais as unknown as string[]) 
+          : []
+      })) as Lesson[];
+      setLessons(lessonsData);
+    }
 
     if (coursesRes.error) toast.error('Erro ao carregar cursos');
     else setCourses(coursesRes.data || []);
@@ -91,7 +100,7 @@ export function AdminLessons() {
         checklist_items: JSON.stringify(lesson.checklist_items || [], null, 2),
         duracao_minutos: lesson.duracao_minutos || 0,
         ordem: lesson.ordem,
-        material_url: lesson.material_url || ''
+        materiais: Array.isArray(lesson.materiais) ? lesson.materiais : []
       });
     } else {
       setEditing(null);
@@ -104,10 +113,65 @@ export function AdminLessons() {
         checklist_items: '[]',
         duracao_minutos: 0,
         ordem: lessons.length,
-        material_url: ''
+        materiais: []
       });
     }
     setDialogOpen(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Arquivo muito grande. Máximo: 10MB');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `aulas/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('materiais')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        toast.error('Erro ao fazer upload: ' + uploadError.message);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('materiais')
+        .getPublicUrl(fileName);
+
+      setForm(prev => ({
+        ...prev,
+        materiais: [...prev.materiais, publicUrl]
+      }));
+      toast.success('Arquivo anexado!');
+    } catch (error) {
+      toast.error('Erro ao fazer upload');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveMaterial = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      materiais: prev.materiais.filter((_, i) => i !== index)
+    }));
+  };
+
+  const getFileName = (url: string) => {
+    return url.split('/').pop() || url;
   };
 
   const handleSave = async () => {
@@ -135,7 +199,7 @@ export function AdminLessons() {
       checklist_items: checklistParsed,
       duracao_minutos: form.duracao_minutos,
       ordem: form.ordem,
-      material_url: form.material_url || null
+      materiais: form.materiais
     };
 
     if (editing) {
@@ -272,19 +336,66 @@ export function AdminLessons() {
                   </p>
                 </div>
               )}
+              
+              {/* Multiple Materials Upload */}
               <div className="space-y-2">
-                <Label className="text-gray-700">Material Complementar (PDF/Arquivo)</Label>
-                <FileUpload
-                  value={form.material_url}
-                  onChange={(url) => setForm({ ...form, material_url: url })}
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-                  folder="aulas"
-                  placeholder="Cole uma URL ou faça upload de um arquivo"
-                />
+                <Label className="text-gray-700">Materiais Complementares</Label>
+                
+                {/* List of uploaded materials */}
+                {form.materiais.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {form.materiais.map((url, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                        <Paperclip className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-amber-600 hover:underline truncate flex-1"
+                        >
+                          {getFileName(url)}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMaterial(index)}
+                          className="text-gray-400 hover:text-red-500 p-1"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload button */}
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="material-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('material-upload')?.click()}
+                    disabled={uploading}
+                    className="border-gray-300 hover:bg-gray-50"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    Adicionar Arquivo
+                  </Button>
+                </div>
                 <p className="text-xs text-gray-500">
-                  Formatos aceitos: PDF, Word, PowerPoint, Excel
+                  Formatos aceitos: PDF, Word, PowerPoint, Excel, Imagens. Máximo 10MB por arquivo.
                 </p>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-700">Duração (min)</Label>
@@ -329,6 +440,7 @@ export function AdminLessons() {
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Tipo</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Curso</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden lg:table-cell">Materiais</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
               </tr>
             </thead>
@@ -346,6 +458,16 @@ export function AdminLessons() {
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
                     <span className="text-gray-600 text-sm">{getCourseName(lesson.course_id)}</span>
+                  </td>
+                  <td className="py-3 px-4 hidden lg:table-cell">
+                    {lesson.materiais?.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+                        <Paperclip className="h-3 w-3" />
+                        {lesson.materiais.length} arquivo(s)
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
