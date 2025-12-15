@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { 
   Home, 
@@ -8,10 +8,12 @@ import {
   LogOut, 
   ChevronLeft,
   GraduationCap,
-  Menu
+  Menu,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarProps {
   onLogout: () => void;
@@ -27,7 +29,24 @@ const navItems = [
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    checkAdminRole();
+  }, []);
+
+  const checkAdminRole = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      setIsAdmin(profile?.role === 'admin');
+    }
+  };
 
   return (
     <>
@@ -101,6 +120,21 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               </NavLink>
             );
           })}
+          
+          {isAdmin && (
+            <NavLink
+              to="/admin"
+              className={cn(
+                "nav-item",
+                location.pathname === '/admin' && "nav-item-active",
+                collapsed && "lg:justify-center lg:px-3"
+              )}
+              onClick={() => setCollapsed(true)}
+            >
+              <Shield className="w-5 h-5 shrink-0" />
+              {!collapsed && <span>Admin</span>}
+            </NavLink>
+          )}
         </nav>
 
         {/* User Section */}
