@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, FileText, Video, ListChecks } from 'lucide-react';
-
+import { FileUpload } from './FileUpload';
 interface Lesson {
   id: string;
   titulo: string;
@@ -241,14 +241,17 @@ export function AdminLessons() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-gray-700">Texto de Apoio</Label>
-                <Textarea
+                <Label className="text-gray-700">Material de Apoio (PDF ou Imagem)</Label>
+                <FileUpload
                   value={form.texto_apoio}
-                  onChange={(e) => setForm({ ...form, texto_apoio: e.target.value })}
-                  placeholder="Conteúdo de apoio da lição..."
-                  rows={4}
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                  onChange={(url) => setForm({ ...form, texto_apoio: url })}
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  folder="licoes"
+                  placeholder="Cole uma URL ou faça upload do material"
                 />
+                <p className="text-xs text-gray-500">
+                  Você pode colar um link ou fazer upload de PDF/imagem (máx. 10MB)
+                </p>
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700">Checklist Items (JSON)</Label>

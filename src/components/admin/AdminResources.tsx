@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, LifeBuoy } from 'lucide-react';
-
+import { FileUpload } from './FileUpload';
 interface Resource {
   id: string;
   titulo: string;
@@ -194,21 +194,23 @@ export function AdminResources() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">URL do Vídeo</Label>
-                <Input
+                <Label className="text-gray-700">Vídeo (URL ou Upload)</Label>
+                <FileUpload
                   value={form.video_url}
-                  onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                  placeholder="https://youtube.com/..."
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                  onChange={(url) => setForm({ ...form, video_url: url })}
+                  accept=".mp4,.webm,.mov"
+                  folder="recursos/videos"
+                  placeholder="Cole uma URL do YouTube ou faça upload"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">URL do PDF</Label>
-                <Input
+                <Label className="text-gray-700">PDF ou Documento</Label>
+                <FileUpload
                   value={form.url_pdf}
-                  onChange={(e) => setForm({ ...form, url_pdf: e.target.value })}
-                  placeholder="https://..."
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                  onChange={(url) => setForm({ ...form, url_pdf: url })}
+                  accept=".pdf,.doc,.docx"
+                  folder="recursos/pdfs"
+                  placeholder="Cole uma URL ou faça upload do PDF"
                 />
               </div>
               <div className="space-y-2">
