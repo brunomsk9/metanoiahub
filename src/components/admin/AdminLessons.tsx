@@ -68,7 +68,7 @@ export function AdminLessons() {
       supabase.from('courses').select('id, titulo').order('ordem')
     ]);
 
-    if (lessonsRes.error) toast.error('Erro ao carregar lições');
+    if (lessonsRes.error) toast.error('Erro ao carregar aulas');
     else setLessons(lessonsRes.data || []);
 
     if (coursesRes.error) toast.error('Erro ao carregar cursos');
@@ -135,17 +135,17 @@ export function AdminLessons() {
 
     if (editing) {
       const { error } = await supabase.from('lessons').update(payload).eq('id', editing.id);
-      if (error) toast.error('Erro ao atualizar lição');
+      if (error) toast.error('Erro ao atualizar aula');
       else {
-        toast.success('Lição atualizada!');
+        toast.success('Aula atualizada!');
         setDialogOpen(false);
         fetchData();
       }
     } else {
       const { error } = await supabase.from('lessons').insert(payload);
-      if (error) toast.error('Erro ao criar lição');
+      if (error) toast.error('Erro ao criar aula');
       else {
-        toast.success('Lição criada!');
+        toast.success('Aula criada!');
         setDialogOpen(false);
         fetchData();
       }
@@ -155,12 +155,12 @@ export function AdminLessons() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta lição?')) return;
+    if (!confirm('Tem certeza que deseja excluir esta aula?')) return;
 
     const { error } = await supabase.from('lessons').delete().eq('id', id);
-    if (error) toast.error('Erro ao excluir lição');
+    if (error) toast.error('Erro ao excluir aula');
     else {
-      toast.success('Lição excluída!');
+      toast.success('Aula excluída!');
       fetchData();
     }
   };
@@ -180,17 +180,17 @@ export function AdminLessons() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <p className="text-gray-500">{lessons.length} lição(ões) cadastrada(s)</p>
+        <p className="text-gray-500">{lessons.length} aula(s) cadastrada(s)</p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
               <Plus className="h-4 w-4 mr-2" />
-              Nova Lição
+              Nova Aula
             </Button>
           </DialogTrigger>
           <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-gray-900">{editing ? 'Editar Lição' : 'Nova Lição'}</DialogTitle>
+              <DialogTitle className="text-gray-900">{editing ? 'Editar Aula' : 'Nova Aula'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -246,7 +246,7 @@ export function AdminLessons() {
                 <RichTextEditor
                   value={form.texto_apoio}
                   onChange={(html) => setForm({ ...form, texto_apoio: html })}
-                  placeholder="Escreva o conteúdo da lição aqui..."
+                  placeholder="Escreva o conteúdo da aula aqui..."
                 />
                 <p className="text-xs text-gray-500">
                   Use a barra de ferramentas para formatar o texto com negrito, listas, títulos, etc.
@@ -289,7 +289,7 @@ export function AdminLessons() {
               </div>
               <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {editing ? 'Salvar Alterações' : 'Criar Lição'}
+                {editing ? 'Salvar Alterações' : 'Criar Aula'}
               </Button>
             </div>
           </DialogContent>
@@ -300,8 +300,8 @@ export function AdminLessons() {
         {lessons.length === 0 ? (
           <div className="p-12 text-center">
             <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhuma lição cadastrada ainda.</p>
-            <p className="text-sm text-gray-400 mt-1">Crie um curso primeiro, depois adicione lições.</p>
+            <p className="text-gray-500">Nenhuma aula cadastrada ainda.</p>
+            <p className="text-sm text-gray-400 mt-1">Crie um curso primeiro, depois adicione aulas.</p>
           </div>
         ) : (
           <table className="w-full">

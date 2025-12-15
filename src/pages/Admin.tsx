@@ -129,7 +129,7 @@ export default function Admin() {
               className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700 rounded-md px-4 py-2 text-gray-600"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Lições
+              Aulas
             </TabsTrigger>
             <TabsTrigger 
               value="resources"
