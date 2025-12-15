@@ -12,6 +12,7 @@ import Lesson from "./pages/Lesson";
 import Tracks from "./pages/Tracks";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import ReadingPlan from "./pages/ReadingPlan";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ function AnimatedRoutes() {
         <Route path="/aula/:id" element={<Lesson />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/plano/:id" element={<ReadingPlan />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

@@ -162,6 +162,74 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_plan_days: {
+        Row: {
+          conteudo: string | null
+          created_at: string
+          dia: number
+          id: string
+          plan_id: string
+          titulo: string
+          versiculo_referencia: string | null
+        }
+        Insert: {
+          conteudo?: string | null
+          created_at?: string
+          dia: number
+          id?: string
+          plan_id: string
+          titulo: string
+          versiculo_referencia?: string | null
+        }
+        Update: {
+          conteudo?: string | null
+          created_at?: string
+          dia?: number
+          id?: string
+          plan_id?: string
+          titulo?: string
+          versiculo_referencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_plan_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "reading_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_plans: {
+        Row: {
+          categoria: string
+          cover_image: string | null
+          created_at: string
+          descricao: string | null
+          duracao_dias: number
+          id: string
+          titulo: string
+        }
+        Insert: {
+          categoria?: string
+          cover_image?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao_dias?: number
+          id?: string
+          titulo: string
+        }
+        Update: {
+          categoria?: string
+          cover_image?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao_dias?: number
+          id?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           categoria: Database["public"]["Enums"]["resource_category"]
@@ -259,6 +327,44 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reading_progress: {
+        Row: {
+          completed_at: string | null
+          completed_days: number[] | null
+          current_day: number
+          id: string
+          plan_id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_days?: number[] | null
+          current_day?: number
+          id?: string
+          plan_id: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_days?: number[] | null
+          current_day?: number
+          id?: string
+          plan_id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reading_progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "reading_plans"
             referencedColumns: ["id"]
           },
         ]
