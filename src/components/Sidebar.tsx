@@ -6,15 +6,19 @@ import {
   LifeBuoy, 
   User, 
   LogOut, 
-  ChevronLeft,
   GraduationCap,
-  Menu,
   Shield,
-  X
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SidebarProps {
   onLogout: () => void;
@@ -29,7 +33,6 @@ const navItems = [
 ];
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
 
@@ -51,128 +54,140 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-16 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-display font-bold text-gray-900">UDisc</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-gray-600"
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
-      </header>
-
-      {/* Mobile Overlay */}
-      {!collapsed && (
-        <div 
-          className="lg:hidden fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-          onClick={() => setCollapsed(true)}
-        />
-      )}
-
-      {/* Mobile Slide-out Menu */}
-      <div className={cn(
-        "lg:hidden fixed top-0 right-0 z-50 h-full w-72 bg-white shadow-2xl transition-transform duration-300",
-        collapsed ? "translate-x-full" : "translate-x-0"
-      )}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <span className="font-display font-semibold text-gray-900">Menu</span>
-          <Button variant="ghost" size="icon" onClick={() => setCollapsed(true)}>
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-        
-        <nav className="p-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                  isActive 
-                    ? "bg-amber-50 text-amber-700 font-medium" 
-                    : "text-gray-600 hover:bg-gray-50"
-                )}
-                onClick={() => setCollapsed(true)}
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
-          
-          {isAdmin && (
-            <NavLink
-              to="/admin"
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                location.pathname === '/admin' 
-                  ? "bg-amber-50 text-amber-700 font-medium" 
-                  : "text-gray-600 hover:bg-gray-50"
-              )}
-              onClick={() => setCollapsed(true)}
-            >
-              <Shield className="w-5 h-5" />
-              <span>Admin</span>
-            </NavLink>
-          )}
-        </nav>
-        
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-          {userName && (
-            <div className="px-4 py-3 mb-2 bg-gray-50 rounded-xl">
-              <p className="text-xs text-gray-500">Bem-vindo,</p>
-              <p className="font-medium text-gray-900 truncate">{userName}</p>
-            </div>
-          )}
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Sair</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop Sidebar */}
-      <aside className={cn(
-        "hidden lg:flex fixed top-0 left-0 z-50 h-screen bg-white border-r border-gray-100 transition-all duration-300 flex-col",
-        collapsed ? "w-20" : "w-64"
-      )}>
-        {/* Logo */}
-        <div className={cn(
-          "h-16 flex items-center border-b border-gray-100 px-4",
-          collapsed && "justify-center"
-        )}>
+      {/* Desktop Header */}
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-40 h-16 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
+          {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
-            {!collapsed && (
-              <div className="overflow-hidden">
-                <h1 className="font-display font-bold text-gray-900 whitespace-nowrap">
-                  Universidade
-                </h1>
-                <p className="text-xs text-gray-500 whitespace-nowrap">
-                  do Discipulador
-                </p>
-              </div>
-            )}
+            <div>
+              <h1 className="font-semibold text-gray-900 leading-tight">
+                Universidade do Discipulador
+              </h1>
+            </div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {/* Desktop Navigation */}
+          <nav className="flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    isActive 
+                      ? "bg-amber-100 text-amber-700" 
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+            
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  location.pathname === '/admin' 
+                    ? "bg-amber-100 text-amber-700" 
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                )}
+              >
+                <Shield className="w-4 h-4" />
+                <span>Admin</span>
+              </NavLink>
+            )}
+          </nav>
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm font-medium">
+                {userName?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
+                {userName || 'Usuário'}
+              </span>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-white">
+              <DropdownMenuItem asChild>
+                <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
+                  <User className="w-4 h-4" />
+                  Meu Perfil
+                </NavLink>
+              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                    <Shield className="w-4 h-4" />
+                    Painel Admin
+                  </NavLink>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={onLogout}
+                className="flex items-center gap-2 text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+
+      {/* Mobile Header */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+            <GraduationCap className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-semibold text-gray-900 text-sm">UDisc</span>
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-medium">
+              {userName?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-white">
+            <div className="px-3 py-2 border-b border-gray-100">
+              <p className="text-xs text-gray-500">Conectado como</p>
+              <p className="font-medium text-gray-900 truncate text-sm">{userName || 'Usuário'}</p>
+            </div>
+            {isAdmin && (
+              <DropdownMenuItem asChild>
+                <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                  <Shield className="w-4 h-4" />
+                  Painel Admin
+                </NavLink>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={onLogout}
+              className="flex items-center gap-2 text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50"
+            >
+              <LogOut className="w-4 h-4" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-white/95 backdrop-blur-md border-t border-gray-100 safe-area-pb">
+        <div className="h-full flex items-center justify-around px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -180,73 +195,23 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  "flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200",
                   isActive 
-                    ? "bg-amber-50 text-amber-700 font-medium" 
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900",
-                  collapsed && "justify-center px-3"
+                    ? "text-amber-600" 
+                    : "text-gray-400"
                 )}
               >
-                <item.icon className="w-5 h-5 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </NavLink>
             );
           })}
-          
-          {isAdmin && (
-            <NavLink
-              to="/admin"
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                location.pathname === '/admin' 
-                  ? "bg-amber-50 text-amber-700 font-medium" 
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900",
-                collapsed && "justify-center px-3"
-              )}
-            >
-              <Shield className="w-5 h-5 shrink-0" />
-              {!collapsed && <span>Admin</span>}
-            </NavLink>
-          )}
-        </nav>
-
-        {/* User Section */}
-        <div className="p-3 border-t border-gray-100">
-          {!collapsed && userName && (
-            <div className="px-4 py-3 mb-2 bg-gray-50 rounded-xl">
-              <p className="text-xs text-gray-500">Bem-vindo,</p>
-              <p className="font-medium text-gray-900 truncate">{userName}</p>
-            </div>
-          )}
-          <button
-            onClick={onLogout}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-500 hover:bg-red-50 transition-colors",
-              collapsed && "justify-center px-3"
-            )}
-          >
-            <LogOut className="w-5 h-5 shrink-0" />
-            {!collapsed && <span>Sair</span>}
-          </button>
         </div>
+      </nav>
 
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          <ChevronLeft className={cn(
-            "w-4 h-4 text-gray-400 transition-transform",
-            collapsed && "rotate-180"
-          )} />
-        </button>
-      </aside>
-
-      {/* Desktop Content Offset */}
-      <div className={cn(
-        "hidden lg:block shrink-0 transition-all duration-300",
-        collapsed ? "w-20" : "w-64"
-      )} />
+      {/* Spacers */}
+      <div className="h-16 lg:h-16" /> {/* Top spacer */}
+      <div className="h-16 lg:hidden" /> {/* Bottom spacer for mobile */}
     </>
   );
 }
