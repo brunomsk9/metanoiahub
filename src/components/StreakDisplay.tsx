@@ -13,17 +13,17 @@ export function StreakDisplay({ streak, className }: StreakDisplayProps) {
     <div className={cn(
       "flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all duration-300",
       isActive 
-        ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60" 
+        ? "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20" 
         : "bg-card border-border",
       className
     )}>
       <div className={cn(
         "relative flex items-center justify-center w-14 h-14 rounded-2xl",
-        isActive ? "bg-gradient-to-br from-amber-400 to-orange-500" : "bg-muted"
+        isActive ? "bg-gradient-primary" : "bg-muted"
       )}>
         <Flame className={cn(
           "w-7 h-7 transition-colors",
-          isActive ? "text-white" : "text-muted-foreground"
+          isActive ? "text-primary-foreground" : "text-muted-foreground"
         )} />
         {isActive && (
           <span className="absolute -top-1 -right-1 text-lg animate-bounce">🔥</span>
@@ -32,7 +32,7 @@ export function StreakDisplay({ streak, className }: StreakDisplayProps) {
       <div>
         <p className={cn(
           "text-3xl font-display font-bold",
-          isActive ? "text-amber-700" : "text-foreground"
+          isActive ? "text-primary" : "text-foreground"
         )}>
           {streak} dias
         </p>
@@ -56,15 +56,15 @@ export function HealthRadial({ percentage, label, className }: HealthRadialProps
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
   const getColor = () => {
-    if (percentage >= 80) return "stroke-emerald-500";
-    if (percentage >= 50) return "stroke-amber-500";
-    return "stroke-red-500";
+    if (percentage >= 80) return "stroke-success";
+    if (percentage >= 50) return "stroke-primary";
+    return "stroke-destructive";
   };
 
   const getTextColor = () => {
-    if (percentage >= 80) return "text-emerald-600";
-    if (percentage >= 50) return "text-amber-600";
-    return "text-red-600";
+    if (percentage >= 80) return "text-success";
+    if (percentage >= 50) return "text-primary";
+    return "text-destructive";
   };
 
   return (
@@ -77,7 +77,7 @@ export function HealthRadial({ percentage, label, className }: HealthRadialProps
             cy="50"
             r={radius}
             fill="none"
-            className="stroke-gray-100"
+            className="stroke-secondary"
             strokeWidth="8"
           />
           {/* Progress circle */}
@@ -126,13 +126,13 @@ export function DailyHabits({ habits, onToggle }: DailyHabitsProps) {
             className={cn(
               "flex items-center gap-2 px-4 py-3 rounded-xl border transition-all duration-200",
               habit.completed
-                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                : "bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-600"
+                ? "bg-success/10 border-success/30 text-success"
+                : "bg-card border-border text-muted-foreground hover:border-primary/30 hover:text-primary"
             )}
           >
             <Icon className="w-4 h-4" />
             <span className="text-sm font-medium">{habit.name}</span>
-            {habit.completed && <span className="text-emerald-500">✓</span>}
+            {habit.completed && <span className="text-success">✓</span>}
           </button>
         );
       })}

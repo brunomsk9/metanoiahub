@@ -6,11 +6,10 @@ import {
   LifeBuoy, 
   User, 
   LogOut, 
-  GraduationCap,
+  Sparkles,
   Shield,
   ChevronDown,
-  Menu,
-  X
+  Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,16 +70,16 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
   return (
     <>
       {/* Desktop Header */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-40 h-16 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-40 h-16 bg-card/90 backdrop-blur-md border-b border-border">
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
-              <GraduationCap className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-sm">
+              <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-semibold text-gray-900 leading-tight">
-                Universidade do Discipulador
+              <h1 className="font-display font-semibold text-foreground leading-tight">
+                Metanoia Hub
               </h1>
             </div>
           </div>
@@ -96,8 +95,8 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive 
-                      ? "bg-amber-100 text-amber-700" 
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
                   <item.icon className="w-4 h-4" />
@@ -112,8 +111,8 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                   location.pathname === '/admin' 
-                    ? "bg-amber-100 text-amber-700" 
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 )}
               >
                 <Shield className="w-4 h-4" />
@@ -124,16 +123,16 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
 
           {/* User Menu */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm font-medium">
+            <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary transition-colors">
+              <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                 {userName?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
+              <span className="text-sm font-medium text-foreground max-w-[120px] truncate">
                 {userName || 'Usuário'}
               </span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white">
+            <DropdownMenuContent align="end" className="w-48 bg-card">
               <DropdownMenuItem asChild>
                 <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
                   <User className="w-4 h-4" />
@@ -151,7 +150,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={onLogout}
-                className="flex items-center gap-2 text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50"
+                className="flex items-center gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
               >
                 <LogOut className="w-4 h-4" />
                 Sair
@@ -162,22 +161,22 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
       </header>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-card/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4">
         {/* Hamburger Menu */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-gray-700">
+            <Button variant="ghost" size="icon" className="text-foreground">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 bg-white p-0">
-            <SheetHeader className="p-4 border-b border-gray-100">
+          <SheetContent side="left" className="w-72 bg-card p-0">
+            <SheetHeader className="p-4 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                  <GraduationCap className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <SheetTitle className="text-left text-gray-900">
-                  Universidade do Discipulador
+                <SheetTitle className="text-left text-foreground">
+                  Metanoia Hub
                 </SheetTitle>
               </div>
             </SheetHeader>
@@ -192,8 +191,8 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                     className={cn(
                       "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                       isActive 
-                        ? "bg-amber-100 text-amber-700" 
-                        : "text-gray-600 hover:bg-gray-50"
+                        ? "bg-primary/10 text-primary" 
+                        : "text-muted-foreground hover:bg-secondary"
                     )}
                   >
                     <item.icon className="w-5 h-5" />
@@ -208,8 +207,8 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                     location.pathname === '/admin' 
-                      ? "bg-amber-100 text-amber-700" 
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:bg-secondary"
                   )}
                 >
                   <Shield className="w-5 h-5" />
@@ -218,19 +217,19 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               )}
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-card">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-medium">
+                <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-medium">
                   {userName?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{userName || 'Usuário'}</p>
-                  <p className="text-xs text-gray-500">Discípulo</p>
+                  <p className="font-medium text-foreground truncate">{userName || 'Usuário'}</p>
+                  <p className="text-xs text-muted-foreground">Discípulo</p>
                 </div>
               </div>
               <Button 
                 variant="outline" 
-                className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                 onClick={onLogout}
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -242,14 +241,14 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
 
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-            <GraduationCap className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-gray-900 text-sm">UDisc</span>
+          <span className="font-display font-semibold text-foreground text-sm">Metanoia</span>
         </div>
 
         {/* User Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-medium">
+        <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-xs font-medium">
           {userName?.charAt(0).toUpperCase() || 'U'}
         </div>
       </header>

@@ -157,7 +157,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <Sidebar onLogout={handleLogout} userName={userName} />
       
       <main className="pt-14 lg:pt-16">
@@ -166,29 +166,29 @@ export default function Dashboard() {
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
             <StreakDisplay streak={streak} className="md:col-span-1" />
             
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-center md:col-span-1">
-              <HealthRadial percentage={healthScore} label="Saúde do Discipulador" />
+            <div className="card-premium p-4 flex items-center justify-center md:col-span-1">
+              <HealthRadial percentage={healthScore} label="Saúde Espiritual" />
             </div>
             
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:col-span-1">
-              <h3 className="text-sm font-medium text-gray-500 mb-3">Hábitos de Hoje</h3>
+            <div className="card-premium p-4 md:col-span-1">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Hábitos de Hoje</h3>
               <DailyHabits habits={habits} onToggle={handleHabitToggle} />
             </div>
           </section>
 
           {/* Tracks */}
           <section className="space-y-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
-            <h2 className="text-xl font-display font-semibold text-gray-900">
+            <h2 className="text-xl font-display font-semibold text-foreground">
               Trilhas Disponíveis
             </h2>
             
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-                    <Skeleton className="h-40 w-full rounded-xl bg-gray-100" />
-                    <Skeleton className="h-5 w-3/4 bg-gray-100" />
-                    <Skeleton className="h-4 w-full bg-gray-100" />
+                  <div key={i} className="card-premium p-4 space-y-3">
+                    <Skeleton className="h-40 w-full rounded-xl bg-secondary" />
+                    <Skeleton className="h-5 w-3/4 bg-secondary" />
+                    <Skeleton className="h-4 w-full bg-secondary" />
                   </div>
                 ))}
               </div>
