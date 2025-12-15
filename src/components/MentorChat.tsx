@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -44,12 +46,21 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
     {
       id: '1',
       role: 'assistant',
-      content: 'Olá! Sou o Mentor IA da Universidade do Discipulador. Como posso ajudá-lo hoje em sua jornada de discipulado?',
+      content: 'Olá! Sou o Mentor IA da Universidade do Discipulador. Como posso ajudá-lo hoje em sua jornada de discipulado? 🙏',
       timestamp: new Date(),
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -65,17 +76,47 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
     setInput('');
     setIsLoading(true);
 
-    // Simulated response - will be replaced with actual AI integration
-    setTimeout(() => {
+    try {
+      // Prepare messages for API (without id and timestamp)
+      const apiMessages = [...messages, userMessage].map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('mentor-chat', {
+        body: { messages: apiMessages }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Entendo sua pergunta. Como mentor, recomendo que você reflita sobre as Escrituras e busque orientação através da oração. Posso ajudá-lo a encontrar recursos específicos sobre este tema na nossa biblioteca.',
+        content: data.message,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Error calling mentor-chat:', error);
+      toast.error('Erro ao enviar mensagem. Tente novamente.');
+      
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Desculpe, tive um problema para responder. Por favor, tente novamente em alguns instantes.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -89,7 +130,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
             </div>
             <div>
               <h3 className="font-display font-semibold text-white">Mentor IA</h3>
-              <p className="text-xs text-white/80">Sempre disponível para ajudar</p>
+              <p className="text-xs text-white/80">Powered by ChatGPT</p>
             </div>
           </div>
           <button
@@ -123,7 +164,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
                 )}
               </div>
               <div className={cn(
-                "max-w-[80%] p-3 rounded-2xl text-sm",
+                "max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap",
                 message.role === 'user' 
                   ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-br-md" 
                   : "bg-white border border-gray-100 text-gray-700 rounded-bl-md shadow-sm"
@@ -138,10 +179,14 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
                 <Bot className="w-4 h-4 text-gray-600" />
               </div>
               <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-md shadow-sm">
-                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                  <span className="text-xs text-gray-500">Pensando...</span>
+                </div>
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
