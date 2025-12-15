@@ -4,10 +4,11 @@ import { DailyHabits } from "@/components/StreakDisplay";
 import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
 import { PageTransition } from "@/components/PageTransition";
+import { ReadingPlanCard } from "@/components/ReadingPlanCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, ArrowRight, Flame, Play, ChevronRight } from "lucide-react";
+import { BookOpen, Flame, Play, ChevronRight } from "lucide-react";
 
 interface Track {
   id: string;
@@ -15,6 +16,16 @@ interface Track {
   descricao: string | null;
   cover_image: string | null;
   coursesCount: number;
+}
+
+interface ReadingPlanWithProgress {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  duracao_dias: number;
+  cover_image: string | null;
+  currentDay: number;
+  completedDays: number[];
 }
 
 // Versículo do dia (pode ser dinâmico futuramente)
@@ -28,6 +39,7 @@ export default function Dashboard() {
   const [userName, setUserName] = useState<string>('');
   const [xpPoints, setXpPoints] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [readingPlans, setReadingPlans] = useState<ReadingPlanWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [habits, setHabits] = useState([
     { id: 'leitura', name: 'Leitura Bíblica', completed: false, icon: 'book' as const },
@@ -44,40 +56,30 @@ export default function Dashboard() {
         return;
       }
       
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('nome, current_streak, xp_points')
-        .eq('id', session.user.id)
-        .maybeSingle();
+      // Fetch all data in parallel
+      const [profileRes, habitsRes, tracksRes, plansRes, progressRes] = await Promise.all([
+        supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
+        supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
+        supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
+        supabase.from('reading_plans').select('*').order('created_at').limit(4),
+        supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id)
+      ]);
       
-      if (profile) {
-        setUserName(profile.nome || session.user.email?.split('@')[0] || 'Discípulo');
-        setStreak(profile.current_streak || 0);
-        setXpPoints(profile.xp_points || 0);
+      if (profileRes.data) {
+        setUserName(profileRes.data.nome || session.user.email?.split('@')[0] || 'Discípulo');
+        setStreak(profileRes.data.current_streak || 0);
+        setXpPoints(profileRes.data.xp_points || 0);
       }
 
-      const today = new Date().toISOString().split('T')[0];
-      const { data: todayHabits } = await supabase
-        .from('daily_habits')
-        .select('habit_type')
-        .eq('user_id', session.user.id)
-        .eq('completed_date', today);
-
-      if (todayHabits) {
+      if (habitsRes.data) {
         setHabits(prev => prev.map(h => ({
           ...h,
-          completed: todayHabits.some(th => th.habit_type === h.id)
+          completed: habitsRes.data.some(th => th.habit_type === h.id)
         })));
       }
 
-      const { data: tracksData } = await supabase
-        .from('tracks')
-        .select(`id, titulo, descricao, cover_image, courses(count)`)
-        .order('ordem')
-        .limit(4);
-
-      if (tracksData) {
-        const formattedTracks = tracksData.map(track => ({
+      if (tracksRes.data) {
+        const formattedTracks = tracksRes.data.map(track => ({
           id: track.id,
           titulo: track.titulo,
           descricao: track.descricao,
@@ -85,6 +87,23 @@ export default function Dashboard() {
           coursesCount: track.courses?.[0]?.count || 0,
         }));
         setTracks(formattedTracks);
+      }
+
+      // Combine reading plans with user progress
+      if (plansRes.data) {
+        const plansWithProgress = plansRes.data.map(plan => {
+          const userProgress = progressRes.data?.find(p => p.plan_id === plan.id);
+          return {
+            id: plan.id,
+            titulo: plan.titulo,
+            descricao: plan.descricao,
+            duracao_dias: plan.duracao_dias,
+            cover_image: plan.cover_image,
+            currentDay: userProgress?.current_day || 1,
+            completedDays: userProgress?.completed_days || []
+          };
+        });
+        setReadingPlans(plansWithProgress);
       }
 
       setLoading(false);
@@ -211,10 +230,43 @@ export default function Dashboard() {
               <DailyHabits habits={habits} onToggle={handleHabitToggle} />
             </section>
 
+            {/* Reading Plans - YouVersion style */}
+            {(loading || readingPlans.length > 0) && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-display font-semibold text-foreground">Planos de Leitura</h2>
+                </div>
+                
+                {loading ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1, 2].map((i) => (
+                      <Skeleton key={i} className="h-48 rounded-2xl" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {readingPlans.map((plan) => (
+                      <ReadingPlanCard
+                        key={plan.id}
+                        id={plan.id}
+                        titulo={plan.titulo}
+                        descricao={plan.descricao}
+                        coverImage={plan.cover_image}
+                        duracaoDias={plan.duracao_dias}
+                        currentDay={plan.currentDay}
+                        completedDays={plan.completedDays}
+                        onClick={(id) => navigate(`/plano/${id}`)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* Continue Learning - Netflix style */}
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-display font-semibold text-foreground">Continuar aprendendo</h2>
+                <h2 className="text-lg font-display font-semibold text-foreground">Trilhas</h2>
                 <button 
                   onClick={() => navigate('/trilhas')}
                   className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
