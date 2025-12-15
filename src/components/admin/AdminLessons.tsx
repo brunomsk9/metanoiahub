@@ -20,6 +20,7 @@ interface Lesson {
   checklist_items: any;
   duracao_minutos: number | null;
   ordem: number;
+  material_url: string | null;
 }
 
 interface Course {
@@ -55,7 +56,8 @@ export function AdminLessons() {
     texto_apoio: '',
     checklist_items: '[]',
     duracao_minutos: 0,
-    ordem: 0
+    ordem: 0,
+    material_url: ''
   });
 
   useEffect(() => {
@@ -88,7 +90,8 @@ export function AdminLessons() {
         texto_apoio: lesson.texto_apoio || '',
         checklist_items: JSON.stringify(lesson.checklist_items || [], null, 2),
         duracao_minutos: lesson.duracao_minutos || 0,
-        ordem: lesson.ordem
+        ordem: lesson.ordem,
+        material_url: lesson.material_url || ''
       });
     } else {
       setEditing(null);
@@ -100,7 +103,8 @@ export function AdminLessons() {
         texto_apoio: '',
         checklist_items: '[]',
         duracao_minutos: 0,
-        ordem: lessons.length
+        ordem: lessons.length,
+        material_url: ''
       });
     }
     setDialogOpen(true);
@@ -130,7 +134,8 @@ export function AdminLessons() {
       texto_apoio: form.texto_apoio || null,
       checklist_items: checklistParsed,
       duracao_minutos: form.duracao_minutos,
-      ordem: form.ordem
+      ordem: form.ordem,
+      material_url: form.material_url || null
     };
 
     if (editing) {
@@ -267,6 +272,19 @@ export function AdminLessons() {
                   </p>
                 </div>
               )}
+              <div className="space-y-2">
+                <Label className="text-gray-700">Material Complementar (PDF/Arquivo)</Label>
+                <FileUpload
+                  value={form.material_url}
+                  onChange={(url) => setForm({ ...form, material_url: url })}
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                  folder="aulas"
+                  placeholder="Cole uma URL ou faça upload de um arquivo"
+                />
+                <p className="text-xs text-gray-500">
+                  Formatos aceitos: PDF, Word, PowerPoint, Excel
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-700">Duração (min)</Label>
