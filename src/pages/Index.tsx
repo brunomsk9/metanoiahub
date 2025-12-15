@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
@@ -29,6 +30,7 @@ export default function Index() {
   }
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background overflow-hidden">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center p-4">
@@ -174,5 +176,6 @@ export default function Index() {
         </div>
       </footer>
     </div>
+    </PageTransition>
   );
 }

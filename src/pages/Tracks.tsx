@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { MentorChatButton } from "@/components/MentorChat";
 import { TrackCard } from "@/components/ContinueWatching";
+import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Track {
@@ -34,14 +33,7 @@ export default function Tracks() {
 
       const { data: tracksData, error } = await supabase
         .from('tracks')
-        .select(`
-          id,
-          titulo,
-          descricao,
-          categoria,
-          cover_image,
-          courses(count)
-        `)
+        .select(`id, titulo, descricao, categoria, cover_image, courses(count)`)
         .order('ordem');
 
       if (error) {
@@ -82,64 +74,49 @@ export default function Tracks() {
     <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} />
       
-      <main className="pt-14 lg:pt-16">
-        <div className="p-4 lg:p-8 space-y-6 max-w-7xl mx-auto">
-          {/* Header */}
-          <section className="animate-fade-in">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
-                <BookOpen className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
-                Trilhas de Aprendizado
+      <PageTransition>
+        <main className="pt-16 lg:pt-20 pb-8">
+          <div className="px-4 lg:px-8 max-w-6xl mx-auto space-y-8">
+            {/* Minimal Header */}
+            <header className="pt-4">
+              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground tracking-tight">
+                Trilhas
               </h1>
-            </div>
-            <p className="text-muted-foreground">
-              Explore nossas trilhas e avance em sua jornada de discipulado
-            </p>
-          </section>
+              <p className="text-muted-foreground mt-1">Sua jornada de aprendizado</p>
+            </header>
 
-          {/* Filters */}
-          <section className="flex flex-wrap gap-2 animate-slide-up" style={{ animationDelay: '50ms' }}>
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className={selectedCategory === category 
-                  ? "bg-gradient-primary hover:opacity-90 text-primary-foreground" 
-                  : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
-                }
-              >
-                {category}
-              </Button>
-            ))}
-          </section>
-
-          {/* Loading State */}
-          {loading && (
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="card-premium p-4 space-y-3">
-                  <Skeleton className="h-40 w-full rounded-xl bg-secondary" />
-                  <Skeleton className="h-5 w-3/4 bg-secondary" />
-                  <Skeleton className="h-4 w-full bg-secondary" />
-                </div>
-              ))}
-            </section>
-          )}
-
-          {/* Tracks Grid */}
-          {!loading && (
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
-              {filteredTracks.map((track, index) => (
-                <div 
-                  key={track.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+            {/* Filters - Minimal pills */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === category 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  }`}
                 >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            {/* Loading */}
+            {loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-56 rounded-2xl" />
+                ))}
+              </div>
+            )}
+
+            {/* Grid */}
+            {!loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredTracks.map((track) => (
                   <TrackCard
+                    key={track.id}
                     id={track.id}
                     title={track.titulo}
                     description={track.descricao || ''}
@@ -147,20 +124,18 @@ export default function Tracks() {
                     coursesCount={track.coursesCount}
                     onClick={(id) => navigate(`/trilha/${id}`)}
                   />
-                </div>
-              ))}
-            </section>
-          )}
+                ))}
+              </div>
+            )}
 
-          {!loading && filteredTracks.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Nenhuma trilha encontrada nesta categoria.
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
+            {!loading && filteredTracks.length === 0 && (
+              <div className="text-center py-16">
+                <p className="text-muted-foreground">Nenhuma trilha encontrada</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </PageTransition>
 
       <MentorChatButton />
     </div>

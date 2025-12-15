@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { SearchSOS } from "@/components/SearchSOS";
 import { Sidebar } from "@/components/Sidebar";
 import { MentorChatButton } from "@/components/MentorChat";
+import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
-import { LifeBuoy } from "lucide-react";
 
 interface Resource {
   id: string;
@@ -30,7 +30,6 @@ export default function SOS() {
         return;
       }
 
-      // Fetch resources and lessons in parallel
       const [resourcesRes, lessonsRes] = await Promise.all([
         supabase
           .from('resources')
@@ -44,7 +43,6 @@ export default function SOS() {
 
       const formattedResources: Resource[] = [];
 
-      // Add resources
       if (resourcesRes.data) {
         resourcesRes.data.forEach(r => {
           formattedResources.push({
@@ -59,7 +57,6 @@ export default function SOS() {
         });
       }
 
-      // Add lessons
       if (lessonsRes.data) {
         lessonsRes.data.forEach(l => {
           const tags: string[] = [];
@@ -112,55 +109,40 @@ export default function SOS() {
     <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} />
       
-      <main className="pt-14 lg:pt-16">
-        <div className="min-h-[calc(100vh-56px)] lg:min-h-[calc(100vh-64px)] flex flex-col">
-          {/* Hero Section */}
-          <section className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8">
-            <div className="text-center mb-8 animate-fade-in">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-accent shadow-glow-accent mb-4">
-                <LifeBuoy className="w-8 h-8 text-accent-foreground" />
-              </div>
-              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">
-                S.O.S. Discipulador
+      <PageTransition>
+        <main className="pt-16 lg:pt-20 pb-8">
+          <div className="px-4 lg:px-8 max-w-4xl mx-auto">
+            {/* Minimal Header */}
+            <header className="pt-8 pb-12 text-center">
+              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground tracking-tight mb-2">
+                S.O.S.
               </h1>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                Encontre recursos e aulas para situações específicas do discipulado
+              <p className="text-muted-foreground">
+                Encontre ajuda para situações específicas
               </p>
-            </div>
+            </header>
 
-            <div className="w-full animate-slide-up" style={{ animationDelay: '100ms' }}>
-              <SearchSOS 
-                resources={resources}
-                onSelect={handleResourceSelect}
-                loading={loading}
-              />
-            </div>
-          </section>
+            {/* Search */}
+            <SearchSOS 
+              resources={resources}
+              onSelect={handleResourceSelect}
+              loading={loading}
+            />
 
-          {/* Quick Access Categories */}
-          <section className="p-4 lg:p-8 border-t border-border bg-card/50">
-            <h2 className="text-lg font-display font-semibold text-foreground mb-4 text-center">
-              Categorias de Apoio
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
-              {[
-                { label: 'Crise Emocional', emoji: '💔', color: 'bg-destructive/10 border-destructive/20 hover:bg-destructive/20' },
-                { label: 'Dúvidas de Fé', emoji: '❓', color: 'bg-warning/10 border-warning/20 hover:bg-warning/20' },
-                { label: 'Relacionamentos', emoji: '🤝', color: 'bg-success/10 border-success/20 hover:bg-success/20' },
-                { label: 'Vícios', emoji: '⛓️', color: 'bg-primary/10 border-primary/20 hover:bg-primary/20' },
-              ].map((category) => (
+            {/* Quick Tags */}
+            <div className="mt-12 flex flex-wrap gap-2 justify-center">
+              {['Crise', 'Dúvidas', 'Relacionamentos', 'Vícios'].map((tag) => (
                 <button
-                  key={category.label}
-                  className={`p-4 rounded-2xl border text-center transition-all hover:scale-105 ${category.color}`}
+                  key={tag}
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                 >
-                  <span className="text-2xl mb-2 block">{category.emoji}</span>
-                  <span className="text-sm font-medium text-foreground">{category.label}</span>
+                  {tag}
                 </button>
               ))}
             </div>
-          </section>
-        </div>
-      </main>
+          </div>
+        </main>
+      </PageTransition>
 
       <MentorChatButton />
     </div>
