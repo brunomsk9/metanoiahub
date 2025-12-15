@@ -58,12 +58,13 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
   const checkAdminRole = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const { data: profile } = await supabase
-        .from('profiles')
+      // Check if user has admin role in user_roles table
+      const { data: roles } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', session.user.id)
-        .single();
-      setIsAdmin(profile?.role === 'admin');
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin');
+      setIsAdmin(roles && roles.length > 0);
     }
   };
 

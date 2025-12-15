@@ -6,8 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, GraduationCap } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserCheck } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+
+type AppRole = Database['public']['Enums']['app_role'];
 
 interface Course {
   id: string;
@@ -17,6 +21,7 @@ interface Course {
   thumbnail: string | null;
   duracao_minutos: number | null;
   ordem: number;
+  publico_alvo: AppRole[];
 }
 
 interface Track {
@@ -38,7 +43,8 @@ export function AdminCourses() {
     track_id: '',
     thumbnail: '',
     duracao_minutos: 0,
-    ordem: 0
+    ordem: 0,
+    publico_alvo: ['discipulo'] as AppRole[]
   });
 
   useEffect(() => {
@@ -69,13 +75,25 @@ export function AdminCourses() {
         track_id: course.track_id,
         thumbnail: course.thumbnail || '',
         duracao_minutos: course.duracao_minutos || 0,
-        ordem: course.ordem
+        ordem: course.ordem,
+        publico_alvo: course.publico_alvo || ['discipulo']
       });
     } else {
       setEditing(null);
-      setForm({ titulo: '', descricao: '', track_id: '', thumbnail: '', duracao_minutos: 0, ordem: courses.length });
+      setForm({ titulo: '', descricao: '', track_id: '', thumbnail: '', duracao_minutos: 0, ordem: courses.length, publico_alvo: ['discipulo'] });
     }
     setDialogOpen(true);
+  };
+
+  const togglePublicoAlvo = (role: AppRole) => {
+    const current = form.publico_alvo;
+    if (current.includes(role)) {
+      if (current.length > 1) {
+        setForm({ ...form, publico_alvo: current.filter(r => r !== role) });
+      }
+    } else {
+      setForm({ ...form, publico_alvo: [...current, role] });
+    }
   };
 
   const handleSave = async () => {
@@ -92,7 +110,8 @@ export function AdminCourses() {
       track_id: form.track_id,
       thumbnail: form.thumbnail || null,
       duracao_minutos: form.duracao_minutos,
-      ordem: form.ordem
+      ordem: form.ordem,
+      publico_alvo: form.publico_alvo
     };
 
     if (editing) {
@@ -131,6 +150,16 @@ export function AdminCourses() {
     return tracks.find(t => t.id === trackId)?.titulo || 'Sem trilha';
   };
 
+  const getPublicoAlvoLabel = (publico_alvo: AppRole[]) => {
+    if (publico_alvo.includes('discipulo') && publico_alvo.includes('discipulador')) {
+      return 'Todos';
+    }
+    if (publico_alvo.includes('discipulador')) {
+      return 'Discipuladores';
+    }
+    return 'Discípulos';
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -150,7 +179,7 @@ export function AdminCourses() {
               Novo Curso
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200">
+          <DialogContent className="bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-gray-900">{editing ? 'Editar Curso' : 'Novo Curso'}</DialogTitle>
             </DialogHeader>
@@ -178,6 +207,34 @@ export function AdminCourses() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-700">Público Alvo *</Label>
+                <div className="flex gap-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="course-discipulo"
+                      checked={form.publico_alvo.includes('discipulo')}
+                      onCheckedChange={() => togglePublicoAlvo('discipulo')}
+                    />
+                    <label htmlFor="course-discipulo" className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer">
+                      <Users className="h-4 w-4" />
+                      Discípulos
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="course-discipulador"
+                      checked={form.publico_alvo.includes('discipulador')}
+                      onCheckedChange={() => togglePublicoAlvo('discipulador')}
+                    />
+                    <label htmlFor="course-discipulador" className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer">
+                      <UserCheck className="h-4 w-4" />
+                      Discipuladores
+                    </label>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Selecione quem terá acesso a este curso</p>
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700">Descrição</Label>
@@ -240,6 +297,7 @@ export function AdminCourses() {
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ordem</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Trilha</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Público</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
               </tr>
             </thead>
@@ -257,6 +315,11 @@ export function AdminCourses() {
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell">
                     <span className="text-gray-600">{getTrackName(course.track_id)}</span>
+                  </td>
+                  <td className="py-3 px-4 hidden md:table-cell">
+                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                      {getPublicoAlvoLabel(course.publico_alvo)}
+                    </span>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
