@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame } from "lucide-react";
+import { GraduationCap, ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -47,9 +47,13 @@ export default function Index() {
             <span className="text-gradient-primary">Discipulador</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            Transforme sua jornada de discipulado com conteúdo premium, 
-            mentoria inteligente e ferramentas práticas para crescimento espiritual.
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-2 animate-slide-up" style={{ animationDelay: '100ms' }}>
+            "Ide e fazei discípulos de todas as nações"
+          </p>
+
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-8 animate-slide-up" style={{ animationDelay: '150ms' }}>
+            Uma iniciativa da <span className="text-primary font-medium">Comunidade das Nações de Goiânia</span> para 
+            equipar discipuladores na missão de formar o caráter de Cristo em cada pessoa.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
@@ -58,7 +62,7 @@ export default function Index() {
               size="xl"
               onClick={() => navigate('/auth')}
             >
-              Começar Agora
+              Entrar na Plataforma
               <ArrowRight className="w-5 h-5" />
             </Button>
             <Button 
@@ -75,34 +79,37 @@ export default function Index() {
       {/* Features Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-display font-bold text-center text-foreground mb-12">
-            Tudo que você precisa para discipular
+          <h2 className="text-3xl font-display font-bold text-center text-foreground mb-4">
+            Recursos para sua jornada de discipulado
           </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Ferramentas práticas para cuidar, formar e multiplicar através de relacionamentos espirituais consistentes.
+          </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: BookOpen,
-                title: "Trilhas de Conteúdo",
-                description: "Cursos estruturados em vídeo e texto com aplicações práticas.",
+                title: "Jornada Metanoia",
+                description: "4 encontros fundamentais para firmar a fé e transformar vidas.",
                 color: "bg-primary/20",
               },
               {
                 icon: Flame,
-                title: "Sistema de Streak",
-                description: "Mantenha a consistência com hábitos diários rastreados.",
+                title: "Hábitos Diários",
+                description: "Acompanhe sua vida devocional com leitura bíblica e oração.",
                 color: "bg-gradient-streak",
               },
               {
                 icon: LifeBuoy,
                 title: "S.O.S. Discipulador",
-                description: "Recursos de apoio para situações específicas do discipulado.",
+                description: "Recursos de apoio para situações como luto, ansiedade e desânimo.",
                 color: "bg-accent/20",
               },
               {
                 icon: MessageCircle,
                 title: "Mentor IA",
-                description: "Assistente inteligente disponível 24/7 para suas dúvidas.",
+                description: "Assistente para tirar dúvidas sobre discipulado a qualquer momento.",
                 color: "bg-success/20",
               },
             ].map((feature, index) => (
@@ -126,24 +133,28 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Quote Section */}
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto text-center card-premium p-8 lg:p-12">
-          <h2 className="text-2xl lg:text-3xl font-display font-bold text-foreground mb-4">
-            Pronto para transformar seu discipulado?
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            Junte-se a milhares de discipuladores que estão usando nossa plataforma 
-            para crescer e ajudar outros a crescer.
-          </p>
-          <Button 
-            variant="premium" 
-            size="xl"
-            onClick={() => navigate('/auth')}
-          >
-            Criar Conta Gratuita
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+          <Heart className="w-10 h-10 text-primary mx-auto mb-6" />
+          <blockquote className="text-xl lg:text-2xl font-display text-foreground mb-4 italic">
+            "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
+          </blockquote>
+          <p className="text-muted-foreground">— N. T. Wright</p>
+          
+          <div className="mt-8 pt-8 border-t border-border">
+            <p className="text-muted-foreground mb-6">
+              Discipulado é sobre pessoas. É sobre transformação. É sobre vínculo.
+            </p>
+            <Button 
+              variant="premium" 
+              size="xl"
+              onClick={() => navigate('/auth')}
+            >
+              Acessar Plataforma
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -157,7 +168,7 @@ export default function Index() {
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 Todos os direitos reservados
+            Comunidade das Nações de Goiânia • cngoiania.com.br
           </p>
         </div>
       </footer>
