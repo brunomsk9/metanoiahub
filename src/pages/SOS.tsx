@@ -62,15 +62,12 @@ export default function SOS() {
       // Add lessons
       if (lessonsRes.data) {
         lessonsRes.data.forEach(l => {
-          // Extract keywords from title and content for better search
           const tags: string[] = [];
           const titleLower = l.titulo.toLowerCase();
           
-          // Add type-based tags
           if (l.tipo === 'video') tags.push('vídeo');
           if (l.tipo === 'checklist_interativo') tags.push('checklist', 'prático');
           
-          // Common topic keywords
           const keywords = ['encontro', 'oração', 'identidade', 'maldição', 'restauração', 'propósito', 'célula', 'multiplicação', 'discipulado'];
           keywords.forEach(kw => {
             if (titleLower.includes(kw)) tags.push(kw);
@@ -112,7 +109,7 @@ export default function SOS() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
+    <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} />
       
       <main className="pt-14 lg:pt-16">
@@ -120,13 +117,13 @@ export default function SOS() {
           {/* Hero Section */}
           <section className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8">
             <div className="text-center mb-8 animate-fade-in">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 shadow-lg mb-4">
-                <LifeBuoy className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-accent shadow-glow-accent mb-4">
+                <LifeBuoy className="w-8 h-8 text-accent-foreground" />
               </div>
-              <h1 className="text-3xl lg:text-4xl font-display font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">
                 S.O.S. Discipulador
               </h1>
-              <p className="text-lg text-gray-500 max-w-md mx-auto">
+              <p className="text-lg text-muted-foreground max-w-md mx-auto">
                 Encontre recursos e aulas para situações específicas do discipulado
               </p>
             </div>
@@ -141,23 +138,23 @@ export default function SOS() {
           </section>
 
           {/* Quick Access Categories */}
-          <section className="p-4 lg:p-8 border-t border-gray-100 bg-white/50">
-            <h2 className="text-lg font-display font-semibold text-gray-900 mb-4 text-center">
+          <section className="p-4 lg:p-8 border-t border-border bg-card/50">
+            <h2 className="text-lg font-display font-semibold text-foreground mb-4 text-center">
               Categorias de Apoio
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
               {[
-                { label: 'Crise Emocional', emoji: '💔', color: 'bg-red-50 border-red-200 hover:bg-red-100' },
-                { label: 'Dúvidas de Fé', emoji: '❓', color: 'bg-amber-50 border-amber-200 hover:bg-amber-100' },
-                { label: 'Relacionamentos', emoji: '🤝', color: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
-                { label: 'Vícios', emoji: '⛓️', color: 'bg-purple-50 border-purple-200 hover:bg-purple-100' },
+                { label: 'Crise Emocional', emoji: '💔', color: 'bg-destructive/10 border-destructive/20 hover:bg-destructive/20' },
+                { label: 'Dúvidas de Fé', emoji: '❓', color: 'bg-warning/10 border-warning/20 hover:bg-warning/20' },
+                { label: 'Relacionamentos', emoji: '🤝', color: 'bg-success/10 border-success/20 hover:bg-success/20' },
+                { label: 'Vícios', emoji: '⛓️', color: 'bg-primary/10 border-primary/20 hover:bg-primary/20' },
               ].map((category) => (
                 <button
                   key={category.label}
                   className={`p-4 rounded-2xl border text-center transition-all hover:scale-105 ${category.color}`}
                 >
                   <span className="text-2xl mb-2 block">{category.emoji}</span>
-                  <span className="text-sm font-medium text-gray-700">{category.label}</span>
+                  <span className="text-sm font-medium text-foreground">{category.label}</span>
                 </button>
               ))}
             </div>

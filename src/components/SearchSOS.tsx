@@ -50,7 +50,7 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
       <div className="relative">
         <Search className={cn(
           "absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 transition-colors",
-          isFocused ? "text-amber-500" : "text-gray-400"
+          isFocused ? "text-primary" : "text-muted-foreground"
         )} />
         <input
           type="text"
@@ -60,12 +60,12 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
           onBlur={() => setIsFocused(false)}
           placeholder="Buscar ajuda... (ex: encontro, identidade, célula)"
           className={cn(
-            "w-full h-14 pl-14 pr-6 text-lg rounded-2xl border bg-white",
-            "text-gray-900 placeholder:text-gray-400",
+            "w-full h-14 pl-14 pr-6 text-lg rounded-2xl border bg-card",
+            "text-foreground placeholder:text-muted-foreground",
             "focus:outline-none transition-all duration-300",
             isFocused 
-              ? "border-amber-400 ring-4 ring-amber-100 shadow-lg" 
-              : "border-gray-200 shadow-sm hover:border-gray-300"
+              ? "border-primary ring-4 ring-primary/20 shadow-lg" 
+              : "border-border shadow-sm hover:border-primary/30"
           )}
         />
       </div>
@@ -78,10 +78,10 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
               {/* Aulas Section */}
               {filteredResults.aulas.length > 0 && (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-amber-600">
+                  <div className="flex items-center gap-2 text-primary">
                     <GraduationCap className="w-5 h-5" />
                     <h3 className="font-display font-semibold">Aulas</h3>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                       ({filteredResults.aulas.length})
                     </span>
                   </div>
@@ -101,10 +101,10 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
                 {/* Videos Section */}
                 {filteredResults.videos.length > 0 && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-blue-600">
+                    <div className="flex items-center gap-2 text-accent">
                       <Video className="w-5 h-5" />
                       <h3 className="font-display font-semibold">Vídeos S.O.S.</h3>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         ({filteredResults.videos.length})
                       </span>
                     </div>
@@ -123,10 +123,10 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
                 {/* PDFs Section */}
                 {filteredResults.pdfs.length > 0 && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-orange-600">
+                    <div className="flex items-center gap-2 text-warning">
                       <FileText className="w-5 h-5" />
                       <h3 className="font-display font-semibold">PDFs de Apoio</h3>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         ({filteredResults.pdfs.length})
                       </span>
                     </div>
@@ -145,10 +145,10 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
             </div>
           ) : (
             <div className="text-center py-12 animate-fade-in">
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 Nenhum resultado encontrado para "{query}"
               </p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="text-sm text-muted-foreground/70 mt-2">
                 Tente buscar por: encontro, identidade, célula, multiplicação
               </p>
             </div>
@@ -159,13 +159,13 @@ export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
       {/* Popular Tags */}
       {!showResults && (
         <div className="mt-8 text-center animate-fade-in">
-          <p className="text-sm text-gray-500 mb-4">Buscas populares:</p>
+          <p className="text-sm text-muted-foreground mb-4">Buscas populares:</p>
           <div className="flex flex-wrap justify-center gap-2">
             {['Primeiro Encontro', 'Identidade', 'Célula', 'Restauração', 'Propósito', 'Multiplicação'].map((tag) => (
               <button
                 key={tag}
                 onClick={() => setQuery(tag)}
-                className="px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-full text-sm font-medium bg-card border border-border text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all cursor-pointer"
               >
                 {tag}
               </button>
@@ -190,9 +190,9 @@ function ResourceCard({ resource, onSelect }: ResourceCardProps) {
   };
   
   const getIconColors = () => {
-    if (resource.source === 'lesson') return { bg: 'bg-amber-100', text: 'text-amber-600' };
-    if (resource.type === 'video') return { bg: 'bg-blue-100', text: 'text-blue-600' };
-    return { bg: 'bg-orange-100', text: 'text-orange-600' };
+    if (resource.source === 'lesson') return { bg: 'bg-primary/10', text: 'text-primary' };
+    if (resource.type === 'video') return { bg: 'bg-accent/10', text: 'text-accent' };
+    return { bg: 'bg-warning/10', text: 'text-warning' };
   };
   
   const Icon = getIcon();
@@ -201,7 +201,7 @@ function ResourceCard({ resource, onSelect }: ResourceCardProps) {
   return (
     <button
       onClick={() => onSelect(resource)}
-      className="w-full group bg-white rounded-xl p-4 text-left border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200"
+      className="w-full group bg-card rounded-xl p-4 text-left border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200"
     >
       <div className="flex items-start gap-3">
         <div className={cn(
@@ -211,30 +211,30 @@ function ResourceCard({ resource, onSelect }: ResourceCardProps) {
           <Icon className={cn("w-5 h-5", colors.text)} />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-gray-900 group-hover:text-amber-600 transition-colors line-clamp-1">
+          <h4 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
             {resource.titulo}
           </h4>
           {resource.courseName && (
-            <p className="text-xs text-amber-600 font-medium mt-0.5">
+            <p className="text-xs text-primary font-medium mt-0.5">
               {resource.courseName}
             </p>
           )}
           {resource.descricao && (
-            <p className="text-sm text-gray-500 line-clamp-2 mt-1">
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
               {resource.descricao}
             </p>
           )}
           {resource.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {resource.tags.slice(0, 3).map((tag) => (
-                <span key={tag} className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                <span key={tag} className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
                   {tag}
                 </span>
               ))}
             </div>
           )}
         </div>
-        <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-amber-500 group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
       </div>
     </button>
   );
