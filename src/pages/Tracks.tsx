@@ -81,7 +81,7 @@ export default function Tracks() {
     : tracks.filter(t => t.categoria === selectedCategory);
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex w-full bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
       <Sidebar onLogout={handleLogout} />
       
       <main className="flex-1 min-w-0 pt-16 lg:pt-0">
@@ -89,14 +89,14 @@ export default function Tracks() {
           {/* Header */}
           <section className="animate-fade-in">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+                <BookOpen className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
+              <h1 className="text-2xl lg:text-3xl font-display font-bold text-gray-900">
                 Trilhas de Aprendizado
               </h1>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-gray-500">
               Explore nossas trilhas e avance em sua jornada de discipulado
             </p>
           </section>
@@ -109,7 +109,10 @@ export default function Tracks() {
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(category)}
-                className="transition-all"
+                className={selectedCategory === category 
+                  ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }
               >
                 {category}
               </Button>
@@ -120,10 +123,10 @@ export default function Tracks() {
           {loading && (
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="card-premium p-4 space-y-3">
-                  <Skeleton className="h-40 w-full rounded-lg" />
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+                  <Skeleton className="h-40 w-full rounded-xl bg-gray-100" />
+                  <Skeleton className="h-5 w-3/4 bg-gray-100" />
+                  <Skeleton className="h-4 w-full bg-gray-100" />
                 </div>
               ))}
             </section>
@@ -153,7 +156,7 @@ export default function Tracks() {
 
           {!loading && filteredTracks.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
+              <p className="text-gray-500">
                 Nenhuma trilha encontrada nesta categoria.
               </p>
             </div>

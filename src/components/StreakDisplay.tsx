@@ -11,19 +11,19 @@ export function StreakDisplay({ streak, className }: StreakDisplayProps) {
   
   return (
     <div className={cn(
-      "flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300",
+      "flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all duration-300",
       isActive 
-        ? "bg-gradient-streak border-accent/30 shadow-glow-accent" 
+        ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60" 
         : "bg-card border-border",
       className
     )}>
       <div className={cn(
-        "relative flex items-center justify-center w-12 h-12 rounded-full",
-        isActive ? "bg-accent/20" : "bg-muted"
+        "relative flex items-center justify-center w-14 h-14 rounded-2xl",
+        isActive ? "bg-gradient-to-br from-amber-400 to-orange-500" : "bg-muted"
       )}>
         <Flame className={cn(
-          "w-6 h-6 transition-colors",
-          isActive ? "text-accent" : "text-muted-foreground"
+          "w-7 h-7 transition-colors",
+          isActive ? "text-white" : "text-muted-foreground"
         )} />
         {isActive && (
           <span className="absolute -top-1 -right-1 text-lg animate-bounce">🔥</span>
@@ -31,15 +31,12 @@ export function StreakDisplay({ streak, className }: StreakDisplayProps) {
       </div>
       <div>
         <p className={cn(
-          "text-2xl font-display font-bold",
-          isActive ? "text-accent-foreground" : "text-foreground"
+          "text-3xl font-display font-bold",
+          isActive ? "text-amber-700" : "text-foreground"
         )}>
           {streak} dias
         </p>
-        <p className={cn(
-          "text-sm",
-          isActive ? "text-accent-foreground/80" : "text-muted-foreground"
-        )}>
+        <p className="text-sm text-muted-foreground">
           Streak de Leitura
         </p>
       </div>
@@ -59,9 +56,15 @@ export function HealthRadial({ percentage, label, className }: HealthRadialProps
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
   const getColor = () => {
-    if (percentage >= 80) return "stroke-success";
-    if (percentage >= 50) return "stroke-accent";
-    return "stroke-destructive";
+    if (percentage >= 80) return "stroke-emerald-500";
+    if (percentage >= 50) return "stroke-amber-500";
+    return "stroke-red-500";
+  };
+
+  const getTextColor = () => {
+    if (percentage >= 80) return "text-emerald-600";
+    if (percentage >= 50) return "text-amber-600";
+    return "text-red-600";
   };
 
   return (
@@ -74,7 +77,7 @@ export function HealthRadial({ percentage, label, className }: HealthRadialProps
             cy="50"
             r={radius}
             fill="none"
-            className="stroke-muted"
+            className="stroke-gray-100"
             strokeWidth="8"
           />
           {/* Progress circle */}
@@ -91,7 +94,7 @@ export function HealthRadial({ percentage, label, className }: HealthRadialProps
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-display font-bold text-foreground">
+          <span className={cn("text-2xl font-display font-bold", getTextColor())}>
             {percentage}%
           </span>
         </div>
@@ -113,7 +116,7 @@ export function DailyHabits({ habits, onToggle }: DailyHabitsProps) {
   };
 
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-col sm:flex-row gap-2">
       {habits.map((habit) => {
         const Icon = icons[habit.icon];
         return (
@@ -121,15 +124,15 @@ export function DailyHabits({ habits, onToggle }: DailyHabitsProps) {
             key={habit.id}
             onClick={() => onToggle(habit.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200",
+              "flex items-center gap-2 px-4 py-3 rounded-xl border transition-all duration-200",
               habit.completed
-                ? "bg-success/20 border-success/30 text-success"
-                : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                : "bg-white border-gray-200 text-gray-500 hover:border-amber-300 hover:text-amber-600"
             )}
           >
             <Icon className="w-4 h-4" />
             <span className="text-sm font-medium">{habit.name}</span>
-            {habit.completed && <span className="text-xs">✓</span>}
+            {habit.completed && <span className="text-emerald-500">✓</span>}
           </button>
         );
       })}

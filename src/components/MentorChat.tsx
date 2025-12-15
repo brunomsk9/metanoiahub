@@ -19,7 +19,9 @@ export function MentorChatButton() {
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fab",
+          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center",
+          "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg",
+          "hover:scale-110 hover:shadow-xl transition-all duration-300",
           isOpen && "scale-0 opacity-0"
         )}
         aria-label="Abrir Mentor IA"
@@ -78,28 +80,28 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] animate-scale-in">
-      <div className="card-premium overflow-hidden shadow-premium">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-primary">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500 to-orange-500">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-primary-foreground">Mentor IA</h3>
-              <p className="text-xs text-primary-foreground/70">Sempre disponível para ajudar</p>
+              <h3 className="font-display font-semibold text-white">Mentor IA</h3>
+              <p className="text-xs text-white/80">Sempre disponível para ajudar</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <X className="w-5 h-5 text-primary-foreground" />
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="h-[350px] overflow-y-auto p-4 space-y-4 scrollbar-thin">
+        <div className="h-[350px] overflow-y-auto p-4 space-y-4 bg-gray-50">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -110,36 +112,40 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
             >
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                message.role === 'user' ? "bg-primary" : "bg-secondary"
+                message.role === 'user' 
+                  ? "bg-gradient-to-br from-amber-500 to-orange-500" 
+                  : "bg-gray-200"
               )}>
                 {message.role === 'user' ? (
-                  <User className="w-4 h-4 text-primary-foreground" />
+                  <User className="w-4 h-4 text-white" />
                 ) : (
-                  <Bot className="w-4 h-4 text-foreground" />
+                  <Bot className="w-4 h-4 text-gray-600" />
                 )}
               </div>
               <div className={cn(
-                "chat-bubble",
-                message.role === 'user' ? "chat-bubble-user" : "chat-bubble-ai"
+                "max-w-[80%] p-3 rounded-2xl text-sm",
+                message.role === 'user' 
+                  ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-br-md" 
+                  : "bg-white border border-gray-100 text-gray-700 rounded-bl-md shadow-sm"
               )}>
-                <p className="text-sm">{message.content}</p>
+                <p>{message.content}</p>
               </div>
             </div>
           ))}
           {isLoading && (
             <div className="flex gap-3 animate-slide-up">
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                <Bot className="w-4 h-4 text-foreground" />
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <Bot className="w-4 h-4 text-gray-600" />
               </div>
-              <div className="chat-bubble chat-bubble-ai">
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-md shadow-sm">
+                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
               </div>
             </div>
           )}
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 bg-white border-t border-gray-100">
           <form 
             onSubmit={(e) => { e.preventDefault(); handleSend(); }}
             className="flex gap-2"
@@ -149,13 +155,14 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 h-10 px-4 rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              className="flex-1 h-10 px-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
               disabled={isLoading}
             />
             <Button 
               type="submit" 
               size="icon" 
               disabled={!input.trim() || isLoading}
+              className="bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
             >
               <Send className="w-4 h-4" />
             </Button>
