@@ -102,7 +102,7 @@ export default function Profile() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
       <Sidebar onLogout={handleLogout} userName={profile.nome} />
       
-      <main className="pt-14 pb-20 lg:pt-16 lg:pb-8">
+      <main className="pt-14 lg:pt-16">
         <div className="p-4 lg:p-8 space-y-6 max-w-4xl mx-auto">
           {/* Profile Header */}
           <section className="card-premium p-6 animate-fade-in">
