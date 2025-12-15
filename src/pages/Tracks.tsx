@@ -81,10 +81,10 @@ export default function Tracks() {
     : tracks.filter(t => t.categoria === selectedCategory);
 
   return (
-    <div className="min-h-screen flex w-full bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
       <Sidebar onLogout={handleLogout} />
       
-      <main className="flex-1 min-w-0 pt-16 lg:pt-0">
+      <main className="pt-14 pb-20 lg:pt-16 lg:pb-8">
         <div className="p-4 lg:p-8 space-y-6 max-w-7xl mx-auto">
           {/* Header */}
           <section className="animate-fade-in">

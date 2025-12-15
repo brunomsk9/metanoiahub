@@ -186,7 +186,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-white/95 backdrop-blur-md border-t border-gray-100 safe-area-pb">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-white border-t border-gray-200 lg:hidden">
         <div className="h-full flex items-center justify-around px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -208,10 +208,6 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
           })}
         </div>
       </nav>
-
-      {/* Spacers */}
-      <div className="h-16 lg:h-16" /> {/* Top spacer */}
-      <div className="h-16 lg:hidden" /> {/* Bottom spacer for mobile */}
     </>
   );
 }
