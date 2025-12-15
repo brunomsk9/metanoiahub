@@ -69,7 +69,7 @@ export default function SOS() {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex w-full bg-gradient-to-br from-amber-50/50 via-white to-orange-50/50">
       <Sidebar onLogout={handleLogout} />
       
       <main className="flex-1 min-w-0 pt-16 lg:pt-0">
@@ -77,13 +77,13 @@ export default function SOS() {
           {/* Hero Section */}
           <section className="flex-1 flex flex-col items-center justify-center p-4 lg:p-8">
             <div className="text-center mb-8 animate-fade-in">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-accent shadow-glow-accent mb-4">
-                <LifeBuoy className="w-8 h-8 text-accent-foreground" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 shadow-lg mb-4">
+                <LifeBuoy className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">
+              <h1 className="text-3xl lg:text-4xl font-display font-bold text-gray-900 mb-2">
                 S.O.S. Discipulador
               </h1>
-              <p className="text-lg text-muted-foreground max-w-md mx-auto">
+              <p className="text-lg text-gray-500 max-w-md mx-auto">
                 Encontre recursos de apoio para situações específicas do discipulado
               </p>
             </div>
@@ -98,23 +98,23 @@ export default function SOS() {
           </section>
 
           {/* Quick Access Categories */}
-          <section className="p-4 lg:p-8 border-t border-border">
-            <h2 className="text-lg font-display font-semibold text-foreground mb-4 text-center">
+          <section className="p-4 lg:p-8 border-t border-gray-100 bg-white/50">
+            <h2 className="text-lg font-display font-semibold text-gray-900 mb-4 text-center">
               Categorias de Apoio
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
               {[
-                { label: 'Crise Emocional', emoji: '💔', color: 'bg-destructive/10 border-destructive/30' },
-                { label: 'Dúvidas de Fé', emoji: '❓', color: 'bg-primary/10 border-primary/30' },
-                { label: 'Relacionamentos', emoji: '🤝', color: 'bg-success/10 border-success/30' },
-                { label: 'Vícios', emoji: '⛓️', color: 'bg-accent/10 border-accent/30' },
+                { label: 'Crise Emocional', emoji: '💔', color: 'bg-red-50 border-red-200 hover:bg-red-100' },
+                { label: 'Dúvidas de Fé', emoji: '❓', color: 'bg-amber-50 border-amber-200 hover:bg-amber-100' },
+                { label: 'Relacionamentos', emoji: '🤝', color: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
+                { label: 'Vícios', emoji: '⛓️', color: 'bg-purple-50 border-purple-200 hover:bg-purple-100' },
               ].map((category) => (
                 <button
                   key={category.label}
-                  className={`card-premium p-4 text-center transition-all hover:scale-105 ${category.color}`}
+                  className={`p-4 rounded-2xl border text-center transition-all hover:scale-105 ${category.color}`}
                 >
                   <span className="text-2xl mb-2 block">{category.emoji}</span>
-                  <span className="text-sm font-medium text-foreground">{category.label}</span>
+                  <span className="text-sm font-medium text-gray-700">{category.label}</span>
                 </button>
               ))}
             </div>
