@@ -10,9 +10,11 @@ interface Resource {
   id: string;
   titulo: string;
   descricao: string | null;
-  type: 'video' | 'pdf';
+  type: 'video' | 'pdf' | 'aula';
   tags: string[];
   url: string;
+  source: 'resource' | 'lesson';
+  courseName?: string;
 }
 
 export default function SOS() {
@@ -21,38 +23,77 @@ export default function SOS() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchResources = async () => {
+    const fetchAllContent = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
         return;
       }
 
-      const { data, error } = await supabase
-        .from('resources')
-        .select('*')
-        .eq('categoria', 'sos');
+      // Fetch resources and lessons in parallel
+      const [resourcesRes, lessonsRes] = await Promise.all([
+        supabase
+          .from('resources')
+          .select('*')
+          .eq('categoria', 'sos'),
+        supabase
+          .from('lessons')
+          .select('*, courses(titulo)')
+          .order('ordem')
+      ]);
 
-      if (error) {
-        console.error('Error fetching resources:', error);
-        setLoading(false);
-        return;
+      const formattedResources: Resource[] = [];
+
+      // Add resources
+      if (resourcesRes.data) {
+        resourcesRes.data.forEach(r => {
+          formattedResources.push({
+            id: r.id,
+            titulo: r.titulo,
+            descricao: r.descricao,
+            type: r.video_url ? 'video' : 'pdf',
+            tags: r.tags || [],
+            url: r.video_url || r.url_pdf || '',
+            source: 'resource'
+          });
+        });
       }
 
-      const formattedResources: Resource[] = data?.map(r => ({
-        id: r.id,
-        titulo: r.titulo,
-        descricao: r.descricao,
-        type: r.video_url ? 'video' : 'pdf',
-        tags: r.tags || [],
-        url: r.video_url || r.url_pdf || '',
-      })) || [];
+      // Add lessons
+      if (lessonsRes.data) {
+        lessonsRes.data.forEach(l => {
+          // Extract keywords from title and content for better search
+          const tags: string[] = [];
+          const titleLower = l.titulo.toLowerCase();
+          
+          // Add type-based tags
+          if (l.tipo === 'video') tags.push('vídeo');
+          if (l.tipo === 'checklist_interativo') tags.push('checklist', 'prático');
+          
+          // Common topic keywords
+          const keywords = ['encontro', 'oração', 'identidade', 'maldição', 'restauração', 'propósito', 'célula', 'multiplicação', 'discipulado'];
+          keywords.forEach(kw => {
+            if (titleLower.includes(kw)) tags.push(kw);
+          });
+
+          formattedResources.push({
+            id: l.id,
+            titulo: l.titulo,
+            descricao: l.texto_apoio ? l.texto_apoio.replace(/<[^>]*>/g, '').substring(0, 150) + '...' : null,
+            type: 'aula',
+            tags,
+            url: '',
+            source: 'lesson',
+            courseName: (l.courses as any)?.titulo || undefined
+          });
+        });
+      }
 
       setResources(formattedResources);
       setLoading(false);
     };
 
-    fetchResources();
+    fetchAllContent();
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -61,7 +102,9 @@ export default function SOS() {
   };
 
   const handleResourceSelect = (resource: Resource) => {
-    if (resource.type === 'video') {
+    if (resource.source === 'lesson') {
+      navigate(`/lesson/${resource.id}`);
+    } else if (resource.type === 'video') {
       navigate(`/aula/${resource.id}`);
     } else if (resource.url) {
       window.open(resource.url, '_blank');
@@ -84,7 +127,7 @@ export default function SOS() {
                 S.O.S. Discipulador
               </h1>
               <p className="text-lg text-gray-500 max-w-md mx-auto">
-                Encontre recursos de apoio para situações específicas do discipulado
+                Encontre recursos e aulas para situações específicas do discipulado
               </p>
             </div>
 
