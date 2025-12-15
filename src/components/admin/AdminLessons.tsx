@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface Lesson {
@@ -172,6 +172,38 @@ export function AdminLessons() {
 
   const getFileName = (url: string) => {
     return url.split('/').pop() || url;
+  };
+
+  const getFileIcon = (url: string) => {
+    const ext = url.split('.').pop()?.toLowerCase() || '';
+    
+    if (['pdf'].includes(ext)) {
+      return <FileText className="h-4 w-4 text-red-500 flex-shrink-0" />;
+    }
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) {
+      return <FileImage className="h-4 w-4 text-blue-500 flex-shrink-0" />;
+    }
+    if (['doc', 'docx'].includes(ext)) {
+      return <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />;
+    }
+    if (['xls', 'xlsx'].includes(ext)) {
+      return <FileSpreadsheet className="h-4 w-4 text-green-600 flex-shrink-0" />;
+    }
+    if (['ppt', 'pptx'].includes(ext)) {
+      return <Presentation className="h-4 w-4 text-orange-500 flex-shrink-0" />;
+    }
+    return <File className="h-4 w-4 text-gray-500 flex-shrink-0" />;
+  };
+
+  const getFileTypeLabel = (url: string) => {
+    const ext = url.split('.').pop()?.toLowerCase() || '';
+    
+    if (['pdf'].includes(ext)) return 'PDF';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return 'Imagem';
+    if (['doc', 'docx'].includes(ext)) return 'Word';
+    if (['xls', 'xlsx'].includes(ext)) return 'Excel';
+    if (['ppt', 'pptx'].includes(ext)) return 'PowerPoint';
+    return 'Arquivo';
   };
 
   const handleSave = async () => {
@@ -346,7 +378,10 @@ export function AdminLessons() {
                   <div className="space-y-2 mb-3">
                     {form.materiais.map((url, index) => (
                       <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
-                        <Paperclip className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                        {getFileIcon(url)}
+                        <span className="text-xs px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded">
+                          {getFileTypeLabel(url)}
+                        </span>
                         <a
                           href={url}
                           target="_blank"
