@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { HealthRadial, DailyHabits } from "@/components/StreakDisplay";
-import { TrackCard } from "@/components/ContinueWatching";
+import { DailyHabits } from "@/components/StreakDisplay";
 import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, ArrowRight, Flame } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BookOpen, ArrowRight, Flame, Play, ChevronRight } from "lucide-react";
 
 interface Track {
   id: string;
@@ -19,9 +17,14 @@ interface Track {
   coursesCount: number;
 }
 
+// Versículo do dia (pode ser dinâmico futuramente)
+const verseOfDay = {
+  text: "Ensina-me, Senhor, o teu caminho, e andarei na tua verdade; une o meu coração ao temor do teu nome.",
+  reference: "Salmos 86:11"
+};
+
 export default function Dashboard() {
   const [streak, setStreak] = useState(0);
-  const [healthScore, setHealthScore] = useState(0);
   const [userName, setUserName] = useState<string>('');
   const [xpPoints, setXpPoints] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -51,9 +54,6 @@ export default function Dashboard() {
         setUserName(profile.nome || session.user.email?.split('@')[0] || 'Discípulo');
         setStreak(profile.current_streak || 0);
         setXpPoints(profile.xp_points || 0);
-        const healthFromXP = Math.min(50, (profile.xp_points || 0) / 10);
-        const healthFromStreak = Math.min(50, (profile.current_streak || 0) * 5);
-        setHealthScore(Math.round(healthFromXP + healthFromStreak));
       }
 
       const today = new Date().toISOString().split('T')[0];
@@ -74,7 +74,7 @@ export default function Dashboard() {
         .from('tracks')
         .select(`id, titulo, descricao, cover_image, courses(count)`)
         .order('ordem')
-        .limit(3);
+        .limit(4);
 
       if (tracksData) {
         const formattedTracks = tracksData.map(track => ({
@@ -122,7 +122,7 @@ export default function Dashboard() {
         ));
         toast({
           title: "Hábito registrado!",
-          description: `${habit.name} concluído para hoje.`,
+          description: `${habit.name} concluído.`,
         });
       }
     } else {
@@ -141,116 +141,156 @@ export default function Dashboard() {
     }
   };
 
-  const handleTrackSelect = (id: string) => {
-    navigate(`/trilha/${id}`);
-  };
+  const completedHabits = habits.filter(h => h.completed).length;
+  const totalHabits = habits.length;
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} userName={userName} />
       
       <PageTransition>
-        <main className="pt-16 lg:pt-20 pb-8">
-          <div className="px-4 lg:px-8 max-w-6xl mx-auto space-y-8">
-            {/* Minimal Header */}
-            <header className="pt-4">
-              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground tracking-tight">
-                Olá, {userName}
+        <main className="pt-16 lg:pt-20 pb-24">
+          <div className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6">
+            
+            {/* Greeting */}
+            <header className="pt-2">
+              <p className="text-muted-foreground text-sm">Olá,</p>
+              <h1 className="text-2xl font-display font-bold text-foreground">
+                {userName}
               </h1>
-              <p className="text-muted-foreground mt-1">Continue sua jornada de transformação</p>
             </header>
 
-            {/* Stats Row - Minimal */}
-            <section className="flex flex-wrap gap-6 items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Flame className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{streak}</p>
-                  <p className="text-xs text-muted-foreground">dias seguidos</p>
-                </div>
-              </div>
+            {/* Verse of the Day Card */}
+            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
               
-              <div className="h-8 w-px bg-border hidden sm:block" />
-              
-              <div>
-                <p className="text-2xl font-bold text-foreground">{xpPoints} <span className="text-sm font-normal text-muted-foreground">XP</span></p>
-              </div>
-              
-              <div className="h-8 w-px bg-border hidden sm:block" />
-              
-              <HealthRadial percentage={healthScore} label="Saúde" className="scale-75" />
+              <p className="text-xs uppercase tracking-wider opacity-80 mb-3">Versículo do Dia</p>
+              <p className="text-lg font-serif italic leading-relaxed mb-4 relative z-10">
+                "{verseOfDay.text}"
+              </p>
+              <p className="text-sm font-medium opacity-90">{verseOfDay.reference}</p>
             </section>
 
-            {/* Daily Habits - Compact */}
-            <section className="bg-card border border-border rounded-2xl p-5">
-              <h2 className="text-sm font-medium text-muted-foreground mb-4">Hábitos de hoje</h2>
+            {/* Streak & Progress */}
+            <section className="bg-card rounded-2xl border border-border p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center">
+                    <Flame className="w-6 h-6 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{streak}</p>
+                    <p className="text-xs text-muted-foreground">dias seguidos</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-foreground">{xpPoints}</p>
+                  <p className="text-xs text-muted-foreground">XP total</p>
+                </div>
+              </div>
+              
+              {/* Progress bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Hábitos de hoje</span>
+                  <span className="text-foreground font-medium">{completedHabits}/{totalHabits}</span>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                    style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Daily Habits */}
+            <section className="bg-card rounded-2xl border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-4">Seu dia</h2>
               <DailyHabits habits={habits} onToggle={handleHabitToggle} />
             </section>
 
-            {/* Quick Actions - Minimal */}
+            {/* Continue Learning - Netflix style */}
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-display font-semibold text-foreground">Continuar aprendendo</h2>
+                <button 
+                  onClick={() => navigate('/trilhas')}
+                  className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
+                >
+                  Ver todas
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              
+              {loading ? (
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="flex-shrink-0 w-40 h-52 rounded-2xl" />
+                  ))}
+                </div>
+              ) : tracks.length > 0 ? (
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {tracks.map((track) => (
+                    <button
+                      key={track.id}
+                      onClick={() => navigate(`/trilha/${track.id}`)}
+                      className="flex-shrink-0 w-40 group"
+                    >
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mb-2">
+                        <img 
+                          src={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&auto=format&fit=crop'} 
+                          alt={track.titulo}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center mb-2 group-hover:bg-white transition-colors">
+                            <Play className="w-4 h-4 text-primary fill-primary ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm font-medium text-foreground text-left line-clamp-2">{track.titulo}</p>
+                      <p className="text-xs text-muted-foreground text-left">{track.coursesCount} cursos</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-card rounded-2xl border border-border p-8 text-center">
+                  <BookOpen className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">Nenhuma trilha disponível</p>
+                </div>
+              )}
+            </section>
+
+            {/* Quick Actions */}
             <section className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => navigate('/trilhas')}
-                className="text-left p-5 rounded-2xl bg-primary/5 hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all group"
+                className="bg-card rounded-2xl border border-border p-4 text-left hover:border-primary/30 transition-colors group"
               >
-                <BookOpen className="w-5 h-5 text-primary mb-3" />
-                <p className="font-medium text-foreground">Trilhas</p>
-                <p className="text-xs text-muted-foreground">Aprendizado estruturado</p>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                </div>
+                <p className="font-medium text-foreground text-sm">Trilhas</p>
+                <p className="text-xs text-muted-foreground">Aprendizado guiado</p>
               </button>
               
               <button 
                 onClick={() => navigate('/sos')}
-                className="text-left p-5 rounded-2xl bg-accent/5 hover:bg-accent/10 border border-transparent hover:border-accent/20 transition-all group"
+                className="bg-card rounded-2xl border border-border p-4 text-left hover:border-accent/30 transition-colors group"
               >
-                <svg className="w-5 h-5 text-accent mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <p className="font-medium text-foreground">S.O.S.</p>
-                <p className="text-xs text-muted-foreground">Ajuda rápida</p>
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mb-3 group-hover:bg-accent/20 transition-colors">
+                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <p className="font-medium text-foreground text-sm">S.O.S.</p>
+                <p className="text-xs text-muted-foreground">Ajuda pastoral</p>
               </button>
             </section>
 
-            {/* Tracks - Clean Grid */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-display font-semibold text-foreground">Trilhas</h2>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/trilhas')} className="text-primary hover:text-primary/80">
-                  Ver todas
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-              
-              {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl overflow-hidden">
-                      <Skeleton className="h-44 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : tracks.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tracks.map((track) => (
-                    <TrackCard
-                      key={track.id}
-                      id={track.id}
-                      title={track.titulo}
-                      description={track.descricao || ''}
-                      thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
-                      coursesCount={track.coursesCount}
-                      onClick={handleTrackSelect}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <BookOpen className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-muted-foreground">Nenhuma trilha disponível ainda</p>
-                </div>
-              )}
-            </section>
           </div>
         </main>
       </PageTransition>
