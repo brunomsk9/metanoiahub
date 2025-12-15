@@ -6,6 +6,7 @@ import { AdminTracks } from '@/components/admin/AdminTracks';
 import { AdminCourses } from '@/components/admin/AdminCourses';
 import { AdminLessons } from '@/components/admin/AdminLessons';
 import { AdminResources } from '@/components/admin/AdminResources';
+import { PageTransition } from '@/components/PageTransition';
 import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
@@ -74,6 +75,7 @@ export default function Admin() {
   }
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-40">
@@ -157,5 +159,6 @@ export default function Admin() {
         </Tabs>
       </main>
     </div>
+    </PageTransition>
   );
 }

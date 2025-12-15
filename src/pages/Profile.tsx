@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { MentorChatButton } from "@/components/MentorChat";
-import { StreakDisplay, HealthRadial } from "@/components/StreakDisplay";
+import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Trophy, Calendar, Edit2, Save, Loader2 } from "lucide-react";
+import { User, Edit2, Save, Loader2, Flame, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Profile() {
@@ -32,7 +32,7 @@ export default function Profile() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
@@ -79,7 +79,7 @@ export default function Profile() {
       setProfile(prev => ({ ...prev, nome: editedNome }));
       setIsEditing(false);
       toast({
-        title: "Perfil atualizado!",
+        title: "Perfil atualizado",
         description: "Suas alterações foram salvas.",
       });
     }
@@ -93,117 +93,98 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} userName={profile.nome} />
       
-      <main className="pt-14 lg:pt-16">
-        <div className="p-4 lg:p-8 space-y-6 max-w-4xl mx-auto">
-          {/* Profile Header */}
-          <section className="card-premium p-6 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              {/* Avatar */}
-              <div className="w-24 h-24 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                <User className="w-12 h-12 text-primary-foreground" />
+      <PageTransition>
+        <main className="pt-16 lg:pt-20 pb-8">
+          <div className="px-4 lg:px-8 max-w-2xl mx-auto space-y-8">
+            {/* Profile Header - Minimal */}
+            <header className="pt-4 flex items-center gap-5">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-8 h-8 text-primary" />
               </div>
-
-              {/* Info */}
-              <div className="flex-1 text-center sm:text-left">
+              <div className="flex-1">
                 {isEditing ? (
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={editedNome}
                       onChange={(e) => setEditedNome(e.target.value)}
-                      className="text-2xl font-display font-bold bg-secondary border border-border rounded-lg px-3 py-1 text-foreground focus:outline-none focus:border-primary"
+                      className="text-xl font-display font-bold bg-secondary border border-border rounded-lg px-3 py-1 text-foreground focus:outline-none focus:border-primary"
                       autoFocus
                     />
-                    <Button size="icon" onClick={handleSave} disabled={isSaving}>
+                    <Button size="icon" variant="ghost" onClick={handleSave} disabled={isSaving}>
                       {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 justify-center sm:justify-start">
-                    <h1 className="text-2xl font-display font-bold text-foreground">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-display font-bold text-foreground">
                       {profile.nome || 'Discípulo'}
                     </h1>
-                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
-                      <Edit2 className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-8 w-8">
+                      <Edit2 className="w-3 h-3" />
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center gap-2 justify-center sm:justify-start text-muted-foreground mt-1">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-sm">{profile.email}</span>
-                </div>
-                <div className="flex items-center gap-2 justify-center sm:justify-start text-muted-foreground mt-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm">Membro desde {memberSince}</span>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <p className="text-xs text-muted-foreground">Membro desde {memberSince}</p>
+              </div>
+            </header>
+
+            {/* Stats - Minimal row */}
+            <section className="flex gap-6 py-4 border-y border-border">
+              <div className="flex items-center gap-3">
+                <Flame className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-xl font-bold text-foreground">{profile.current_streak}</p>
+                  <p className="text-xs text-muted-foreground">Streak</p>
                 </div>
               </div>
-            </div>
-          </section>
-
-          {/* Stats */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            <StreakDisplay streak={profile.current_streak} />
-            
-            <div className="card-premium p-6 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-accent flex items-center justify-center">
-                <Trophy className="w-7 h-7 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-display font-bold text-foreground">
-                  {profile.xp_points.toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">Pontos XP</p>
-              </div>
-            </div>
-
-            <div className="card-premium p-4 flex items-center justify-center">
-              <HealthRadial percentage={75} label="Saúde Espiritual" />
-            </div>
-          </section>
-
-          {/* Achievements */}
-          <section className="card-premium p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
-            <h2 className="text-lg font-display font-semibold text-foreground mb-4">
-              Conquistas
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { emoji: '🎯', label: 'Primeira Aula', unlocked: true },
-                { emoji: '🔥', label: '7 Dias de Streak', unlocked: profile.current_streak >= 7 },
-                { emoji: '📚', label: 'Trilha Completa', unlocked: false },
-                { emoji: '⭐', label: '1000 XP', unlocked: profile.xp_points >= 1000 },
-              ].map((achievement) => (
-                <div
-                  key={achievement.label}
-                  className={cn(
-                    "p-4 rounded-xl text-center transition-all",
-                    achievement.unlocked
-                      ? "bg-gradient-primary shadow-glow"
-                      : "bg-muted opacity-50"
-                  )}
-                >
-                  <span className="text-3xl mb-2 block">{achievement.emoji}</span>
-                  <span className={cn(
-                    "text-xs font-medium",
-                    achievement.unlocked ? "text-primary-foreground" : "text-muted-foreground"
-                  )}>
-                    {achievement.label}
-                  </span>
+              <div className="flex items-center gap-3">
+                <Trophy className="w-5 h-5 text-accent" />
+                <div>
+                  <p className="text-xl font-bold text-foreground">{profile.xp_points.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">XP</p>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </main>
+              </div>
+            </section>
+
+            {/* Achievements - Minimal grid */}
+            <section>
+              <h2 className="text-sm font-medium text-muted-foreground mb-4">Conquistas</h2>
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { emoji: '🎯', label: 'Primeira Aula', unlocked: true },
+                  { emoji: '🔥', label: '7 Dias', unlocked: profile.current_streak >= 7 },
+                  { emoji: '📚', label: 'Trilha', unlocked: false },
+                  { emoji: '⭐', label: '1000 XP', unlocked: profile.xp_points >= 1000 },
+                ].map((achievement) => (
+                  <div
+                    key={achievement.label}
+                    className={cn(
+                      "aspect-square rounded-2xl flex flex-col items-center justify-center transition-all",
+                      achievement.unlocked
+                        ? "bg-primary/10 border border-primary/20"
+                        : "bg-muted/50 opacity-40"
+                    )}
+                  >
+                    <span className="text-2xl mb-1">{achievement.emoji}</span>
+                    <span className="text-[10px] text-muted-foreground text-center px-1">{achievement.label}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </main>
+      </PageTransition>
 
       <MentorChatButton />
     </div>

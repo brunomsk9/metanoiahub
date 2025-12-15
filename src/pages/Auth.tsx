@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
@@ -59,6 +60,7 @@ export default function Auth() {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       {/* Subtle pattern */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
@@ -167,5 +169,6 @@ export default function Auth() {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 }

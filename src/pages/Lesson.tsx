@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronRight, BookOpen } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
+import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ export default function Lesson() {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
@@ -141,5 +143,6 @@ export default function Lesson() {
 
       <MentorChatButton />
     </div>
+    </PageTransition>
   );
 }
