@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchSOS } from "@/components/SearchSOS";
 import { Sidebar } from "@/components/Sidebar";
@@ -6,71 +6,64 @@ import { MentorChatButton } from "@/components/MentorChat";
 import { supabase } from "@/integrations/supabase/client";
 import { LifeBuoy } from "lucide-react";
 
-// Mock resources data
-const mockResources = [
-  {
-    id: '1',
-    titulo: 'Como lidar com o desânimo espiritual',
-    descricao: 'Estratégias práticas baseadas na Bíblia para superar momentos de desânimo.',
-    type: 'video' as const,
-    tags: ['desânimo', 'ânimo', 'motivação', 'esperança'],
-    url: '/video/1',
-  },
-  {
-    id: '2',
-    titulo: 'Guia de acompanhamento em momentos de luto',
-    descricao: 'PDF com orientações para discipuladores sobre como apoiar pessoas em luto.',
-    type: 'pdf' as const,
-    tags: ['luto', 'perda', 'consolação', 'apoio'],
-    url: '/resource/2',
-  },
-  {
-    id: '3',
-    titulo: 'Ansiedade: Uma perspectiva bíblica',
-    descricao: 'Entenda como a Bíblia nos orienta a lidar com a ansiedade.',
-    type: 'video' as const,
-    tags: ['ansiedade', 'paz', 'confiança', 'medo'],
-    url: '/video/3',
-  },
-  {
-    id: '4',
-    titulo: 'Roteiro de conversa sobre pecado',
-    descricao: 'Como abordar questões de pecado de forma amorosa e bíblica.',
-    type: 'pdf' as const,
-    tags: ['pecado', 'arrependimento', 'graça', 'perdão'],
-    url: '/resource/4',
-  },
-  {
-    id: '5',
-    titulo: 'Restaurando a esperança',
-    descricao: 'Série sobre como ajudar pessoas que perderam a esperança.',
-    type: 'video' as const,
-    tags: ['desânimo', 'esperança', 'fé', 'restauração'],
-    url: '/video/5',
-  },
-  {
-    id: '6',
-    titulo: 'O poder do perdão',
-    descricao: 'Material de apoio sobre o processo de perdão e reconciliação.',
-    type: 'pdf' as const,
-    tags: ['perdão', 'reconciliação', 'mágoa', 'cura'],
-    url: '/resource/6',
-  },
-];
+interface Resource {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  type: 'video' | 'pdf';
+  tags: string[];
+  url: string;
+}
 
 export default function SOS() {
   const navigate = useNavigate();
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('resources')
+        .select('*')
+        .eq('categoria', 'sos');
+
+      if (error) {
+        console.error('Error fetching resources:', error);
+        setLoading(false);
+        return;
+      }
+
+      const formattedResources: Resource[] = data?.map(r => ({
+        id: r.id,
+        titulo: r.titulo,
+        descricao: r.descricao,
+        type: r.video_url ? 'video' : 'pdf',
+        tags: r.tags || [],
+        url: r.video_url || r.url_pdf || '',
+      })) || [];
+
+      setResources(formattedResources);
+      setLoading(false);
+    };
+
+    fetchResources();
+  }, [navigate]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/auth');
   };
 
-  const handleResourceSelect = (resource: any) => {
+  const handleResourceSelect = (resource: Resource) => {
     if (resource.type === 'video') {
       navigate(`/aula/${resource.id}`);
-    } else {
-      // Open PDF in new tab
+    } else if (resource.url) {
       window.open(resource.url, '_blank');
     }
   };
@@ -97,8 +90,9 @@ export default function SOS() {
 
             <div className="w-full animate-slide-up" style={{ animationDelay: '100ms' }}>
               <SearchSOS 
-                resources={mockResources}
+                resources={resources}
                 onSelect={handleResourceSelect}
+                loading={loading}
               />
             </div>
           </section>

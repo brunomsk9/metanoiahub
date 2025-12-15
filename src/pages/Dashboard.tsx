@@ -6,72 +6,31 @@ import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock data for demonstration
-const mockContinueWatching = [
-  {
-    id: '1',
-    title: 'Como conduzir o primeiro encontro com seu discípulo',
-    thumbnail: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop',
-    trackTitle: 'Jornada Metanoia',
-    progress: 45,
-    duration: '12 min',
-  },
-  {
-    id: '2',
-    title: 'Estabelecendo uma rotina de oração',
-    thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop',
-    trackTitle: 'Fundamentos Espirituais',
-    progress: 70,
-    duration: '8 min',
-  },
-  {
-    id: '3',
-    title: 'Escuta ativa no discipulado',
-    thumbnail: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop',
-    trackTitle: 'Comunicação Eficaz',
-    progress: 20,
-    duration: '15 min',
-  },
-];
-
-const mockTracks = [
-  {
-    id: '1',
-    title: 'Jornada Metanoia',
-    description: 'Uma transformação completa através do discipulado bíblico',
-    thumbnail: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop',
-    coursesCount: 12,
-  },
-  {
-    id: '2',
-    title: 'Fundamentos Espirituais',
-    description: 'Construa uma base sólida para sua vida espiritual',
-    thumbnail: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=800&auto=format&fit=crop',
-    coursesCount: 8,
-  },
-  {
-    id: '3',
-    title: 'Liderança Servidora',
-    description: 'Aprenda a liderar como Jesus liderou',
-    thumbnail: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop',
-    coursesCount: 10,
-  },
-];
+interface Track {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  cover_image: string | null;
+  coursesCount: number;
+}
 
 export default function Dashboard() {
-  const [streak, setStreak] = useState(7);
-  const [healthScore, setHealthScore] = useState(75);
+  const [streak, setStreak] = useState(0);
+  const [healthScore, setHealthScore] = useState(0);
   const [userName, setUserName] = useState<string>('');
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
   const [habits, setHabits] = useState([
-    { id: 'leitura', name: 'Leitura Bíblica', completed: true, icon: 'book' as const },
+    { id: 'leitura', name: 'Leitura Bíblica', completed: false, icon: 'book' as const },
     { id: 'oracao', name: 'Oração', completed: false, icon: 'heart' as const },
   ]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndFetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
@@ -88,10 +47,55 @@ export default function Dashboard() {
       if (profile) {
         setUserName(profile.nome || session.user.email?.split('@')[0] || 'Discípulo');
         setStreak(profile.current_streak || 0);
+        // Calculate health score based on XP and streak
+        const healthFromXP = Math.min(50, (profile.xp_points || 0) / 10);
+        const healthFromStreak = Math.min(50, (profile.current_streak || 0) * 5);
+        setHealthScore(Math.round(healthFromXP + healthFromStreak));
       }
+
+      // Check today's habits
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayHabits } = await supabase
+        .from('daily_habits')
+        .select('habit_type')
+        .eq('user_id', session.user.id)
+        .eq('completed_date', today);
+
+      if (todayHabits) {
+        setHabits(prev => prev.map(h => ({
+          ...h,
+          completed: todayHabits.some(th => th.habit_type === h.id)
+        })));
+      }
+
+      // Fetch tracks with course count
+      const { data: tracksData } = await supabase
+        .from('tracks')
+        .select(`
+          id,
+          titulo,
+          descricao,
+          cover_image,
+          courses(count)
+        `)
+        .order('ordem')
+        .limit(3);
+
+      if (tracksData) {
+        const formattedTracks = tracksData.map(track => ({
+          id: track.id,
+          titulo: track.titulo,
+          descricao: track.descricao,
+          cover_image: track.cover_image,
+          coursesCount: track.courses?.[0]?.count || 0,
+        }));
+        setTracks(formattedTracks);
+      }
+
+      setLoading(false);
     };
 
-    checkAuth();
+    checkAuthAndFetchData();
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -100,16 +104,47 @@ export default function Dashboard() {
   };
 
   const handleHabitToggle = async (id: string) => {
-    setHabits(prev => prev.map(h => 
-      h.id === id ? { ...h, completed: !h.completed } : h
-    ));
-    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
     const habit = habits.find(h => h.id === id);
-    if (!habit?.completed) {
-      toast({
-        title: "Hábito registrado! 🎉",
-        description: `${habit?.name} concluído para hoje.`,
-      });
+    if (!habit) return;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!habit.completed) {
+      // Add habit
+      const { error } = await supabase
+        .from('daily_habits')
+        .insert({
+          user_id: session.user.id,
+          habit_type: id,
+          completed_date: today,
+        });
+
+      if (!error) {
+        setHabits(prev => prev.map(h => 
+          h.id === id ? { ...h, completed: true } : h
+        ));
+        toast({
+          title: "Hábito registrado! 🎉",
+          description: `${habit.name} concluído para hoje.`,
+        });
+      }
+    } else {
+      // Remove habit
+      const { error } = await supabase
+        .from('daily_habits')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('habit_type', id)
+        .eq('completed_date', today);
+
+      if (!error) {
+        setHabits(prev => prev.map(h => 
+          h.id === id ? { ...h, completed: false } : h
+        ));
+      }
     }
   };
 
@@ -141,28 +176,37 @@ export default function Dashboard() {
             </div>
           </section>
 
-          {/* Continue Watching */}
-          <section className="animate-slide-up" style={{ animationDelay: '100ms' }}>
-            <ContinueWatching 
-              courses={mockContinueWatching} 
-              onSelect={handleCourseSelect}
-            />
-          </section>
-
           {/* Tracks */}
           <section className="space-y-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
             <h2 className="text-xl font-display font-semibold text-foreground">
               Trilhas Disponíveis
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockTracks.map((track) => (
-                <TrackCard
-                  key={track.id}
-                  {...track}
-                  onClick={handleTrackSelect}
-                />
-              ))}
-            </div>
+            
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="card-premium p-4 space-y-3">
+                    <Skeleton className="h-40 w-full rounded-lg" />
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tracks.map((track) => (
+                  <TrackCard
+                    key={track.id}
+                    id={track.id}
+                    title={track.titulo}
+                    description={track.descricao || ''}
+                    thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
+                    coursesCount={track.coursesCount}
+                    onClick={handleTrackSelect}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>

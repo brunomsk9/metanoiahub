@@ -4,76 +4,71 @@ import { Sidebar } from "@/components/Sidebar";
 import { MentorChatButton } from "@/components/MentorChat";
 import { TrackCard } from "@/components/ContinueWatching";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, Filter } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock tracks data
-const mockTracks = [
-  {
-    id: '1',
-    title: 'Jornada Metanoia',
-    description: 'Uma transformação completa através do discipulado bíblico. Aprenda os fundamentos e práticas essenciais.',
-    thumbnail: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop',
-    coursesCount: 12,
-    categoria: 'Fundamentos',
-  },
-  {
-    id: '2',
-    title: 'Fundamentos Espirituais',
-    description: 'Construa uma base sólida para sua vida espiritual através de práticas diárias.',
-    thumbnail: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=800&auto=format&fit=crop',
-    coursesCount: 8,
-    categoria: 'Fundamentos',
-  },
-  {
-    id: '3',
-    title: 'Liderança Servidora',
-    description: 'Aprenda a liderar como Jesus liderou - com humildade e propósito.',
-    thumbnail: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop',
-    coursesCount: 10,
-    categoria: 'Liderança',
-  },
-  {
-    id: '4',
-    title: 'Comunicação Eficaz',
-    description: 'Desenvolva habilidades de comunicação para um discipulado mais efetivo.',
-    thumbnail: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop',
-    coursesCount: 6,
-    categoria: 'Habilidades',
-  },
-  {
-    id: '5',
-    title: 'Aconselhamento Bíblico',
-    description: 'Ferramentas e técnicas para aconselhar baseado nas Escrituras.',
-    thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop',
-    coursesCount: 9,
-    categoria: 'Avançado',
-  },
-  {
-    id: '6',
-    title: 'Evangelismo Relacional',
-    description: 'Como compartilhar o evangelho de forma natural e autêntica.',
-    thumbnail: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop',
-    coursesCount: 7,
-    categoria: 'Evangelismo',
-  },
-];
-
-const categories = ['Todos', 'Fundamentos', 'Liderança', 'Habilidades', 'Avançado', 'Evangelismo'];
+interface Track {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  categoria: string;
+  cover_image: string | null;
+  coursesCount: number;
+}
 
 export default function Tracks() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('Todos');
-  const [tracks, setTracks] = useState(mockTracks);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [categories, setCategories] = useState<string[]>(['Todos']);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndFetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
+        return;
       }
+
+      // Fetch tracks with course count
+      const { data: tracksData, error } = await supabase
+        .from('tracks')
+        .select(`
+          id,
+          titulo,
+          descricao,
+          categoria,
+          cover_image,
+          courses(count)
+        `)
+        .order('ordem');
+
+      if (error) {
+        console.error('Error fetching tracks:', error);
+        setLoading(false);
+        return;
+      }
+
+      const formattedTracks = tracksData?.map(track => ({
+        id: track.id,
+        titulo: track.titulo,
+        descricao: track.descricao,
+        categoria: track.categoria,
+        cover_image: track.cover_image,
+        coursesCount: track.courses?.[0]?.count || 0,
+      })) || [];
+
+      setTracks(formattedTracks);
+
+      // Extract unique categories
+      const uniqueCategories = ['Todos', ...new Set(formattedTracks.map(t => t.categoria))];
+      setCategories(uniqueCategories);
+      setLoading(false);
     };
-    checkAuth();
+
+    checkAuthAndFetchData();
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -121,27 +116,42 @@ export default function Tracks() {
             ))}
           </section>
 
-          {/* Tracks Grid */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            {filteredTracks.map((track, index) => (
-              <div 
-                key={track.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <TrackCard
-                  id={track.id}
-                  title={track.title}
-                  description={track.description}
-                  thumbnail={track.thumbnail}
-                  coursesCount={track.coursesCount}
-                  onClick={(id) => navigate(`/trilha/${id}`)}
-                />
-              </div>
-            ))}
-          </section>
+          {/* Loading State */}
+          {loading && (
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="card-premium p-4 space-y-3">
+                  <Skeleton className="h-40 w-full rounded-lg" />
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ))}
+            </section>
+          )}
 
-          {filteredTracks.length === 0 && (
+          {/* Tracks Grid */}
+          {!loading && (
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
+              {filteredTracks.map((track, index) => (
+                <div 
+                  key={track.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <TrackCard
+                    id={track.id}
+                    title={track.titulo}
+                    description={track.descricao || ''}
+                    thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
+                    coursesCount={track.coursesCount}
+                    onClick={(id) => navigate(`/trilha/${id}`)}
+                  />
+                </div>
+              ))}
+            </section>
+          )}
+
+          {!loading && filteredTracks.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 Nenhuma trilha encontrada nesta categoria.

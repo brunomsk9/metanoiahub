@@ -14,9 +14,10 @@ interface Resource {
 interface SearchSOSProps {
   resources: Resource[];
   onSelect: (resource: Resource) => void;
+  loading?: boolean;
 }
 
-export function SearchSOS({ resources, onSelect }: SearchSOSProps) {
+export function SearchSOS({ resources, onSelect, loading }: SearchSOSProps) {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
