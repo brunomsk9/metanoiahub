@@ -86,7 +86,7 @@ export type Database = {
           created_at: string
           duracao_minutos: number | null
           id: string
-          material_url: string | null
+          materiais: Json | null
           ordem: number
           texto_apoio: string | null
           tipo: Database["public"]["Enums"]["lesson_type"]
@@ -99,7 +99,7 @@ export type Database = {
           created_at?: string
           duracao_minutos?: number | null
           id?: string
-          material_url?: string | null
+          materiais?: Json | null
           ordem?: number
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
@@ -112,7 +112,7 @@ export type Database = {
           created_at?: string
           duracao_minutos?: number | null
           id?: string
-          material_url?: string | null
+          materiais?: Json | null
           ordem?: number
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
