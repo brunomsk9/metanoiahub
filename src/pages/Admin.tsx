@@ -9,8 +9,9 @@ import { AdminResources } from '@/components/admin/AdminResources';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
+import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
@@ -79,7 +80,7 @@ export default function Admin() {
   }
 
   // Determine default tab based on role
-  const defaultTab = isAdmin ? "tracks" : "discipleship";
+  const defaultTab = isAdmin ? "dashboard" : "discipleship";
 
   return (
     <PageTransition>
@@ -124,6 +125,13 @@ export default function Admin() {
           <TabsList className="bg-card border border-border p-1 rounded-lg w-full sm:w-auto inline-flex flex-wrap">
             {isAdmin && (
               <>
+                <TabsTrigger 
+                  value="dashboard" 
+                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </TabsTrigger>
                 <TabsTrigger 
                   value="tracks" 
                   className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
@@ -181,6 +189,10 @@ export default function Admin() {
 
           {isAdmin && (
             <>
+              <TabsContent value="dashboard">
+                <AdminDashboard />
+              </TabsContent>
+
               <TabsContent value="tracks">
                 <AdminTracks />
               </TabsContent>

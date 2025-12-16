@@ -9,6 +9,7 @@ import { ReadingPlanCard } from "@/components/ReadingPlanCard";
 import { AlicerceProgress } from "@/components/AlicerceProgress";
 import { DailyVerse } from "@/components/DailyVerse";
 import { StartPlanModal } from "@/components/StartPlanModal";
+import { DiscipuladorDashboardCards } from "@/components/DiscipuladorDashboardCards";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<ReadingPlanWithProgress | null>(null);
   const [showStartModal, setShowStartModal] = useState(false);
+  const [isDiscipulador, setIsDiscipulador] = useState(false);
   const [habits, setHabits] = useState([
     { id: 'leitura', name: 'Leitura Bíblica', completed: false, icon: 'book' as const },
     { id: 'oracao', name: 'Oração', completed: false, icon: 'heart' as const },
@@ -68,7 +70,7 @@ export default function Dashboard() {
         return;
       }
       
-      const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes] = await Promise.all([
+      const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes, rolesRes] = await Promise.all([
         supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
         supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
         supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
@@ -76,8 +78,13 @@ export default function Dashboard() {
         supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id),
         supabase.from('tracks').select('id, titulo').eq('is_base', true).maybeSingle(),
         supabase.rpc('user_completed_base_track', { _user_id: session.user.id }),
-        supabase.from('discipleship_relationships').select('alicerce_completed_presencial').eq('discipulo_id', session.user.id).eq('alicerce_completed_presencial', true).maybeSingle()
+        supabase.from('discipleship_relationships').select('alicerce_completed_presencial').eq('discipulo_id', session.user.id).eq('alicerce_completed_presencial', true).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', session.user.id)
       ]);
+
+      // Check if user is discipulador
+      const userRoles = rolesRes.data?.map(r => r.role) || [];
+      setIsDiscipulador(userRoles.includes('discipulador'));
       
       if (profileRes.data) {
         setUserName(profileRes.data.nome || session.user.email?.split('@')[0] || 'Discípulo');
@@ -296,7 +303,9 @@ export default function Dashboard() {
               <DailyHabits habits={habits} onToggle={handleHabitToggle} />
             </section>
 
-            {/* Continue Reading - Plans in Progress */}
+            {/* Discipulador Management Cards */}
+            {isDiscipulador && <DiscipuladorDashboardCards />}
+
             {plansInProgress.length > 0 && (
               <section>
                 <h2 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
