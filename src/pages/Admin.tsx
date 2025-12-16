@@ -8,8 +8,9 @@ import { AdminLessons } from '@/components/admin/AdminLessons';
 import { AdminResources } from '@/components/admin/AdminResources';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
+import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
@@ -158,6 +159,13 @@ export default function Admin() {
                   <Users className="h-4 w-4 mr-2" />
                   Usuários
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="reading-plans"
+                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
+                >
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  Planos de Leitura
+                </TabsTrigger>
               </>
             )}
             {isDiscipulador && (
@@ -191,6 +199,10 @@ export default function Admin() {
 
               <TabsContent value="users">
                 <AdminUsers />
+              </TabsContent>
+
+              <TabsContent value="reading-plans">
+                <AdminReadingPlanDays />
               </TabsContent>
             </>
           )}
