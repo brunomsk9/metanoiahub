@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, CheckCircle, XCircle, Download, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Upload, FileText, CheckCircle, XCircle, Download, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserRow {
@@ -19,7 +21,10 @@ interface ImportResult {
 export function AdminUserImport() {
   const [parsedUsers, setParsedUsers] = useState<UserRow[]>([]);
   const [importing, setImporting] = useState(false);
+  const [sendingEmails, setSendingEmails] = useState(false);
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
   const [results, setResults] = useState<ImportResult[] | null>(null);
+  const [emailResults, setEmailResults] = useState<{ sent: number; failed: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (content: string): UserRow[] => {
@@ -74,6 +79,7 @@ export function AdminUserImport() {
 
     setImporting(true);
     setResults(null);
+    setEmailResults(null);
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -97,11 +103,48 @@ export function AdminUserImport() {
         toast.warning(`${success} importados, ${failed} com erro`);
       }
 
+      // Send welcome emails if enabled and there are successful imports
+      if (sendWelcomeEmail && success > 0) {
+        const successfulUsers = data.results
+          .filter((r: ImportResult) => r.success)
+          .map((r: ImportResult) => {
+            const user = parsedUsers.find(u => u.email === r.email);
+            return { email: r.email, nome: user?.nome || '' };
+          });
+
+        await sendWelcomeEmails(successfulUsers);
+      }
+
     } catch (error) {
       console.error('Import error:', error);
       toast.error("Erro ao importar usuários");
     } finally {
       setImporting(false);
+    }
+  };
+
+  const sendWelcomeEmails = async (users: Array<{ email: string; nome: string }>) => {
+    setSendingEmails(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-welcome-email', {
+        body: { users }
+      });
+
+      if (error) throw error;
+
+      setEmailResults(data.summary);
+      
+      if (data.summary.failed === 0) {
+        toast.success(`${data.summary.sent} emails enviados!`);
+      } else {
+        toast.warning(`${data.summary.sent} emails enviados, ${data.summary.failed} com erro`);
+      }
+    } catch (error) {
+      console.error('Email error:', error);
+      toast.error("Erro ao enviar emails de boas-vindas");
+    } finally {
+      setSendingEmails(false);
     }
   };
 
@@ -119,6 +162,7 @@ export function AdminUserImport() {
   const clearData = () => {
     setParsedUsers([]);
     setResults(null);
+    setEmailResults(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -218,13 +262,33 @@ export function AdminUserImport() {
             </table>
           </div>
 
+          {/* Send Email Option */}
+          {!results && (
+            <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
+              <Checkbox
+                id="sendWelcomeEmail"
+                checked={sendWelcomeEmail}
+                onCheckedChange={(checked) => setSendWelcomeEmail(checked === true)}
+              />
+              <Label htmlFor="sendWelcomeEmail" className="text-sm text-foreground cursor-pointer flex items-center gap-2">
+                <Mail className="w-4 h-4 text-primary" />
+                Enviar email de boas-vindas com instruções de acesso
+              </Label>
+            </div>
+          )}
+
           {/* Import Button */}
           {!results && (
-            <Button onClick={handleImport} disabled={importing} className="w-full">
+            <Button onClick={handleImport} disabled={importing || sendingEmails} className="w-full">
               {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Importando...
+                </>
+              ) : sendingEmails ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Enviando emails...
                 </>
               ) : (
                 <>
@@ -237,18 +301,26 @@ export function AdminUserImport() {
 
           {/* Results Summary */}
           {results && (
-            <div className="flex gap-4 p-4 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-2 text-green-500">
-                <CheckCircle className="w-5 h-5" />
-                <span>{results.filter(r => r.success).length} importados</span>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-4 p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2 text-green-500">
+                  <CheckCircle className="w-5 h-5" />
+                  <span>{results.filter(r => r.success).length} importados</span>
+                </div>
+                <div className="flex items-center gap-2 text-red-500">
+                  <XCircle className="w-5 h-5" />
+                  <span>{results.filter(r => !r.success).length} com erro</span>
+                </div>
+                {emailResults && (
+                  <div className="flex items-center gap-2 text-primary">
+                    <Mail className="w-5 h-5" />
+                    <span>{emailResults.sent} emails enviados</span>
+                  </div>
+                )}
+                <Button variant="outline" size="sm" className="ml-auto" onClick={clearData}>
+                  Nova Importação
+                </Button>
               </div>
-              <div className="flex items-center gap-2 text-red-500">
-                <XCircle className="w-5 h-5" />
-                <span>{results.filter(r => !r.success).length} com erro</span>
-              </div>
-              <Button variant="outline" size="sm" className="ml-auto" onClick={clearData}>
-                Nova Importação
-              </Button>
             </div>
           )}
         </div>
