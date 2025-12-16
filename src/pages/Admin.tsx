@@ -111,7 +111,7 @@ export default function Admin() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">
-            {isAdmin ? 'Gerenciar Conteúdo' : 'Meus Discípulos'}
+            {isAdmin ? 'Gerenciar Conteúdo' : 'Discipulado'}
           </h1>
           <p className="text-muted-foreground mt-1">
             {isAdmin 
@@ -174,7 +174,7 @@ export default function Admin() {
                 className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
               >
                 <Heart className="h-4 w-4 mr-2" />
-                Meus Discípulos
+                Discipulado
               </TabsTrigger>
             )}
           </TabsList>

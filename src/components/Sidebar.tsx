@@ -136,7 +136,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 )}
               >
                 <Heart className="w-4 h-4" />
-                <span>Discípulos</span>
+                <span>Discipulado</span>
               </NavLink>
             )}
           </nav>
@@ -174,7 +174,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                   <DropdownMenuItem asChild>
                     <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
                       <Heart className="w-4 h-4" />
-                      Meus Discípulos
+                      Discipulado
                     </NavLink>
                   </DropdownMenuItem>
                 )}
@@ -246,7 +246,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                   )}
                 >
                   <Heart className="w-5 h-5" />
-                  <span>Meus Discípulos</span>
+                  <span>Discipulado</span>
                 </NavLink>
               )}
             </nav>
