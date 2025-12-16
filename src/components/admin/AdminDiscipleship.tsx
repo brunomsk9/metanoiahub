@@ -624,15 +624,9 @@ export function AdminDiscipleship() {
                   
                   <div className="flex items-center gap-2">
                     {rel.alicerce_completed_presencial ? (
-                      <Badge className="bg-success/10 text-success border-success/20">
-                        <Award className="w-3 h-3 mr-1" />
-                        Alicerce ✓
-                      </Badge>
+                      <Award className="w-4 h-4 text-success" />
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground">
-                        <Lock className="w-3 h-3 mr-1" />
-                        Alicerce
-                      </Badge>
+                      <Lock className="w-4 h-4 text-muted-foreground" />
                     )}
                     {getStatusBadge(rel.status)}
                   </div>
