@@ -82,6 +82,41 @@ export type Database = {
         }
         Relationships: []
       }
+      discipleship_notes: {
+        Row: {
+          created_at: string
+          discipulador_id: string
+          id: string
+          notes: string | null
+          relationship_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discipulador_id: string
+          id?: string
+          notes?: string | null
+          relationship_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discipulador_id?: string
+          id?: string
+          notes?: string | null
+          relationship_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discipleship_notes_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: true
+            referencedRelation: "discipleship_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discipleship_relationships: {
         Row: {
           academia_nivel_1: boolean | null
@@ -97,7 +132,6 @@ export type Database = {
           discipulador_id: string
           discipulo_id: string
           id: string
-          notes: string | null
           started_at: string
           status: string
           updated_at: string
@@ -116,7 +150,6 @@ export type Database = {
           discipulador_id: string
           discipulo_id: string
           id?: string
-          notes?: string | null
           started_at?: string
           status?: string
           updated_at?: string
@@ -135,7 +168,6 @@ export type Database = {
           discipulador_id?: string
           discipulo_id?: string
           id?: string
-          notes?: string | null
           started_at?: string
           status?: string
           updated_at?: string
