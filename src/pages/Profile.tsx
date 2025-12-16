@@ -93,7 +93,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
       </div>
     );
   }
@@ -104,11 +104,12 @@ export default function Profile() {
       
       <PageTransition>
         <main className="pt-16 lg:pt-20 pb-8">
-          <div className="px-4 lg:px-8 max-w-2xl mx-auto space-y-8">
-            {/* Profile Header - Minimal */}
-            <header className="pt-4 flex items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-8 h-8 text-primary" />
+          <div className="px-4 lg:px-6 max-w-lg mx-auto space-y-6">
+            
+            {/* Profile Header */}
+            <header className="pt-4 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
                 {isEditing ? (
@@ -117,7 +118,7 @@ export default function Profile() {
                       type="text"
                       value={editedNome}
                       onChange={(e) => setEditedNome(e.target.value)}
-                      className="text-xl font-display font-bold bg-secondary border border-border rounded-lg px-3 py-1 text-foreground focus:outline-none focus:border-primary"
+                      className="text-lg font-semibold bg-secondary border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:border-primary"
                       autoFocus
                     />
                     <Button size="icon" variant="ghost" onClick={handleSave} disabled={isSaving}>
@@ -126,10 +127,10 @@ export default function Profile() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-display font-bold text-foreground">
+                    <h1 className="text-lg font-semibold text-foreground">
                       {profile.nome || 'Discípulo'}
                     </h1>
-                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-7 w-7">
                       <Edit2 className="w-3 h-3" />
                     </Button>
                   </div>
@@ -139,28 +140,28 @@ export default function Profile() {
               </div>
             </header>
 
-            {/* Stats - Minimal row */}
-            <section className="flex gap-6 py-4 border-y border-border">
-              <div className="flex items-center gap-3">
-                <Flame className="w-5 h-5 text-primary" />
+            {/* Stats */}
+            <section className="flex gap-4">
+              <div className="flex-1 stats-card flex items-center gap-3">
+                <Flame className="w-5 h-5 text-warning" />
                 <div>
-                  <p className="text-xl font-bold text-foreground">{profile.current_streak}</p>
+                  <p className="text-lg font-semibold text-foreground">{profile.current_streak}</p>
                   <p className="text-xs text-muted-foreground">Streak</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex-1 stats-card flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-accent" />
                 <div>
-                  <p className="text-xl font-bold text-foreground">{profile.xp_points.toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-foreground">{profile.xp_points.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">XP</p>
                 </div>
               </div>
             </section>
 
-            {/* Achievements - Minimal grid */}
-            <section>
+            {/* Achievements */}
+            <section className="card-elevated p-4">
               <h2 className="text-sm font-medium text-muted-foreground mb-4">Conquistas</h2>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {[
                   { emoji: '🎯', label: 'Primeira Aula', unlocked: true },
                   { emoji: '🔥', label: '7 Dias', unlocked: profile.current_streak >= 7 },
@@ -170,13 +171,13 @@ export default function Profile() {
                   <div
                     key={achievement.label}
                     className={cn(
-                      "aspect-square rounded-2xl flex flex-col items-center justify-center transition-all",
+                      "aspect-square rounded-xl flex flex-col items-center justify-center transition-opacity",
                       achievement.unlocked
                         ? "bg-primary/10 border border-primary/20"
-                        : "bg-muted/50 opacity-40"
+                        : "bg-muted opacity-40"
                     )}
                   >
-                    <span className="text-2xl mb-1">{achievement.emoji}</span>
+                    <span className="text-xl mb-1">{achievement.emoji}</span>
                     <span className="text-[10px] text-muted-foreground text-center px-1">{achievement.label}</span>
                   </div>
                 ))}
