@@ -36,8 +36,6 @@ interface Relationship {
   academia_nivel_4: boolean;
   conexao_inicial_1: boolean;
   conexao_inicial_2: boolean;
-  conexao_inicial_3: boolean;
-  conexao_inicial_4: boolean;
   discipulo?: Profile;
   discipulador?: Profile;
 }
@@ -383,7 +381,7 @@ export function AdminDiscipleship() {
     fetchData();
   };
 
-  const handleToggleConexaoInicial = async (relationshipId: string, nivel: 1 | 2 | 3 | 4, currentValue: boolean) => {
+  const handleToggleConexaoInicial = async (relationshipId: string, nivel: 1 | 2, currentValue: boolean) => {
     const columnName = `conexao_inicial_${nivel}` as const;
     
     const { error } = await supabase
@@ -393,11 +391,11 @@ export function AdminDiscipleship() {
 
     if (error) {
       console.error('Error updating conexao inicial nivel:', error);
-      toast.error('Erro ao atualizar nível');
+      toast.error('Erro ao atualizar encontro');
       return;
     }
 
-    toast.success(`Conexão Inicial ${nivel} ${!currentValue ? 'marcado' : 'desmarcado'}`);
+    toast.success(`Encontro ${nivel} ${!currentValue ? 'marcado' : 'desmarcado'}`);
     fetchData();
   };
 
@@ -643,7 +641,7 @@ export function AdminDiscipleship() {
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
                     <Link className="w-4 h-4 text-accent" />
                     <span className="text-xs font-medium text-muted-foreground mr-2">Conexão:</span>
-                    {[1, 2, 3, 4].map((nivel) => {
+                    {[1, 2].map((nivel) => {
                       const key = `conexao_inicial_${nivel}` as keyof Relationship;
                       const isChecked = rel[key] as boolean;
                       return (
@@ -651,14 +649,14 @@ export function AdminDiscipleship() {
                           <Checkbox
                             id={`conexao-${rel.id}-${nivel}`}
                             checked={isChecked}
-                            onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                            onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
                             className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                           />
                           <label 
                             htmlFor={`conexao-${rel.id}-${nivel}`}
                             className="text-xs cursor-pointer"
                           >
-                            N{nivel}
+                            E{nivel}
                           </label>
                         </div>
                       );
@@ -767,7 +765,7 @@ export function AdminDiscipleship() {
                                 <span className="font-semibold text-foreground">Conexão Inicial</span>
                               </div>
                               <div className="flex items-center gap-4">
-                                {[1, 2, 3, 4].map((nivel) => {
+                                {[1, 2].map((nivel) => {
                                   const key = `conexao_inicial_${nivel}` as keyof Relationship;
                                   const isChecked = rel[key] as boolean;
                                   return (
@@ -775,20 +773,20 @@ export function AdminDiscipleship() {
                                       <Checkbox
                                         id={`progress-conexao-${rel.id}-${nivel}`}
                                         checked={isChecked}
-                                        onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                        onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
                                       />
                                       <label 
                                         htmlFor={`progress-conexao-${rel.id}-${nivel}`}
                                         className="text-sm cursor-pointer"
                                       >
-                                        Nível {nivel}
+                                        Encontro {nivel}
                                       </label>
                                     </div>
                                   );
                                 })}
                               </div>
                               <p className="text-xs text-muted-foreground">
-                                {[rel.conexao_inicial_1, rel.conexao_inicial_2, rel.conexao_inicial_3, rel.conexao_inicial_4].filter(Boolean).length}/4 níveis concluídos
+                                {[rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length}/2 encontros concluídos
                               </p>
                             </div>
 
