@@ -9,7 +9,8 @@ import {
   Shield,
   ChevronDown,
   Menu,
-  Heart
+  Heart,
+  GraduationCap
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
@@ -36,11 +37,9 @@ interface SidebarProps {
   userName?: string;
 }
 
-const navItems = [
-  { path: '/dashboard', label: 'Início', icon: Home },
+const learningItems = [
   { path: '/trilhas', label: 'Trilhas', icon: BookOpen },
   { path: '/sos', label: 'S.O.S.', icon: LifeBuoy },
-  { path: '/perfil', label: 'Perfil', icon: User },
 ];
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
@@ -71,21 +70,8 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
     }
   };
 
-  const NavItem = ({ item, isActive, isMobile = false }: { item: typeof navItems[0], isActive: boolean, isMobile?: boolean }) => (
-    <NavLink
-      to={item.path}
-      className={cn(
-        "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-        isMobile && "gap-3 px-4 py-2.5",
-        isActive 
-          ? "bg-primary/8 text-primary" 
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-      )}
-    >
-      <item.icon className={cn("w-4 h-4", isMobile && "w-5 h-5")} />
-      <span>{item.label}</span>
-    </NavLink>
-  );
+  const isLearningActive = learningItems.some(item => location.pathname === item.path);
+  const activeLearningItem = learningItems.find(item => location.pathname === item.path);
 
   return (
     <>
@@ -101,22 +87,68 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="flex items-center gap-0.5">
-            {navItems.map((item) => (
-              <NavItem 
-                key={item.path} 
-                item={item} 
-                isActive={location.pathname === item.path} 
-              />
-            ))}
+          <nav className="flex items-center gap-1">
+            {/* Início */}
+            <NavLink
+              to="/dashboard"
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                location.pathname === '/dashboard' 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <Home className="w-4 h-4" />
+              <span>Início</span>
+            </NavLink>
+
+            {/* Aprendizado Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors outline-none",
+                isLearningActive 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}>
+                {activeLearningItem ? (
+                  <>
+                    <activeLearningItem.icon className="w-4 h-4" />
+                    <span>{activeLearningItem.label}</span>
+                  </>
+                ) : (
+                  <>
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Aprendizado</span>
+                  </>
+                )}
+                <ChevronDown className="w-3 h-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="bg-popover border border-border">
+                {learningItems.map((item) => (
+                  <DropdownMenuItem key={item.path} asChild>
+                    <NavLink
+                      to={item.path}
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer",
+                        location.pathname === item.path && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </NavLink>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
+            {/* Admin/Discipulado */}
             {isAdmin && (
               <NavLink
                 to="/admin"
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   location.pathname === '/admin' 
-                    ? "bg-primary/8 text-primary" 
+                    ? "bg-primary/10 text-primary" 
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
@@ -129,9 +161,9 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               <NavLink
                 to="/admin"
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   location.pathname === '/admin' 
-                    ? "bg-primary/8 text-primary" 
+                    ? "bg-primary/10 text-primary" 
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
@@ -155,7 +187,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuContent align="end" className="w-44 bg-popover border border-border">
                 <DropdownMenuItem asChild>
                   <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
                     <User className="w-4 h-4" />
@@ -210,45 +242,99 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               </div>
             </SheetHeader>
             
-            <nav className="p-3 space-y-0.5">
-              {navItems.map((item) => (
-                <NavItem 
-                  key={item.path} 
-                  item={item} 
-                  isActive={location.pathname === item.path}
-                  isMobile
-                />
-              ))}
-              
-              {isAdmin && (
+            <nav className="p-3 space-y-1">
+              {/* Início */}
+              <NavLink
+                to="/dashboard"
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                  location.pathname === '/dashboard' 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <Home className="w-5 h-5" />
+                <span>Início</span>
+              </NavLink>
+
+              {/* Aprendizado Section */}
+              <div className="pt-2">
+                <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Aprendizado
+                </p>
+                {learningItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                      location.pathname === item.path 
+                        ? "bg-primary/10 text-primary" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+
+              {/* Gestão Section */}
+              {(isAdmin || isDiscipulador) && (
+                <div className="pt-2">
+                  <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Gestão
+                  </p>
+                  {isAdmin && (
+                    <NavLink
+                      to="/admin"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                        location.pathname === '/admin' 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Shield className="w-5 h-5" />
+                      <span>Painel Admin</span>
+                    </NavLink>
+                  )}
+                  
+                  {isDiscipulador && !isAdmin && (
+                    <NavLink
+                      to="/admin"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                        location.pathname === '/admin' 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Heart className="w-5 h-5" />
+                      <span>Discipulado</span>
+                    </NavLink>
+                  )}
+                </div>
+              )}
+
+              {/* Perfil Section */}
+              <div className="pt-2">
+                <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Conta
+                </p>
                 <NavLink
-                  to="/admin"
+                  to="/perfil"
                   className={cn(
                     "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                    location.pathname === '/admin' 
-                      ? "bg-primary/8 text-primary" 
+                    location.pathname === '/perfil' 
+                      ? "bg-primary/10 text-primary" 
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <Shield className="w-5 h-5" />
-                  <span>Painel Admin</span>
+                  <User className="w-5 h-5" />
+                  <span>Meu Perfil</span>
                 </NavLink>
-              )}
-              
-              {isDiscipulador && !isAdmin && (
-                <NavLink
-                  to="/admin"
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                    location.pathname === '/admin' 
-                      ? "bg-primary/8 text-primary" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <Heart className="w-5 h-5" />
-                  <span>Discipulado</span>
-                </NavLink>
-              )}
+              </div>
             </nav>
 
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50">
