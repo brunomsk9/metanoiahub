@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminTracks } from '@/components/admin/AdminTracks';
 import { AdminCourses } from '@/components/admin/AdminCourses';
 import { AdminLessons } from '@/components/admin/AdminLessons';
@@ -11,15 +10,33 @@ import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship';
+
+const contentSections = [
+  { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
+  { id: 'courses' as const, label: 'Cursos', icon: GraduationCap },
+  { id: 'lessons' as const, label: 'Aulas', icon: FileText },
+  { id: 'resources' as const, label: 'Recursos', icon: LifeBuoy },
+  { id: 'reading-plans' as const, label: 'Planos de Leitura', icon: CalendarDays },
+];
 
 export default function Admin() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
+  const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
 
   useEffect(() => {
     checkAdminAccess();
@@ -33,15 +50,18 @@ export default function Admin() {
       return;
     }
 
-    // Check if user has admin role in user_roles table
     const { data: roles } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', session.user.id);
 
     const userRoles = roles?.map(r => r.role) || [];
-    setIsAdmin(userRoles.includes('admin'));
-    setIsDiscipulador(userRoles.includes('discipulador'));
+    const userIsAdmin = userRoles.includes('admin');
+    const userIsDiscipulador = userRoles.includes('discipulador');
+    
+    setIsAdmin(userIsAdmin);
+    setIsDiscipulador(userIsDiscipulador);
+    setActiveSection(userIsAdmin ? 'dashboard' : 'discipleship');
     setLoading(false);
   };
 
@@ -58,7 +78,6 @@ export default function Admin() {
     );
   }
 
-  // Allow access if user is admin OR discipulador
   if (!isAdmin && !isDiscipulador) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -79,8 +98,22 @@ export default function Admin() {
     );
   }
 
-  // Determine default tab based on role
-  const defaultTab = isAdmin ? "dashboard" : "discipleship";
+  const isContentSection = contentSections.some(s => s.id === activeSection);
+  const activeContentSection = contentSections.find(s => s.id === activeSection);
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'dashboard': return <AdminDashboard />;
+      case 'tracks': return <AdminTracks />;
+      case 'courses': return <AdminCourses />;
+      case 'lessons': return <AdminLessons />;
+      case 'resources': return <AdminResources />;
+      case 'users': return <AdminUsers />;
+      case 'reading-plans': return <AdminReadingPlanDays />;
+      case 'discipleship': return <AdminDiscipleship />;
+      default: return null;
+    }
+  };
 
   return (
     <PageTransition>
@@ -121,112 +154,89 @@ export default function Admin() {
           </p>
         </div>
 
-        <Tabs defaultValue={defaultTab} className="space-y-6">
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-            <TabsList className="bg-card border border-border p-1 rounded-lg inline-flex min-w-max">
-              {isAdmin && (
-                <>
-                  <TabsTrigger 
-                    value="dashboard" 
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <LayoutDashboard className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Dashboard</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="tracks" 
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <BookOpen className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Trilhas</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="courses"
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <GraduationCap className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Cursos</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="lessons"
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <FileText className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Aulas</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="resources"
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <LifeBuoy className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Recursos</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="users"
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <Users className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Usuários</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="reading-plans"
-                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                  >
-                    <CalendarDays className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Planos</span>
-                  </TabsTrigger>
-                </>
-              )}
-              {isDiscipulador && (
-                <TabsTrigger 
-                  value="discipleship"
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
-                >
-                  <Heart className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Discipulado</span>
-                </TabsTrigger>
-              )}
-            </TabsList>
-          </div>
-
+        {/* Navigation */}
+        <div className="flex flex-wrap gap-2 mb-6">
           {isAdmin && (
             <>
-              <TabsContent value="dashboard">
-                <AdminDashboard />
-              </TabsContent>
+              <Button
+                variant={activeSection === 'dashboard' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('dashboard')}
+                className="gap-2"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Button>
 
-              <TabsContent value="tracks">
-                <AdminTracks />
-              </TabsContent>
+              {/* Content Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant={isContentSection ? 'default' : 'outline'}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {activeContentSection ? (
+                      <>
+                        <activeContentSection.icon className="h-4 w-4" />
+                        <span className="hidden sm:inline">{activeContentSection.label}</span>
+                        <span className="sm:hidden">Conteúdo</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="h-4 w-4" />
+                        <span>Conteúdo</span>
+                      </>
+                    )}
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-popover border border-border">
+                  {contentSections.map((section) => (
+                    <DropdownMenuItem
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={cn(
+                        "gap-2 cursor-pointer",
+                        activeSection === section.id && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <section.icon className="h-4 w-4" />
+                      {section.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              <TabsContent value="courses">
-                <AdminCourses />
-              </TabsContent>
-
-              <TabsContent value="lessons">
-                <AdminLessons />
-              </TabsContent>
-
-              <TabsContent value="resources">
-                <AdminResources />
-              </TabsContent>
-
-              <TabsContent value="users">
-                <AdminUsers />
-              </TabsContent>
-
-              <TabsContent value="reading-plans">
-                <AdminReadingPlanDays />
-              </TabsContent>
+              <Button
+                variant={activeSection === 'users' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('users')}
+                className="gap-2"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Usuários</span>
+              </Button>
             </>
           )}
 
           {isDiscipulador && (
-            <TabsContent value="discipleship">
-              <AdminDiscipleship />
-            </TabsContent>
+            <Button
+              variant={activeSection === 'discipleship' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveSection('discipleship')}
+              className="gap-2"
+            >
+              <Heart className="h-4 w-4" />
+              <span className="hidden sm:inline">Discipulado</span>
+            </Button>
           )}
-        </Tabs>
+        </div>
+
+        {/* Content */}
+        <div className="mt-6">
+          {renderContent()}
+        </div>
       </main>
     </div>
     </PageTransition>
