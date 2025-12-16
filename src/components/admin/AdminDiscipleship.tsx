@@ -609,9 +609,7 @@ export function AdminDiscipleship() {
                       <p className="font-medium">{rel.discipulo?.nome || 'Sem nome'}</p>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         {isAdmin && rel.discipulador && (
-                          <span className="text-xs">
-                            Discipulador: <span className="font-medium">{rel.discipulador.nome}</span>
-                          </span>
+                          <span className="text-xs font-medium">{rel.discipulador.nome}</span>
                         )}
                         <span className="flex items-center gap-1">
                           <Flame className="w-3 h-3 text-orange-500" />
