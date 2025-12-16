@@ -55,23 +55,37 @@ export function MeetingsManager() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const [meetingsRes, disciplesRes] = await Promise.all([
-      supabase
-        .from('meetings')
-        .select('*')
-        .eq('discipulador_id', session.user.id)
-        .order('data_encontro', { ascending: false }),
-      supabase
-        .from('discipleship_relationships')
-        .select('discipulo_id, profiles!discipleship_relationships_discipulo_id_fkey(id, nome)')
-        .eq('discipulador_id', session.user.id)
-        .eq('status', 'active')
-    ]);
+    // Fetch meetings
+    const { data: meetingsData } = await supabase
+      .from('meetings')
+      .select('*')
+      .eq('discipulador_id', session.user.id)
+      .order('data_encontro', { ascending: false });
 
-    if (meetingsRes.data) {
-      // Fetch attendance for cell meetings
-      const meetingsWithAttendance = await Promise.all(
-        meetingsRes.data.map(async (meeting) => {
+    // Fetch discipleship relationships to get disciples
+    const { data: relsData } = await supabase
+      .from('discipleship_relationships')
+      .select('discipulo_id')
+      .eq('discipulador_id', session.user.id)
+      .eq('status', 'active');
+
+    // Fetch disciple profiles
+    if (relsData && relsData.length > 0) {
+      const discipleIds = relsData.map(r => r.discipulo_id);
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, nome')
+        .in('id', discipleIds);
+      
+      setDisciples(profilesData || []);
+    } else {
+      setDisciples([]);
+    }
+
+    if (meetingsData) {
+      // Fetch attendance and disciple names for meetings
+      const meetingsWithDetails = await Promise.all(
+        meetingsData.map(async (meeting) => {
           if (meeting.tipo === 'celula') {
             const { data: attendance } = await supabase
               .from('meeting_attendance')
@@ -102,17 +116,7 @@ export function MeetingsManager() {
           return meeting;
         })
       );
-      setMeetings(meetingsWithAttendance as Meeting[]);
-    }
-
-    if (disciplesRes.data) {
-      const disciplesList = disciplesRes.data
-        .filter(r => r.profiles)
-        .map(r => ({
-          id: (r.profiles as any).id,
-          nome: (r.profiles as any).nome
-        }));
-      setDisciples(disciplesList);
+      setMeetings(meetingsWithDetails as Meeting[]);
     }
 
     setLoading(false);
