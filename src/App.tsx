@@ -14,6 +14,7 @@ import Tracks from "./pages/Tracks";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import ReadingPlan from "./pages/ReadingPlan";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ function AnimatedRoutes() {
         <Route path="/perfil" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/plano/:id" element={<ReadingPlan />} />
+        <Route path="/alterar-senha" element={<ChangePassword />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

@@ -192,6 +192,7 @@ export type Database = {
           created_at: string
           current_streak: number
           id: string
+          needs_password_change: boolean
           nome: string
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
@@ -202,6 +203,7 @@ export type Database = {
           created_at?: string
           current_streak?: number
           id: string
+          needs_password_change?: boolean
           nome?: string
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
@@ -212,6 +214,7 @@ export type Database = {
           created_at?: string
           current_streak?: number
           id?: string
+          needs_password_change?: boolean
           nome?: string
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
