@@ -158,7 +158,7 @@ export function DailyVerse() {
 
   return (
     <>
-    <section className="card-elevated p-5">
+    <section className="card-elevated p-5 animate-fade-in">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-primary" />
