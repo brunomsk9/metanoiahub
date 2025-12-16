@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { PageTransition } from "@/components/PageTransition";
 import { ReadingPlanCard } from "@/components/ReadingPlanCard";
 import { AlicerceProgress } from "@/components/AlicerceProgress";
+import { DailyVerse } from "@/components/DailyVerse";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -218,6 +219,8 @@ export default function Dashboard() {
               </h1>
             </header>
 
+            {/* Daily Verse */}
+            <DailyVerse />
 
             {/* Streak & Progress */}
             <section className="bg-card rounded-2xl border border-border p-5">
