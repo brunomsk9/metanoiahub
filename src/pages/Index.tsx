@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, LifeBuoy, MessageCircle, Flame } from "lucide-react";
+import { 
+  ArrowRight, 
+  BookOpen, 
+  LifeBuoy, 
+  MessageCircle, 
+  Flame,
+  Users,
+  CheckCircle2,
+  Compass,
+  Heart
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,115 +41,241 @@ export default function Index() {
 
   const features = [
     {
-      icon: BookOpen,
-      title: "Jornada Metanoia",
-      description: "4 encontros fundamentais para firmar a fé.",
+      icon: Compass,
+      title: "Trilhas de Formação",
+      description: "Conteúdo estruturado para cada etapa do discipulado.",
     },
     {
       icon: Flame,
       title: "Hábitos Diários",
-      description: "Acompanhe sua vida devocional.",
+      description: "Acompanhe leitura bíblica, oração e devocionais.",
     },
     {
       icon: LifeBuoy,
       title: "S.O.S. Discipulador",
-      description: "Recursos de apoio para situações difíceis.",
+      description: "Recursos práticos para situações desafiadoras.",
     },
     {
       icon: MessageCircle,
       title: "Mentor IA",
-      description: "Assistente para tirar dúvidas.",
+      description: "Assistente inteligente para tirar dúvidas.",
     },
+    {
+      icon: Users,
+      title: "Gestão de Discípulos",
+      description: "Acompanhe o progresso de quem você discipula.",
+    },
+    {
+      icon: BookOpen,
+      title: "Planos de Leitura",
+      description: "Planos bíblicos de 7 dias a 1 ano.",
+    },
+  ];
+
+  const journeySteps = [
+    { step: "1", title: "Alicerce", description: "Fundamentos da fé cristã" },
+    { step: "2", title: "Conexão Inicial", description: "Primeiros encontros" },
+    { step: "3", title: "Academia", description: "4 níveis de formação" },
+    { step: "4", title: "Multiplicação", description: "Forme novos discipuladores" },
   ];
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
+          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+              <span className="font-semibold text-foreground">Metanoia Hub</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
+              Entrar
+            </Button>
+          </div>
+        </header>
+
         {/* Hero Section */}
-        <section className="min-h-[85vh] flex flex-col items-center justify-center px-4 py-12">
-          <div className="max-w-3xl mx-auto text-center space-y-8">
+        <section className="min-h-screen flex flex-col items-center justify-center px-4 pt-14">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            {/* Badge de lançamento */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm text-primary font-medium">Plataforma de Lançamento</span>
+            </div>
+
             {/* Logo e Título */}
             <div className="space-y-4">
               <img 
                 src={metanoiaLogo} 
                 alt="Metanoia Hub" 
-                className="w-24 h-24 mx-auto object-contain"
+                className="w-28 h-28 mx-auto object-contain"
               />
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground tracking-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
                 METANOIA <span className="text-primary">HUB</span>
               </h1>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Plataforma completa para discipuladores formarem vidas com o caráter de Cristo
+              </p>
             </div>
 
             {/* Citação destaque */}
-            <blockquote className="border-l-2 border-primary pl-4 py-2 text-left max-w-xl mx-auto">
-              <p className="text-lg sm:text-xl text-foreground/90 font-serif italic">
+            <blockquote className="border-l-4 border-primary pl-6 py-3 text-left max-w-2xl mx-auto bg-primary/5 rounded-r-lg">
+              <p className="text-xl sm:text-2xl text-foreground/90 font-serif italic leading-relaxed">
                 "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
               </p>
-              <footer className="text-sm text-muted-foreground mt-2">— N. T. Wright</footer>
+              <footer className="text-sm text-muted-foreground mt-3 font-medium">— N. T. Wright</footer>
             </blockquote>
 
-            {/* Descrição */}
-            <div className="space-y-2">
-              <p className="text-muted-foreground">
-                "Ide e fazei discípulos de todas as nações"
-              </p>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Uma iniciativa da <span className="text-primary font-medium">Comunidade das Nações de Goiânia</span> para 
-                equipar discipuladores na missão de formar o caráter de Cristo.
-              </p>
-            </div>
-
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <Button size="lg" onClick={() => navigate('/auth')}>
-                Entrar na Plataforma
-                <ArrowRight className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+              <Button size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
+                Começar Agora
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              <Button variant="outline" onClick={() => navigate('/auth')}>
+              <Button variant="outline" size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
                 Já tenho conta
               </Button>
+            </div>
+
+            {/* Comunidade */}
+            <p className="text-sm text-muted-foreground pt-4">
+              Uma iniciativa da <span className="text-primary font-semibold">Comunidade das Nações de Goiânia</span>
+            </p>
+          </div>
+
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1">
+              <div className="w-1.5 h-3 rounded-full bg-muted-foreground/50" />
             </div>
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-16 px-4 bg-muted/30">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Recursos para sua jornada
+        {/* Jornada Section */}
+        <section className="py-20 px-4 bg-muted/30">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                A Jornada do Discípulo
               </h2>
-              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-                Ferramentas práticas para cuidar, formar e multiplicar através de relacionamentos consistentes.
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Um caminho estruturado para crescer e multiplicar discípulos
               </p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {features.map((feature) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {journeySteps.map((item, index) => (
                 <div 
-                  key={feature.title} 
-                  className="bg-background border border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors"
+                  key={item.step}
+                  className="relative bg-background border border-border rounded-xl p-6 text-center group hover:border-primary/50 transition-all"
                 >
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 mb-3">
-                    <feature.icon className="w-5 h-5 text-primary" />
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                    <span className="text-xl font-bold text-primary">{item.step}</span>
                   </div>
-                  <h3 className="text-sm font-medium text-foreground mb-1">{feature.title}</h3>
-                  <p className="text-xs text-muted-foreground">{feature.description}</p>
+                  <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                  
+                  {index < journeySteps.length - 1 && (
+                    <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2">
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/30" />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="py-6 px-4 border-t border-border">
-          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-6 h-6 object-contain" />
-              <span className="text-sm font-medium text-foreground">Metanoia Hub</span>
+        {/* Features Section */}
+        <section className="py-20 px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                Tudo que você precisa em um só lugar
+              </h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Ferramentas práticas para cuidar, formar e multiplicar através de relacionamentos consistentes
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Comunidade das Nações de Goiânia
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((feature) => (
+                <div 
+                  key={feature.title} 
+                  className="bg-background border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                    <feature.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* O que está incluso */}
+        <section className="py-20 px-4 bg-muted/30">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                O que está incluso
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                "Trilha Alicerce - fundamentos da fé",
+                "Trilhas avançadas para discipuladores",
+                "Planos de leitura bíblica de 7 a 365 dias",
+                "Sistema de acompanhamento de discípulos",
+                "S.O.S. com recursos para situações difíceis",
+                "Biblioteca com livros, músicas e pregações",
+                "Mentor IA para tirar dúvidas",
+                "Registro de encontros e reuniões",
+                "Controle de hábitos diários",
+                "Versículo do dia compartilhável",
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-3 p-4 bg-background rounded-lg border border-border">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-sm text-foreground">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Final */}
+        <section className="py-24 px-4">
+          <div className="max-w-3xl mx-auto text-center space-y-8">
+            <Heart className="w-16 h-16 text-primary mx-auto" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+              Pronto para transformar vidas?
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              Junte-se a discipuladores que estão formando o caráter de Cristo em suas comunidades
+            </p>
+            <Button size="lg" className="text-base px-10 py-6" onClick={() => navigate('/auth')}>
+              Começar Gratuitamente
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-8 px-4 border-t border-border">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+              <div>
+                <span className="font-semibold text-foreground">Metanoia Hub</span>
+                <p className="text-xs text-muted-foreground">Plataforma de Discipulado</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              © 2024 Comunidade das Nações de Goiânia
             </p>
           </div>
         </footer>
