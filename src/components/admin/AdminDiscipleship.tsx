@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface Profile {
   id: string;
@@ -22,6 +23,8 @@ interface Relationship {
   discipulador_id: string;
   status: string;
   started_at: string;
+  alicerce_completed_presencial: boolean;
+  alicerce_completed_at: string | null;
   discipulo?: Profile;
 }
 
@@ -30,6 +33,8 @@ interface DiscipleProgress {
   totalLessons: number;
   readingPlansProgress: number;
   habitsThisWeek: number;
+  alicerceCompleted: number;
+  alicerceTotal: number;
 }
 
 export function AdminDiscipleship() {
@@ -152,6 +157,45 @@ export function AdminDiscipleship() {
   const handleViewProgress = async (discipleId: string) => {
     setViewingProgress(discipleId);
     
+    // Fetch base track info first
+    const { data: baseTrack } = await supabase
+      .from('tracks')
+      .select('id')
+      .eq('is_base', true)
+      .maybeSingle();
+    
+    let alicerceCompleted = 0;
+    let alicerceTotal = 0;
+    
+    if (baseTrack) {
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('track_id', baseTrack.id);
+      
+      if (courses && courses.length > 0) {
+        const courseIds = courses.map(c => c.id);
+        const { data: lessons } = await supabase
+          .from('lessons')
+          .select('id')
+          .in('course_id', courseIds);
+        
+        alicerceTotal = lessons?.length || 0;
+        
+        if (lessons && lessons.length > 0) {
+          const lessonIds = lessons.map(l => l.id);
+          const { count } = await supabase
+            .from('user_progress')
+            .select('id', { count: 'exact' })
+            .eq('user_id', discipleId)
+            .eq('completed', true)
+            .in('lesson_id', lessonIds);
+          
+          alicerceCompleted = count || 0;
+        }
+      }
+    }
+    
     // Fetch disciple's progress
     const [lessonsRes, habitsRes, readingRes, totalLessonsRes] = await Promise.all([
       supabase
@@ -181,8 +225,29 @@ export function AdminDiscipleship() {
       lessonsCompleted: lessonsRes.data?.length || 0,
       totalLessons: totalLessonsRes.data?.length || 1,
       readingPlansProgress: completedDays,
-      habitsThisWeek: habitsRes.data?.length || 0
+      habitsThisWeek: habitsRes.data?.length || 0,
+      alicerceCompleted,
+      alicerceTotal
     });
+  };
+
+  const handleMarkAlicerceComplete = async (relationshipId: string, discipleName: string) => {
+    const { error } = await supabase
+      .from('discipleship_relationships')
+      .update({
+        alicerce_completed_presencial: true,
+        alicerce_completed_at: new Date().toISOString()
+      })
+      .eq('id', relationshipId);
+
+    if (error) {
+      console.error('Error marking alicerce complete:', error);
+      toast.error('Erro ao marcar conclusão');
+      return;
+    }
+
+    toast.success(`Alicerce de ${discipleName} marcado como concluído presencialmente!`);
+    fetchData();
   };
 
   const getStatusBadge = (status: string) => {
@@ -281,6 +346,17 @@ export function AdminDiscipleship() {
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    {rel.alicerce_completed_presencial ? (
+                      <Badge className="bg-success/10 text-success border-success/20">
+                        <Award className="w-3 h-3 mr-1" />
+                        Alicerce ✓
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        <Lock className="w-3 h-3 mr-1" />
+                        Alicerce
+                      </Badge>
+                    )}
                     {getStatusBadge(rel.status)}
                     
                     <Dialog>
@@ -300,12 +376,63 @@ export function AdminDiscipleship() {
                         </DialogHeader>
                         {discipleProgress && viewingProgress === rel.discipulo_id && (
                           <div className="space-y-6 pt-4">
+                            {/* Alicerce Progress */}
+                            <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold text-foreground flex items-center gap-2">
+                                  <Award className="w-4 h-4 text-primary" />
+                                  Progresso Alicerce
+                                </span>
+                                {rel.alicerce_completed_presencial ? (
+                                  <Badge className="bg-success/10 text-success border-success/20">
+                                    Concluído ✓
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline">Em andamento</Badge>
+                                )}
+                              </div>
+                              <Progress 
+                                value={discipleProgress.alicerceTotal > 0 
+                                  ? (discipleProgress.alicerceCompleted / discipleProgress.alicerceTotal) * 100 
+                                  : 0} 
+                              />
+                              <p className="text-sm text-muted-foreground">
+                                {discipleProgress.alicerceCompleted}/{discipleProgress.alicerceTotal} aulas concluídas
+                              </p>
+                              
+                              {!rel.alicerce_completed_presencial && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" className="w-full mt-2">
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      Marcar como Concluído (Presencial)
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Confirmar Conclusão Presencial</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Ao confirmar, você está atestando que {rel.discipulo?.nome} completou a jornada Alicerce presencialmente com você. 
+                                        Isso irá desbloquear todas as trilhas para o discípulo.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleMarkAlicerceComplete(rel.id, rel.discipulo?.nome || '')}>
+                                        Confirmar Conclusão
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+
                             {/* Lessons Progress */}
                             <div className="space-y-2">
                               <div className="flex items-center justify-between text-sm">
                                 <span className="flex items-center gap-2">
                                   <BookOpen className="w-4 h-4 text-primary" />
-                                  Aulas Concluídas
+                                  Aulas Concluídas (Total)
                                 </span>
                                 <span className="font-medium">
                                   {discipleProgress.lessonsCompleted}/{discipleProgress.totalLessons}
