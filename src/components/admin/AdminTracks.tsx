@@ -20,6 +20,7 @@ interface Track {
   cover_image: string | null;
   ordem: number;
   publico_alvo: AppRole[];
+  is_base: boolean;
 }
 
 export function AdminTracks() {
@@ -35,7 +36,8 @@ export function AdminTracks() {
     categoria: '',
     cover_image: '',
     ordem: 0,
-    publico_alvo: ['discipulo'] as AppRole[]
+    publico_alvo: ['discipulo'] as AppRole[],
+    is_base: false
   });
 
   useEffect(() => {
@@ -65,11 +67,12 @@ export function AdminTracks() {
         categoria: track.categoria,
         cover_image: track.cover_image || '',
         ordem: track.ordem,
-        publico_alvo: track.publico_alvo || ['discipulo']
+        publico_alvo: track.publico_alvo || ['discipulo'],
+        is_base: track.is_base || false
       });
     } else {
       setEditing(null);
-      setForm({ titulo: '', descricao: '', categoria: '', cover_image: '', ordem: tracks.length, publico_alvo: ['discipulo'] });
+      setForm({ titulo: '', descricao: '', categoria: '', cover_image: '', ordem: tracks.length, publico_alvo: ['discipulo'], is_base: false });
     }
     setDialogOpen(true);
   };
@@ -94,13 +97,19 @@ export function AdminTracks() {
 
     setSaving(true);
 
+    // If setting this track as base, unset any existing base track first
+    if (form.is_base) {
+      await supabase.from('tracks').update({ is_base: false }).eq('is_base', true);
+    }
+
     const payload = {
       titulo: form.titulo,
       descricao: form.descricao || null,
       categoria: form.categoria,
       cover_image: form.cover_image || null,
       ordem: form.ordem,
-      publico_alvo: form.publico_alvo
+      publico_alvo: form.publico_alvo,
+      is_base: form.is_base
     };
 
     if (editing) {
@@ -253,6 +262,17 @@ export function AdminTracks() {
                   className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
+              <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                <Checkbox 
+                  id="is_base"
+                  checked={form.is_base}
+                  onCheckedChange={(checked) => setForm({ ...form, is_base: !!checked })}
+                />
+                <label htmlFor="is_base" className="text-sm text-foreground cursor-pointer">
+                  <span className="font-medium">Trilha Alicerce</span>
+                  <p className="text-xs text-muted-foreground">Marque se esta é a trilha inicial obrigatória</p>
+                </label>
+              </div>
               <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {editing ? 'Salvar Alterações' : 'Criar Trilha'}
@@ -283,6 +303,7 @@ export function AdminTracks() {
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Público</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden lg:table-cell">Tipo</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
               </tr>
             </thead>
@@ -307,6 +328,13 @@ export function AdminTracks() {
                     <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
                       {getPublicoAlvoLabel(track.publico_alvo)}
                     </span>
+                  </td>
+                  <td className="py-3 px-4 hidden lg:table-cell">
+                    {track.is_base && (
+                      <span className="inline-flex px-2 py-1 text-xs rounded-full bg-primary/10 text-primary font-medium">
+                        Alicerce
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">

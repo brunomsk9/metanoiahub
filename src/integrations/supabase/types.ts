@@ -309,6 +309,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           id: string
+          is_base: boolean
           ordem: number
           publico_alvo: Database["public"]["Enums"]["app_role"][]
           titulo: string
@@ -319,6 +320,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_base?: boolean
           ordem?: number
           publico_alvo?: Database["public"]["Enums"]["app_role"][]
           titulo: string
@@ -329,6 +331,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           id?: string
+          is_base?: boolean
           ordem?: number
           publico_alvo?: Database["public"]["Enums"]["app_role"][]
           titulo?: string
@@ -458,6 +461,10 @@ export type Database = {
           _publico_alvo: Database["public"]["Enums"]["app_role"][]
           _user_id: string
         }
+        Returns: boolean
+      }
+      user_completed_base_track: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }

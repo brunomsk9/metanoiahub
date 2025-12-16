@@ -14,6 +14,7 @@ interface Track {
   categoria: string;
   cover_image: string | null;
   coursesCount: number;
+  is_base: boolean;
 }
 
 export default function Tracks() {
@@ -22,6 +23,7 @@ export default function Tracks() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [categories, setCategories] = useState<string[]>(['Todos']);
   const [loading, setLoading] = useState(true);
+  const [completedBaseTrack, setCompletedBaseTrack] = useState(false);
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
@@ -33,7 +35,7 @@ export default function Tracks() {
 
       const { data: tracksData, error } = await supabase
         .from('tracks')
-        .select(`id, titulo, descricao, categoria, cover_image, courses(count)`)
+        .select(`id, titulo, descricao, categoria, cover_image, is_base, courses(count)`)
         .order('ordem');
 
       if (error) {
@@ -49,12 +51,20 @@ export default function Tracks() {
         categoria: track.categoria,
         cover_image: track.cover_image,
         coursesCount: track.courses?.[0]?.count || 0,
+        is_base: track.is_base || false,
       })) || [];
 
       setTracks(formattedTracks);
 
       const uniqueCategories = ['Todos', ...new Set(formattedTracks.map(t => t.categoria))];
       setCategories(uniqueCategories);
+
+      // Check if user completed the base track
+      const { data: completedData } = await supabase.rpc('user_completed_base_track', {
+        _user_id: session.user.id
+      });
+      setCompletedBaseTrack(completedData || false);
+
       setLoading(false);
     };
 
@@ -114,17 +124,25 @@ export default function Tracks() {
             {/* Grid */}
             {!loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredTracks.map((track) => (
-                  <TrackCard
-                    key={track.id}
-                    id={track.id}
-                    title={track.titulo}
-                    description={track.descricao || ''}
-                    thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
-                    coursesCount={track.coursesCount}
-                    onClick={(id) => navigate(`/trilha/${id}`)}
-                  />
-                ))}
+                {filteredTracks.map((track) => {
+                  // Check if track should be locked (not base and base track not completed)
+                  const hasBaseTrack = tracks.some(t => t.is_base);
+                  const isLocked = hasBaseTrack && !track.is_base && !completedBaseTrack;
+                  
+                  return (
+                    <TrackCard
+                      key={track.id}
+                      id={track.id}
+                      title={track.titulo}
+                      description={track.descricao || ''}
+                      thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
+                      coursesCount={track.coursesCount}
+                      onClick={(id) => navigate(`/trilha/${id}`)}
+                      isBase={track.is_base}
+                      isLocked={isLocked}
+                    />
+                  );
+                })}
               </div>
             )}
 
