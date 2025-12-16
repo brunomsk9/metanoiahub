@@ -23,11 +23,27 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        
+        // Check if user needs to change password
+        if (data.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('needs_password_change')
+            .eq('id', data.user.id)
+            .single();
+          
+          if (profile?.needs_password_change) {
+            toast({ title: "Bem-vindo!", description: "Por favor, altere sua senha." });
+            navigate("/alterar-senha");
+            return;
+          }
+        }
+        
         toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
         navigate("/dashboard");
       } else {

@@ -82,13 +82,13 @@ serve(async (req) => {
           continue;
         }
 
-        // Generate random password
-        const randomPassword = crypto.randomUUID().slice(0, 16) + 'Aa1!';
+        // Default password for imported users
+        const defaultPassword = 'mudar123';
 
         // Create user in auth
         const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email: userData.email,
-          password: randomPassword,
+          password: defaultPassword,
           email_confirm: true, // Auto-confirm email
           user_metadata: {
             nome: userData.nome
@@ -107,10 +107,10 @@ serve(async (req) => {
 
         const userId = authData.user.id;
 
-        // Update profile with nome
+        // Update profile with nome and set needs_password_change flag
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
-          .update({ nome: userData.nome })
+          .update({ nome: userData.nome, needs_password_change: true })
           .eq('id', userId);
 
         if (profileError) {
