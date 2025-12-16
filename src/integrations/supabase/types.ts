@@ -84,6 +84,8 @@ export type Database = {
       }
       discipleship_relationships: {
         Row: {
+          alicerce_completed_at: string | null
+          alicerce_completed_presencial: boolean | null
           completed_at: string | null
           created_at: string
           discipulador_id: string
@@ -95,6 +97,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alicerce_completed_at?: string | null
+          alicerce_completed_presencial?: boolean | null
           completed_at?: string | null
           created_at?: string
           discipulador_id: string
@@ -106,6 +110,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alicerce_completed_at?: string | null
+          alicerce_completed_presencial?: boolean | null
           completed_at?: string | null
           created_at?: string
           discipulador_id?: string

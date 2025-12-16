@@ -35,6 +35,7 @@ interface BaseTrackProgress {
   completedLessons: number;
   totalLessons: number;
   isCompleted: boolean;
+  completedPresencial: boolean;
 }
 
 export default function Dashboard() {
@@ -61,14 +62,15 @@ export default function Dashboard() {
       }
       
       // Fetch all data in parallel
-      const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes] = await Promise.all([
+      const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes] = await Promise.all([
         supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
         supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
         supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
         supabase.from('reading_plans').select('*').order('created_at').limit(4),
         supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id),
         supabase.from('tracks').select('id, titulo').eq('is_base', true).maybeSingle(),
-        supabase.rpc('user_completed_base_track', { _user_id: session.user.id })
+        supabase.rpc('user_completed_base_track', { _user_id: session.user.id }),
+        supabase.from('discipleship_relationships').select('alicerce_completed_presencial').eq('discipulo_id', session.user.id).eq('alicerce_completed_presencial', true).maybeSingle()
       ]);
       
       if (profileRes.data) {
@@ -115,7 +117,7 @@ export default function Dashboard() {
       // Fetch base track progress
       if (baseTrackRes.data) {
         const baseTrack = baseTrackRes.data;
-        const isCompleted = baseCompletedRes.data === true;
+        const isCompleted = baseCompletedRes.data === true || !!presencialRes.data;
         
         // Get lessons count for base track
         const { data: lessonsData } = await supabase
@@ -137,7 +139,8 @@ export default function Dashboard() {
             trackTitle: baseTrack.titulo,
             completedLessons: completedLessonsRes.count || 0,
             totalLessons: totalLessonsRes.count || 0,
-            isCompleted
+            isCompleted,
+            completedPresencial: !!presencialRes.data
           });
         }
       }
@@ -258,6 +261,7 @@ export default function Dashboard() {
                   completedLessons={baseTrackProgress.completedLessons}
                   totalLessons={baseTrackProgress.totalLessons}
                   isCompleted={baseTrackProgress.isCompleted}
+                  completedPresencial={baseTrackProgress.completedPresencial}
                 />
               </section>
             )}

@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { MentorChatButton } from "@/components/MentorChat";
 import { TrackCard } from "@/components/ContinueWatching";
 import { PageTransition } from "@/components/PageTransition";
+import { CelebrationModal } from "@/components/CelebrationModal";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -24,6 +25,8 @@ export default function Tracks() {
   const [categories, setCategories] = useState<string[]>(['Todos']);
   const [loading, setLoading] = useState(true);
   const [completedBaseTrack, setCompletedBaseTrack] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [baseTrackTitle, setBaseTrackTitle] = useState('Alicerce');
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
@@ -55,15 +58,36 @@ export default function Tracks() {
       })) || [];
 
       setTracks(formattedTracks);
+      
+      // Get base track title
+      const baseTrack = formattedTracks.find(t => t.is_base);
+      if (baseTrack) {
+        setBaseTrackTitle(baseTrack.titulo);
+      }
 
       const uniqueCategories = ['Todos', ...new Set(formattedTracks.map(t => t.categoria))];
       setCategories(uniqueCategories);
 
-      // Check if user completed the base track
-      const { data: completedData } = await supabase.rpc('user_completed_base_track', {
-        _user_id: session.user.id
-      });
-      setCompletedBaseTrack(completedData || false);
+      // Check if user completed the base track (either by lessons or by discipulador marking presencial)
+      const [completedData, presencialData] = await Promise.all([
+        supabase.rpc('user_completed_base_track', { _user_id: session.user.id }),
+        supabase
+          .from('discipleship_relationships')
+          .select('alicerce_completed_presencial')
+          .eq('discipulo_id', session.user.id)
+          .eq('alicerce_completed_presencial', true)
+          .maybeSingle()
+      ]);
+      
+      const isCompleted = completedData.data === true || !!presencialData.data;
+      setCompletedBaseTrack(isCompleted);
+
+      // Check if celebration should be shown (just completed)
+      const celebrationShown = sessionStorage.getItem('alicerce_celebration_shown');
+      if (isCompleted && !celebrationShown) {
+        setShowCelebration(true);
+        sessionStorage.setItem('alicerce_celebration_shown', 'true');
+      }
 
       setLoading(false);
     };
@@ -156,6 +180,12 @@ export default function Tracks() {
       </PageTransition>
 
       <MentorChatButton />
+      
+      <CelebrationModal
+        isOpen={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        trackTitle={baseTrackTitle}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Lock, CheckCircle, BookOpen } from "lucide-react";
+import { Lock, CheckCircle, BookOpen, Award } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 
@@ -8,6 +8,7 @@ interface AlicerceProgressProps {
   completedLessons: number;
   totalLessons: number;
   isCompleted: boolean;
+  completedPresencial?: boolean;
 }
 
 export function AlicerceProgress({ 
@@ -15,7 +16,8 @@ export function AlicerceProgress({
   trackTitle, 
   completedLessons, 
   totalLessons,
-  isCompleted 
+  isCompleted,
+  completedPresencial = false
 }: AlicerceProgressProps) {
   const navigate = useNavigate();
   const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
@@ -27,10 +29,16 @@ export function AlicerceProgress({
           <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
             <CheckCircle className="w-5 h-5 text-success" />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="font-semibold text-foreground">{trackTitle}</p>
             <p className="text-xs text-success">Concluído! Todas as trilhas liberadas.</p>
           </div>
+          {completedPresencial && (
+            <div className="flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">
+              <Award className="w-3 h-3" />
+              <span>Presencial</span>
+            </div>
+          )}
         </div>
       </div>
     );
