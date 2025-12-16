@@ -21,14 +21,14 @@ export function MentorChatButton() {
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center",
-          "bg-gradient-primary text-primary-foreground shadow-glow",
-          "hover:scale-110 hover:shadow-xl transition-all duration-300",
+          "fixed bottom-5 right-5 z-50 w-11 h-11 rounded-full flex items-center justify-center",
+          "bg-primary text-primary-foreground shadow-md",
+          "hover:scale-105 transition-transform duration-200",
           isOpen && "scale-0 opacity-0"
         )}
-        aria-label="Abrir Mentor IA"
+        aria-label="Abrir Assistente"
       >
-        <MessageCircle className="w-6 h-6" />
+        <MessageCircle className="w-5 h-5" />
       </button>
 
       {/* Chat Panel */}
@@ -46,7 +46,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
     {
       id: '1',
       role: 'assistant',
-      content: 'Olá! Sou o Mentor IA do Metanoia Hub. Como posso ajudá-lo hoje em sua jornada de discipulado? 🙏',
+      content: 'Olá! Sou o assistente do Metanoia Hub. Como posso ajudá-lo hoje?',
       timestamp: new Date(),
     }
   ]);
@@ -77,7 +77,6 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
     setIsLoading(true);
 
     try {
-      // Prepare messages for API (without id and timestamp)
       const apiMessages = [...messages, userMessage].map(m => ({
         role: m.role,
         content: m.content
@@ -106,11 +105,10 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
       console.error('Error calling mentor-chat:', error);
       toast.error('Erro ao enviar mensagem. Tente novamente.');
       
-      // Add error message to chat
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Desculpe, tive um problema para responder. Por favor, tente novamente em alguns instantes.',
+        content: 'Desculpe, tive um problema para responder. Por favor, tente novamente.',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -120,68 +118,68 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] animate-scale-in">
-      <div className="bg-card rounded-2xl overflow-hidden shadow-2xl border border-border">
+    <div className="fixed bottom-5 right-5 z-50 w-[340px] max-w-[calc(100vw-2.5rem)] animate-fade-in">
+      <div className="bg-card rounded-xl overflow-hidden shadow-lg border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-gradient-primary">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-primary-foreground">Mentor IA</h3>
-              <p className="text-xs text-primary-foreground/80">Powered by ChatGPT</p>
+              <h3 className="text-sm font-medium text-foreground">Assistente</h3>
+              <p className="text-[10px] text-muted-foreground">Online</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors"
+            className="p-1.5 rounded-md hover:bg-muted transition-colors"
           >
-            <X className="w-5 h-5 text-primary-foreground" />
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="h-[350px] overflow-y-auto p-4 space-y-4 bg-secondary/30">
+        <div className="h-[300px] overflow-y-auto p-3 space-y-3 bg-background scrollbar-thin">
           {messages.map((message) => (
             <div
               key={message.id}
               className={cn(
-                "flex gap-3 animate-slide-up",
+                "flex gap-2",
                 message.role === 'user' ? "flex-row-reverse" : ""
               )}
             >
               <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                "w-6 h-6 rounded-full flex items-center justify-center shrink-0",
                 message.role === 'user' 
-                  ? "bg-gradient-primary" 
-                  : "bg-secondary"
+                  ? "bg-primary" 
+                  : "bg-muted"
               )}>
                 {message.role === 'user' ? (
-                  <User className="w-4 h-4 text-primary-foreground" />
+                  <User className="w-3 h-3 text-primary-foreground" />
                 ) : (
-                  <Bot className="w-4 h-4 text-muted-foreground" />
+                  <Bot className="w-3 h-3 text-muted-foreground" />
                 )}
               </div>
               <div className={cn(
-                "max-w-[80%] p-3 rounded-2xl text-sm whitespace-pre-wrap",
+                "max-w-[80%] px-3 py-2 rounded-lg text-sm",
                 message.role === 'user' 
-                  ? "bg-gradient-primary text-primary-foreground rounded-br-md" 
-                  : "bg-card border border-border text-foreground rounded-bl-md shadow-sm"
+                  ? "bg-primary text-primary-foreground rounded-br-sm" 
+                  : "bg-muted text-foreground rounded-bl-sm"
               )}>
-                <p>{message.content}</p>
+                <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
               </div>
             </div>
           ))}
           {isLoading && (
-            <div className="flex gap-3 animate-slide-up">
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                <Bot className="w-4 h-4 text-muted-foreground" />
+            <div className="flex gap-2">
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                <Bot className="w-3 h-3 text-muted-foreground" />
               </div>
-              <div className="bg-card border border-border p-3 rounded-2xl rounded-bl-md shadow-sm">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-xs text-muted-foreground">Pensando...</span>
+              <div className="bg-muted px-3 py-2 rounded-lg rounded-bl-sm">
+                <div className="flex items-center gap-1.5">
+                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                  <span className="text-xs text-muted-foreground">Digitando...</span>
                 </div>
               </div>
             </div>
@@ -190,7 +188,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-card border-t border-border">
+        <div className="p-3 bg-card border-t border-border">
           <form 
             onSubmit={(e) => { e.preventDefault(); handleSend(); }}
             className="flex gap-2"
@@ -200,14 +198,14 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1 h-10 px-4 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              className="flex-1 h-9 px-3 rounded-md bg-muted border-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow"
               disabled={isLoading}
             />
             <Button 
               type="submit" 
               size="icon" 
               disabled={!input.trim() || isLoading}
-              className="bg-gradient-primary hover:opacity-90"
+              className="h-9 w-9"
             >
               <Send className="w-4 h-4" />
             </Button>
