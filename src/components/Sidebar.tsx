@@ -422,12 +422,54 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
           <span className="font-display font-semibold text-foreground text-sm">Metanoia</span>
         </div>
 
-        {/* Theme Toggle + Avatar */}
+        {/* Theme Toggle + User Menu */}
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-            {userName?.charAt(0).toUpperCase() || 'U'}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold hover:bg-primary/20 transition-colors">
+                {userName?.charAt(0).toUpperCase() || 'U'}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-popover border border-border">
+              <div className="px-3 py-2 border-b border-border">
+                <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
+                </p>
+              </div>
+              <DropdownMenuItem asChild>
+                <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
+                  <UserCircle className="w-4 h-4" />
+                  Meu Perfil
+                </NavLink>
+              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                    <Settings className="w-4 h-4" />
+                    Painel Admin
+                  </NavLink>
+                </DropdownMenuItem>
+              )}
+              {isDiscipulador && !isAdmin && (
+                <DropdownMenuItem asChild>
+                  <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                    <Users className="w-4 h-4" />
+                    Discipulado
+                  </NavLink>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={onLogout}
+                className="flex items-center gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
     </>
