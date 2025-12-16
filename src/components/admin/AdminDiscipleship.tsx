@@ -34,6 +34,10 @@ interface Relationship {
   academia_nivel_2: boolean;
   academia_nivel_3: boolean;
   academia_nivel_4: boolean;
+  conexao_inicial_1: boolean;
+  conexao_inicial_2: boolean;
+  conexao_inicial_3: boolean;
+  conexao_inicial_4: boolean;
   discipulo?: Profile;
   discipulador?: Profile;
 }
@@ -379,6 +383,24 @@ export function AdminDiscipleship() {
     fetchData();
   };
 
+  const handleToggleConexaoInicial = async (relationshipId: string, nivel: 1 | 2 | 3 | 4, currentValue: boolean) => {
+    const columnName = `conexao_inicial_${nivel}` as const;
+    
+    const { error } = await supabase
+      .from('discipleship_relationships')
+      .update({ [columnName]: !currentValue })
+      .eq('id', relationshipId);
+
+    if (error) {
+      console.error('Error updating conexao inicial nivel:', error);
+      toast.error('Erro ao atualizar nível');
+      return;
+    }
+
+    toast.success(`Conexão Inicial ${nivel} ${!currentValue ? 'marcado' : 'desmarcado'}`);
+    fetchData();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -617,6 +639,32 @@ export function AdminDiscipleship() {
                     {getStatusBadge(rel.status)}
                   </div>
 
+                  {/* Conexão Inicial */}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
+                    <Link className="w-4 h-4 text-accent" />
+                    <span className="text-xs font-medium text-muted-foreground mr-2">Conexão:</span>
+                    {[1, 2, 3, 4].map((nivel) => {
+                      const key = `conexao_inicial_${nivel}` as keyof Relationship;
+                      const isChecked = rel[key] as boolean;
+                      return (
+                        <div key={nivel} className="flex items-center gap-1">
+                          <Checkbox
+                            id={`conexao-${rel.id}-${nivel}`}
+                            checked={isChecked}
+                            onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                            className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                          />
+                          <label 
+                            htmlFor={`conexao-${rel.id}-${nivel}`}
+                            className="text-xs cursor-pointer"
+                          >
+                            N{nivel}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   {/* Academia das Nações */}
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
                     <GraduationCap className="w-4 h-4 text-primary" />
@@ -712,10 +760,42 @@ export function AdminDiscipleship() {
                               )}
                             </div>
 
-                            {/* Academia das Nações Progress */}
+                            {/* Conexão Inicial Progress */}
                             <div className="space-y-3 p-4 rounded-lg bg-accent/10 border border-accent/20">
                               <div className="flex items-center gap-2">
-                                <GraduationCap className="w-4 h-4 text-accent" />
+                                <Link className="w-4 h-4 text-accent" />
+                                <span className="font-semibold text-foreground">Conexão Inicial</span>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                {[1, 2, 3, 4].map((nivel) => {
+                                  const key = `conexao_inicial_${nivel}` as keyof Relationship;
+                                  const isChecked = rel[key] as boolean;
+                                  return (
+                                    <div key={nivel} className="flex items-center gap-2">
+                                      <Checkbox
+                                        id={`progress-conexao-${rel.id}-${nivel}`}
+                                        checked={isChecked}
+                                        onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                      />
+                                      <label 
+                                        htmlFor={`progress-conexao-${rel.id}-${nivel}`}
+                                        className="text-sm cursor-pointer"
+                                      >
+                                        Nível {nivel}
+                                      </label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {[rel.conexao_inicial_1, rel.conexao_inicial_2, rel.conexao_inicial_3, rel.conexao_inicial_4].filter(Boolean).length}/4 níveis concluídos
+                              </p>
+                            </div>
+
+                            {/* Academia das Nações Progress */}
+                            <div className="space-y-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
+                              <div className="flex items-center gap-2">
+                                <GraduationCap className="w-4 h-4 text-primary" />
                                 <span className="font-semibold text-foreground">Academia das Nações</span>
                               </div>
                               <div className="flex items-center gap-4">
