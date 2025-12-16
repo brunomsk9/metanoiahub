@@ -147,10 +147,10 @@ export default function SOS() {
             {/* Header */}
             <header className="pt-8 pb-8 text-center">
               <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
-                S.O.S.
+                S.O.S. do Discipulador
               </h1>
               <p className="text-sm text-muted-foreground">
-                Encontre ajuda para situações específicas
+                Recursos e orientações para ajudar seus discípulos em situações difíceis
               </p>
             </header>
 
