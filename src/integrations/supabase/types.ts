@@ -93,8 +93,6 @@ export type Database = {
           completed_at: string | null
           conexao_inicial_1: boolean | null
           conexao_inicial_2: boolean | null
-          conexao_inicial_3: boolean | null
-          conexao_inicial_4: boolean | null
           created_at: string
           discipulador_id: string
           discipulo_id: string
@@ -114,8 +112,6 @@ export type Database = {
           completed_at?: string | null
           conexao_inicial_1?: boolean | null
           conexao_inicial_2?: boolean | null
-          conexao_inicial_3?: boolean | null
-          conexao_inicial_4?: boolean | null
           created_at?: string
           discipulador_id: string
           discipulo_id: string
@@ -135,8 +131,6 @@ export type Database = {
           completed_at?: string | null
           conexao_inicial_1?: boolean | null
           conexao_inicial_2?: boolean | null
-          conexao_inicial_3?: boolean | null
-          conexao_inicial_4?: boolean | null
           created_at?: string
           discipulador_id?: string
           discipulo_id?: string
