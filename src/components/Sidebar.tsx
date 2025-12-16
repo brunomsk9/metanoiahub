@@ -18,6 +18,7 @@ import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +49,7 @@ const learningItems = [
 export function Sidebar({ onLogout, userName }: SidebarProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -62,14 +64,22 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
   const checkRoles = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id);
+      const [{ data: roles }, { data: profile }] = await Promise.all([
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id),
+        supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .single()
+      ]);
       
       const userRoles = roles?.map(r => r.role) || [];
       setIsAdmin(userRoles.includes('admin'));
       setIsDiscipulador(userRoles.includes('discipulador'));
+      setAvatarUrl(profile?.avatar_url || null);
     }
   };
 
@@ -367,9 +377,12 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-semibold">
-                    {userName?.charAt(0).toUpperCase() || 'U'}
-                  </div>
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={avatarUrl || undefined} alt={userName || 'Usuário'} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                      {userName?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
                     <p className="text-xs text-muted-foreground">
