@@ -11,7 +11,8 @@ import { DailyVerse } from "@/components/DailyVerse";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Flame, ChevronRight } from "lucide-react";
+import { BookOpen, Flame, ChevronRight, Calendar, BookMarked, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Track {
   id: string;
@@ -27,8 +28,10 @@ interface ReadingPlanWithProgress {
   descricao: string | null;
   duracao_dias: number;
   cover_image: string | null;
+  categoria: string;
   currentDay: number;
   completedDays: number[];
+  hasProgress: boolean;
 }
 
 interface BaseTrackProgress {
@@ -39,12 +42,6 @@ interface BaseTrackProgress {
   isCompleted: boolean;
   completedPresencial: boolean;
 }
-
-const fadeIn = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.3 }
-};
 
 export default function Dashboard() {
   const [streak, setStreak] = useState(0);
@@ -73,7 +70,7 @@ export default function Dashboard() {
         supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
         supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
         supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
-        supabase.from('reading_plans').select('*').order('created_at').limit(4),
+        supabase.from('reading_plans').select('*').order('duracao_dias', { ascending: false }),
         supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id),
         supabase.from('tracks').select('id, titulo').eq('is_base', true).maybeSingle(),
         supabase.rpc('user_completed_base_track', { _user_id: session.user.id }),
@@ -113,8 +110,10 @@ export default function Dashboard() {
             descricao: plan.descricao,
             duracao_dias: plan.duracao_dias,
             cover_image: plan.cover_image,
+            categoria: plan.categoria || 'leitura bíblica',
             currentDay: userProgress?.current_day || 1,
-            completedDays: userProgress?.completed_days || []
+            completedDays: userProgress?.completed_days || [],
+            hasProgress: !!userProgress
           };
         });
         setReadingPlans(plansWithProgress);
@@ -206,42 +205,47 @@ export default function Dashboard() {
   const completedHabits = habits.filter(h => h.completed).length;
   const totalHabits = habits.length;
 
+  // Separate annual plans from others
+  const annualPlans = readingPlans.filter(p => p.duracao_dias >= 365);
+  const otherPlans = readingPlans.filter(p => p.duracao_dias < 365);
+  const plansInProgress = readingPlans.filter(p => p.hasProgress && p.completedDays.length > 0 && p.completedDays.length < p.duracao_dias);
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} userName={userName} />
       
       <PageTransition>
-        <main className="pt-16 lg:pt-20 pb-24">
+        <main className="pt-14 lg:pt-16 pb-24">
           <div className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6">
             
             {/* Greeting */}
-            <header className="pt-2">
+            <header className="pt-4">
               <p className="text-muted-foreground text-sm">Olá,</p>
-              <h1 className="text-2xl font-semibold text-foreground">{userName}</h1>
+              <h1 className="text-xl font-semibold text-foreground">{userName}</h1>
             </header>
 
             {/* Daily Verse */}
             <DailyVerse />
 
             {/* Stats Row */}
-            <section className="flex gap-4">
-              <div className="flex-1 stats-card flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                  <Flame className="w-5 h-5 text-warning" />
+            <section className="flex gap-3">
+              <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                  <Flame className="w-4 h-4 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-xl font-semibold text-foreground">{streak}</p>
-                  <p className="text-xs text-muted-foreground">dias seguidos</p>
+                  <p className="text-lg font-semibold text-foreground">{streak}</p>
+                  <p className="text-[10px] text-muted-foreground">dias seguidos</p>
                 </div>
               </div>
-              <div className="flex-1 stats-card">
-                <p className="text-xl font-semibold text-foreground">{xpPoints}</p>
-                <p className="text-xs text-muted-foreground">XP total</p>
+              <div className="flex-1 p-3 rounded-lg bg-muted/50">
+                <p className="text-lg font-semibold text-foreground">{xpPoints}</p>
+                <p className="text-[10px] text-muted-foreground">XP total</p>
               </div>
             </section>
 
             {/* Progress Bar */}
-            <section className="card-elevated p-4">
+            <section className="p-3 rounded-lg border border-border/50 bg-card">
               <div className="flex justify-between text-xs mb-2">
                 <span className="text-muted-foreground">Hábitos de hoje</span>
                 <span className="text-foreground">{completedHabits}/{totalHabits}</span>
@@ -267,15 +271,118 @@ export default function Dashboard() {
             )}
 
             {/* Daily Habits */}
-            <section className="card-elevated p-4">
+            <section className="p-4 rounded-lg border border-border/50 bg-card">
               <h2 className="text-sm font-medium text-foreground mb-3">Seu dia</h2>
               <DailyHabits habits={habits} onToggle={handleHabitToggle} />
             </section>
 
-            {/* Reading Plans */}
-            {(loading || readingPlans.length > 0) && (
+            {/* Continue Reading - Plans in Progress */}
+            {plansInProgress.length > 0 && (
               <section>
-                <h2 className="text-base font-semibold text-foreground mb-3">Planos de Leitura</h2>
+                <h2 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                  <BookMarked className="w-4 h-4 text-primary" />
+                  Continue sua leitura
+                </h2>
+                <div className="space-y-2">
+                  {plansInProgress.slice(0, 2).map((plan) => {
+                    const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                    return (
+                      <button
+                        key={plan.id}
+                        onClick={() => navigate(`/plano/${plan.id}`)}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors text-left"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Play className="w-4 h-4 text-primary fill-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{plan.titulo}</p>
+                          <p className="text-xs text-muted-foreground">Dia {plan.currentDay} de {plan.duracao_dias}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-primary">{progress}%</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Annual Reading Plans - Featured Section */}
+            {(loading || annualPlans.length > 0) && (
+              <section className="pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-medium text-foreground">Planos Anuais de Leitura Bíblica</h2>
+                </div>
+                
+                {loading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-32 rounded-xl" />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {annualPlans.map((plan, index) => {
+                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                      const isStarted = plan.hasProgress;
+                      
+                      return (
+                        <button
+                          key={plan.id}
+                          onClick={() => navigate(`/plano/${plan.id}`)}
+                          className={cn(
+                            "w-full relative overflow-hidden rounded-xl text-left transition-all",
+                            index === 0 ? "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30" : "bg-card border border-border hover:border-primary/30"
+                          )}
+                        >
+                          <div className="flex items-start gap-4 p-4">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                              <img
+                                src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
+                                alt={plan.titulo}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h3 className="font-medium text-foreground mb-0.5">{plan.titulo}</h3>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">{plan.descricao}</p>
+                                </div>
+                                {isStarted && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/20 text-primary flex-shrink-0">
+                                    {progress}%
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-3 flex items-center gap-3">
+                                <div className="flex-1">
+                                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-primary rounded-full transition-all"
+                                      style={{ width: `${progress}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                                  {plan.duracao_dias} dias
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Other Reading Plans */}
+            {(loading || otherPlans.length > 0) && (
+              <section>
+                <h2 className="text-sm font-medium text-foreground mb-3">Outros Planos de Leitura</h2>
                 
                 {loading ? (
                   <div className="grid grid-cols-2 gap-3">
@@ -285,7 +392,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    {readingPlans.map((plan) => (
+                    {otherPlans.map((plan) => (
                       <ReadingPlanCard
                         key={plan.id}
                         id={plan.id}
@@ -306,35 +413,35 @@ export default function Dashboard() {
             {/* Tracks */}
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-foreground">Trilhas</h2>
+                <h2 className="text-sm font-medium text-foreground">Trilhas</h2>
                 <button 
                   onClick={() => navigate('/trilhas')}
-                  className="text-sm text-primary font-medium flex items-center gap-1"
+                  className="text-xs text-primary font-medium flex items-center gap-1"
                 >
                   Ver todas
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
               
               {loading ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-20 rounded-xl" />
+                    <Skeleton key={i} className="h-16 rounded-lg" />
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {tracks.map((track) => (
                     <div
                       key={track.id}
                       onClick={() => navigate(`/trilhas`)}
-                      className="track-card flex items-center gap-4 cursor-pointer"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors cursor-pointer"
                     >
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground truncate">{track.titulo}</h3>
+                        <h3 className="text-sm font-medium text-foreground truncate">{track.titulo}</h3>
                         <p className="text-xs text-muted-foreground">{track.coursesCount} cursos</p>
                       </div>
                       <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
