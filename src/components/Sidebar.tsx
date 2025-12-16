@@ -18,7 +18,6 @@ import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,11 +32,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
@@ -54,9 +48,7 @@ const learningItems = [
 export function Sidebar({ onLogout, userName }: SidebarProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -70,22 +62,14 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
   const checkRoles = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const [{ data: roles }, { data: profile }] = await Promise.all([
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id),
-        supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', session.user.id)
-          .single()
-      ]);
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
       
       const userRoles = roles?.map(r => r.role) || [];
       setIsAdmin(userRoles.includes('admin'));
       setIsDiscipulador(userRoles.includes('discipulador'));
-      setAvatarUrl(profile?.avatar_url || null);
     }
   };
 
