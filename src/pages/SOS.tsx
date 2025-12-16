@@ -91,7 +91,6 @@ export default function SOS() {
     fetchAllContent();
   }, [navigate]);
 
-  // Extract unique tags from resources for quick filter buttons
   const quickTags = useMemo(() => {
     const tagCounts = new Map<string, number>();
     resources.forEach(r => {
@@ -99,7 +98,6 @@ export default function SOS() {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
       });
     });
-    // Sort by count and take top 6
     return Array.from(tagCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
@@ -130,14 +128,14 @@ export default function SOS() {
       <Sidebar onLogout={handleLogout} />
       
       <PageTransition>
-        <main className="pt-16 lg:pt-20 pb-8">
-          <div className="px-4 lg:px-8 max-w-4xl mx-auto">
-            {/* Minimal Header */}
-            <header className="pt-8 pb-12 text-center">
-              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground tracking-tight mb-2">
+        <main className="pt-14 lg:pt-16 pb-8">
+          <div className="px-4 lg:px-6 max-w-3xl mx-auto">
+            {/* Header */}
+            <header className="pt-8 pb-8 text-center">
+              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
                 S.O.S.
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Encontre ajuda para situações específicas
               </p>
             </header>
@@ -152,12 +150,12 @@ export default function SOS() {
 
             {/* Quick Tags */}
             {!loading && quickTags.length > 0 && (
-              <div className="mt-12 flex flex-wrap gap-2 justify-center">
+              <div className="mt-8 flex flex-wrap gap-1.5 justify-center">
                 {quickTags.map((tag) => (
                   <button
                     key={tag}
                     onClick={() => handleQuickTagClick(tag)}
-                    className="px-4 py-2 rounded-full text-sm font-medium bg-secondary/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {tag}
                   </button>
