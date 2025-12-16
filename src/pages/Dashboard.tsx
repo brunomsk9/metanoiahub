@@ -11,7 +11,7 @@ import { DailyVerse } from "@/components/DailyVerse";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Flame, Play, ChevronRight, Sparkles } from "lucide-react";
+import { BookOpen, Flame, ChevronRight } from "lucide-react";
 
 interface Track {
   id: string;
@@ -40,62 +40,11 @@ interface BaseTrackProgress {
   completedPresencial: boolean;
 }
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-} as const;
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.5,
-    },
-  },
-} as const;
-
-const glowVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.6,
-    },
-  },
-} as const;
-
-const slideInLeft = {
-  hidden: { opacity: 0, x: -50 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
-} as const;
-
-const slideInRight = {
-  hidden: { opacity: 0, x: 50 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
-} as const;
+const fadeIn = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 }
+};
 
 export default function Dashboard() {
   const [streak, setStreak] = useState(0);
@@ -120,7 +69,6 @@ export default function Dashboard() {
         return;
       }
       
-      // Fetch all data in parallel
       const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes] = await Promise.all([
         supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
         supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
@@ -156,7 +104,6 @@ export default function Dashboard() {
         setTracks(formattedTracks);
       }
 
-      // Combine reading plans with user progress
       if (plansRes.data) {
         const plansWithProgress = plansRes.data.map(plan => {
           const userProgress = progressRes.data?.find(p => p.plan_id === plan.id);
@@ -173,12 +120,10 @@ export default function Dashboard() {
         setReadingPlans(plansWithProgress);
       }
 
-      // Fetch base track progress
       if (baseTrackRes.data) {
         const baseTrack = baseTrackRes.data;
         const isCompleted = baseCompletedRes.data === true || !!presencialRes.data;
         
-        // Get lessons count for base track
         const { data: lessonsData } = await supabase
           .from('courses')
           .select('id')
@@ -262,307 +207,144 @@ export default function Dashboard() {
   const totalHabits = habits.length;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-[100px]" />
-      </div>
-
+    <div className="min-h-screen bg-background">
       <Sidebar onLogout={handleLogout} userName={userName} />
       
       <PageTransition>
-        <main className="pt-16 lg:pt-20 pb-24 relative z-10">
-          <motion.div 
-            className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
+        <main className="pt-16 lg:pt-20 pb-24">
+          <div className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6">
             
-            {/* Greeting with glow effect */}
-            <motion.header 
-              className="pt-2"
-              variants={slideInLeft}
-            >
-              <motion.p 
-                className="text-muted-foreground text-sm flex items-center gap-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                Olá,
-              </motion.p>
-              <motion.h1 
-                className="text-3xl font-display font-bold text-foreground"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-              >
-                <span className="text-gradient-primary">{userName}</span>
-              </motion.h1>
-            </motion.header>
+            {/* Greeting */}
+            <header className="pt-2">
+              <p className="text-muted-foreground text-sm">Olá,</p>
+              <h1 className="text-2xl font-semibold text-foreground">{userName}</h1>
+            </header>
 
-            {/* Daily Verse with entrance animation */}
-            <motion.div variants={glowVariants}>
-              <DailyVerse />
-            </motion.div>
+            {/* Daily Verse */}
+            <DailyVerse />
 
-            {/* Streak & Progress Card */}
-            <motion.section 
-              className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-5 relative overflow-hidden"
-              variants={itemVariants}
-              whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
-            >
-              {/* Glow effect on card */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-warning/10 rounded-full blur-[60px]" />
-              
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <motion.div 
-                  className="flex items-center gap-3"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <motion.div 
-                    className="w-14 h-14 rounded-full bg-gradient-to-br from-warning/20 to-warning/5 flex items-center justify-center border border-warning/30"
-                    animate={{ 
-                      boxShadow: [
-                        "0 0 20px hsl(var(--warning) / 0.2)",
-                        "0 0 40px hsl(var(--warning) / 0.4)",
-                        "0 0 20px hsl(var(--warning) / 0.2)"
-                      ]
-                    }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Flame className="w-7 h-7 text-warning" />
-                  </motion.div>
-                  <div>
-                    <motion.p 
-                      className="text-3xl font-bold text-foreground"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                    >
-                      {streak}
-                    </motion.p>
-                    <p className="text-xs text-muted-foreground">dias seguidos</p>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  className="text-right"
-                  variants={slideInRight}
-                >
-                  <p className="text-xl font-bold text-gradient-accent">{xpPoints}</p>
-                  <p className="text-xs text-muted-foreground">XP total</p>
-                </motion.div>
-              </div>
-              
-              {/* Animated progress bar */}
-              <div className="space-y-2 relative z-10">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Hábitos de hoje</span>
-                  <span className="text-foreground font-medium">{completedHabits}/{totalHabits}</span>
+            {/* Stats Row */}
+            <section className="flex gap-4">
+              <div className="flex-1 stats-card flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
+                  <Flame className="w-5 h-5 text-warning" />
                 </div>
-                <div className="h-2.5 bg-secondary/50 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full rounded-full relative"
-                    style={{ 
-                      background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))"
-                    }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(completedHabits / totalHabits) * 100}%` }}
-                    transition={{ delay: 0.6, duration: 1, ease: "easeOut" }}
-                  >
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                    />
-                  </motion.div>
+                <div>
+                  <p className="text-xl font-semibold text-foreground">{streak}</p>
+                  <p className="text-xs text-muted-foreground">dias seguidos</p>
                 </div>
               </div>
-            </motion.section>
+              <div className="flex-1 stats-card">
+                <p className="text-xl font-semibold text-foreground">{xpPoints}</p>
+                <p className="text-xs text-muted-foreground">XP total</p>
+              </div>
+            </section>
+
+            {/* Progress Bar */}
+            <section className="card-elevated p-4">
+              <div className="flex justify-between text-xs mb-2">
+                <span className="text-muted-foreground">Hábitos de hoje</span>
+                <span className="text-foreground">{completedHabits}/{totalHabits}</span>
+              </div>
+              <div className="progress-bar">
+                <div 
+                  className="progress-bar-fill"
+                  style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
+                />
+              </div>
+            </section>
 
             {/* Alicerce Progress */}
             {baseTrackProgress && !baseTrackProgress.isCompleted && (
-              <motion.section variants={itemVariants}>
-                <AlicerceProgress
-                  trackId={baseTrackProgress.trackId}
-                  trackTitle={baseTrackProgress.trackTitle}
-                  completedLessons={baseTrackProgress.completedLessons}
-                  totalLessons={baseTrackProgress.totalLessons}
-                  isCompleted={baseTrackProgress.isCompleted}
-                  completedPresencial={baseTrackProgress.completedPresencial}
-                />
-              </motion.section>
+              <AlicerceProgress
+                trackId={baseTrackProgress.trackId}
+                trackTitle={baseTrackProgress.trackTitle}
+                completedLessons={baseTrackProgress.completedLessons}
+                totalLessons={baseTrackProgress.totalLessons}
+                isCompleted={baseTrackProgress.isCompleted}
+                completedPresencial={baseTrackProgress.completedPresencial}
+              />
             )}
 
             {/* Daily Habits */}
-            <motion.section 
-              className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-5"
-              variants={itemVariants}
-            >
-              <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Seu dia
-              </h2>
+            <section className="card-elevated p-4">
+              <h2 className="text-sm font-medium text-foreground mb-3">Seu dia</h2>
               <DailyHabits habits={habits} onToggle={handleHabitToggle} />
-            </motion.section>
+            </section>
 
-            {/* Reading Plans - YouVersion style */}
+            {/* Reading Plans */}
             {(loading || readingPlans.length > 0) && (
-              <motion.section variants={itemVariants}>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-display font-semibold text-foreground">Planos de Leitura</h2>
-                </div>
+              <section>
+                <h2 className="text-base font-semibold text-foreground mb-3">Planos de Leitura</h2>
                 
                 {loading ? (
                   <div className="grid grid-cols-2 gap-3">
                     {[1, 2].map((i) => (
-                      <Skeleton key={i} className="h-48 rounded-2xl" />
+                      <Skeleton key={i} className="h-40 rounded-xl" />
                     ))}
                   </div>
                 ) : (
-                  <motion.div 
-                    className="grid grid-cols-2 gap-3"
-                    variants={containerVariants}
-                  >
-                    {readingPlans.map((plan, index) => (
-                      <motion.div
+                  <div className="grid grid-cols-2 gap-3">
+                    {readingPlans.map((plan) => (
+                      <ReadingPlanCard
                         key={plan.id}
-                        variants={itemVariants}
-                        custom={index}
-                        whileHover={{ scale: 1.03, y: -4 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <ReadingPlanCard
-                          id={plan.id}
-                          titulo={plan.titulo}
-                          descricao={plan.descricao}
-                          coverImage={plan.cover_image}
-                          duracaoDias={plan.duracao_dias}
-                          currentDay={plan.currentDay}
-                          completedDays={plan.completedDays}
-                          onClick={(id) => navigate(`/plano/${id}`)}
-                        />
-                      </motion.div>
+                        id={plan.id}
+                        titulo={plan.titulo}
+                        descricao={plan.descricao}
+                        coverImage={plan.cover_image}
+                        duracaoDias={plan.duracao_dias}
+                        currentDay={plan.currentDay}
+                        completedDays={plan.completedDays}
+                        onClick={(id) => navigate(`/plano/${id}`)}
+                      />
                     ))}
-                  </motion.div>
+                  </div>
                 )}
-              </motion.section>
+              </section>
             )}
 
-            {/* Continue Learning - Netflix style */}
-            <motion.section variants={itemVariants}>
+            {/* Tracks */}
+            <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-display font-semibold text-foreground">Trilhas</h2>
-                <motion.button 
+                <h2 className="text-base font-semibold text-foreground">Trilhas</h2>
+                <button 
                   onClick={() => navigate('/trilhas')}
-                  className="text-sm text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all"
-                  whileHover={{ x: 4 }}
+                  className="text-sm text-primary font-medium flex items-center gap-1"
                 >
                   Ver todas
                   <ChevronRight className="w-4 h-4" />
-                </motion.button>
+                </button>
               </div>
               
               {loading ? (
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="flex-shrink-0 w-40 h-52 rounded-2xl" />
-                  ))}
-                </div>
-              ) : tracks.length > 0 ? (
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                  {tracks.map((track, index) => (
-                    <motion.button
-                      key={track.id}
-                      onClick={() => navigate(`/trilha/${track.id}`)}
-                      className="flex-shrink-0 w-40 group"
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 100 }}
-                      whileHover={{ scale: 1.05, y: -8 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mb-2 border border-border/30">
-                        <img 
-                          src={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&auto=format&fit=crop'} 
-                          alt={track.titulo}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-                        <motion.div 
-                          className="absolute bottom-3 left-3 right-3"
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.7 + index * 0.1 }}
-                        >
-                          <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:scale-110 transition-all shadow-glow">
-                            <Play className="w-5 h-5 text-primary-foreground fill-primary-foreground ml-0.5" />
-                          </div>
-                        </motion.div>
-                      </div>
-                      <p className="text-sm font-medium text-foreground text-left line-clamp-2">{track.titulo}</p>
-                      <p className="text-xs text-muted-foreground text-left">{track.coursesCount} cursos</p>
-                    </motion.button>
+                    <Skeleton key={i} className="h-20 rounded-xl" />
                   ))}
                 </div>
               ) : (
-                <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-8 text-center">
-                  <BookOpen className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">Nenhuma trilha disponível</p>
+                <div className="space-y-3">
+                  {tracks.map((track) => (
+                    <div
+                      key={track.id}
+                      onClick={() => navigate(`/trilhas`)}
+                      className="track-card flex items-center gap-4 cursor-pointer"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-foreground truncate">{track.titulo}</h3>
+                        <p className="text-xs text-muted-foreground">{track.coursesCount} cursos</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  ))}
                 </div>
               )}
-            </motion.section>
+            </section>
 
-            {/* Quick Actions */}
-            <motion.section 
-              className="grid grid-cols-2 gap-3"
-              variants={containerVariants}
-            >
-              <motion.button 
-                onClick={() => navigate('/trilhas')}
-                className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-5 text-left group relative overflow-hidden"
-                variants={itemVariants}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <motion.div 
-                  className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 relative z-10 border border-primary/20"
-                  whileHover={{ rotate: 5, scale: 1.1 }}
-                >
-                  <BookOpen className="w-6 h-6 text-primary" />
-                </motion.div>
-                <p className="font-semibold text-foreground relative z-10">Trilhas</p>
-                <p className="text-xs text-muted-foreground relative z-10">Aprendizado guiado</p>
-              </motion.button>
-              
-              <motion.button 
-                onClick={() => navigate('/sos')}
-                className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-5 text-left group relative overflow-hidden"
-                variants={itemVariants}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <motion.div 
-                  className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3 relative z-10 border border-accent/20"
-                  whileHover={{ rotate: -5, scale: 1.1 }}
-                >
-                  <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </motion.div>
-                <p className="font-semibold text-foreground relative z-10">S.O.S.</p>
-                <p className="text-xs text-muted-foreground relative z-10">Ajuda pastoral</p>
-              </motion.button>
-            </motion.section>
-
-          </motion.div>
+          </div>
         </main>
       </PageTransition>
 
