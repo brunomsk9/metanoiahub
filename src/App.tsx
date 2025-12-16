@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import ReadingPlan from "./pages/ReadingPlan";
 import ChangePassword from "./pages/ChangePassword";
 import Onboarding from "./pages/Onboarding";
+import Library from "./pages/Library";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ function AnimatedRoutes() {
         <Route path="/trilhas" element={<Tracks />} />
         <Route path="/trilha/:id" element={<Tracks />} />
         <Route path="/sos" element={<SOS />} />
+        <Route path="/biblioteca" element={<Library />} />
         <Route path="/aula/:id" element={<Lesson />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />

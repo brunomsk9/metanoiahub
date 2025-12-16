@@ -7,30 +7,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, LifeBuoy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video } from 'lucide-react';
 import { FileUpload } from './FileUpload';
+
+type ResourceCategory = 'sos' | 'apoio' | 'devocional' | 'estudo' | 'livro' | 'musica' | 'pregacao';
+
 interface Resource {
   id: string;
   titulo: string;
   descricao: string | null;
-  categoria: 'sos' | 'apoio' | 'devocional' | 'estudo';
+  categoria: ResourceCategory;
   video_url: string | null;
   url_pdf: string | null;
   tags: string[] | null;
+  autor: string | null;
+  link_externo: string | null;
+  imagem_capa: string | null;
 }
 
-const categoriaLabels = {
+const categoriaLabels: Record<ResourceCategory, string> = {
   sos: 'S.O.S.',
   apoio: 'Apoio',
   devocional: 'Devocional',
-  estudo: 'Estudo'
+  estudo: 'Estudo',
+  livro: 'Livro',
+  musica: 'Música',
+  pregacao: 'Pregação'
 };
 
-const categoriaColors = {
+const categoriaColors: Record<ResourceCategory, string> = {
   sos: 'bg-red-100 text-red-700',
   apoio: 'bg-blue-100 text-blue-700',
   devocional: 'bg-purple-100 text-purple-700',
-  estudo: 'bg-green-100 text-green-700'
+  estudo: 'bg-green-100 text-green-700',
+  livro: 'bg-amber-100 text-amber-700',
+  musica: 'bg-pink-100 text-pink-700',
+  pregacao: 'bg-indigo-100 text-indigo-700'
 };
 
 export function AdminResources() {
@@ -43,10 +55,13 @@ export function AdminResources() {
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
-    categoria: 'sos' as 'sos' | 'apoio' | 'devocional' | 'estudo',
+    categoria: 'sos' as ResourceCategory,
     video_url: '',
     url_pdf: '',
-    tags: ''
+    tags: '',
+    autor: '',
+    link_externo: '',
+    imagem_capa: ''
   });
 
   useEffect(() => {
@@ -74,11 +89,14 @@ export function AdminResources() {
         categoria: resource.categoria,
         video_url: resource.video_url || '',
         url_pdf: resource.url_pdf || '',
-        tags: (resource.tags || []).join(', ')
+        tags: (resource.tags || []).join(', '),
+        autor: resource.autor || '',
+        link_externo: resource.link_externo || '',
+        imagem_capa: resource.imagem_capa || ''
       });
     } else {
       setEditing(null);
-      setForm({ titulo: '', descricao: '', categoria: 'sos', video_url: '', url_pdf: '', tags: '' });
+      setForm({ titulo: '', descricao: '', categoria: 'sos', video_url: '', url_pdf: '', tags: '', autor: '', link_externo: '', imagem_capa: '' });
     }
     setDialogOpen(true);
   };
@@ -102,7 +120,10 @@ export function AdminResources() {
       categoria: form.categoria,
       video_url: form.video_url || null,
       url_pdf: form.url_pdf || null,
-      tags: tagsArray
+      tags: tagsArray,
+      autor: form.autor || null,
+      link_externo: form.link_externo || null,
+      imagem_capa: form.imagem_capa || null
     };
 
     if (editing) {
@@ -156,7 +177,7 @@ export function AdminResources() {
               Novo Recurso
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200">
+          <DialogContent className="bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-gray-900">{editing ? 'Editar Recurso' : 'Novo Recurso'}</DialogTitle>
             </DialogHeader>
@@ -170,19 +191,33 @@ export function AdminResources() {
                   className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">Categoria</Label>
-                <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v as any })}>
-                  <SelectTrigger className="border-gray-300 bg-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="sos">S.O.S.</SelectItem>
-                    <SelectItem value="apoio">Apoio</SelectItem>
-                    <SelectItem value="devocional">Devocional</SelectItem>
-                    <SelectItem value="estudo">Estudo</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Categoria</Label>
+                  <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v as ResourceCategory })}>
+                    <SelectTrigger className="border-gray-300 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      <SelectItem value="sos">S.O.S.</SelectItem>
+                      <SelectItem value="apoio">Apoio</SelectItem>
+                      <SelectItem value="devocional">Devocional</SelectItem>
+                      <SelectItem value="estudo">Estudo</SelectItem>
+                      <SelectItem value="livro">Livro</SelectItem>
+                      <SelectItem value="musica">Música</SelectItem>
+                      <SelectItem value="pregacao">Pregação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Autor</Label>
+                  <Input
+                    value={form.autor}
+                    onChange={(e) => setForm({ ...form, autor: e.target.value })}
+                    placeholder="Ex: C.S. Lewis"
+                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700">Descrição</Label>
@@ -190,6 +225,25 @@ export function AdminResources() {
                   value={form.descricao}
                   onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                   placeholder="Descrição do recurso..."
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-700">Imagem de Capa</Label>
+                <FileUpload
+                  value={form.imagem_capa}
+                  onChange={(url) => setForm({ ...form, imagem_capa: url })}
+                  accept=".jpg,.jpeg,.png,.webp"
+                  folder="recursos/capas"
+                  placeholder="Cole uma URL ou faça upload da imagem"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-700">Link Externo (Spotify, YouTube, etc.)</Label>
+                <Input
+                  value={form.link_externo}
+                  onChange={(e) => setForm({ ...form, link_externo: e.target.value })}
+                  placeholder="https://open.spotify.com/..."
                   className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>

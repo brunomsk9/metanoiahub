@@ -366,30 +366,39 @@ export type Database = {
       }
       resources: {
         Row: {
+          autor: string | null
           categoria: Database["public"]["Enums"]["resource_category"]
           created_at: string
           descricao: string | null
           id: string
+          imagem_capa: string | null
+          link_externo: string | null
           tags: string[] | null
           titulo: string
           url_pdf: string | null
           video_url: string | null
         }
         Insert: {
+          autor?: string | null
           categoria?: Database["public"]["Enums"]["resource_category"]
           created_at?: string
           descricao?: string | null
           id?: string
+          imagem_capa?: string | null
+          link_externo?: string | null
           tags?: string[] | null
           titulo: string
           url_pdf?: string | null
           video_url?: string | null
         }
         Update: {
+          autor?: string | null
           categoria?: Database["public"]["Enums"]["resource_category"]
           created_at?: string
           descricao?: string | null
           id?: string
+          imagem_capa?: string | null
+          link_externo?: string | null
           tags?: string[] | null
           titulo?: string
           url_pdf?: string | null
@@ -573,7 +582,14 @@ export type Database = {
       app_role: "discipulo" | "discipulador" | "admin"
       lesson_type: "video" | "texto" | "checklist_interativo"
       meeting_type: "individual" | "celula"
-      resource_category: "sos" | "devocional" | "estudo" | "apoio"
+      resource_category:
+        | "sos"
+        | "devocional"
+        | "estudo"
+        | "apoio"
+        | "livro"
+        | "musica"
+        | "pregacao"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -704,7 +720,15 @@ export const Constants = {
       app_role: ["discipulo", "discipulador", "admin"],
       lesson_type: ["video", "texto", "checklist_interativo"],
       meeting_type: ["individual", "celula"],
-      resource_category: ["sos", "devocional", "estudo", "apoio"],
+      resource_category: [
+        "sos",
+        "devocional",
+        "estudo",
+        "apoio",
+        "livro",
+        "musica",
+        "pregacao",
+      ],
     },
   },
 } as const

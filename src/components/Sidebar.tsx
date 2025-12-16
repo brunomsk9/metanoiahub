@@ -11,7 +11,8 @@ import {
   Menu,
   Heart,
   GraduationCap,
-  Plus
+  Plus,
+  Library
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ interface SidebarProps {
 const learningItems = [
   { path: '/trilhas', label: 'Trilhas', icon: BookOpen },
   { path: '/sos', label: 'S.O.S.', icon: LifeBuoy },
+  { path: '/biblioteca', label: 'Biblioteca', icon: Library },
 ];
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
