@@ -84,6 +84,10 @@ export type Database = {
       }
       discipleship_relationships: {
         Row: {
+          academia_nivel_1: boolean | null
+          academia_nivel_2: boolean | null
+          academia_nivel_3: boolean | null
+          academia_nivel_4: boolean | null
           alicerce_completed_at: string | null
           alicerce_completed_presencial: boolean | null
           completed_at: string | null
@@ -97,6 +101,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academia_nivel_1?: boolean | null
+          academia_nivel_2?: boolean | null
+          academia_nivel_3?: boolean | null
+          academia_nivel_4?: boolean | null
           alicerce_completed_at?: string | null
           alicerce_completed_presencial?: boolean | null
           completed_at?: string | null
@@ -110,6 +118,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academia_nivel_1?: boolean | null
+          academia_nivel_2?: boolean | null
+          academia_nivel_3?: boolean | null
+          academia_nivel_4?: boolean | null
           alicerce_completed_at?: string | null
           alicerce_completed_presencial?: boolean | null
           completed_at?: string | null

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -25,6 +26,10 @@ interface Relationship {
   started_at: string;
   alicerce_completed_presencial: boolean;
   alicerce_completed_at: string | null;
+  academia_nivel_1: boolean;
+  academia_nivel_2: boolean;
+  academia_nivel_3: boolean;
+  academia_nivel_4: boolean;
   discipulo?: Profile;
 }
 
@@ -250,6 +255,24 @@ export function AdminDiscipleship() {
     fetchData();
   };
 
+  const handleToggleAcademiaNivel = async (relationshipId: string, nivel: 1 | 2 | 3 | 4, currentValue: boolean) => {
+    const columnName = `academia_nivel_${nivel}` as const;
+    
+    const { error } = await supabase
+      .from('discipleship_relationships')
+      .update({ [columnName]: !currentValue })
+      .eq('id', relationshipId);
+
+    if (error) {
+      console.error('Error updating academia nivel:', error);
+      toast.error('Erro ao atualizar nível');
+      return;
+    }
+
+    toast.success(`Nível ${nivel} ${!currentValue ? 'marcado' : 'desmarcado'}`);
+    fetchData();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -358,7 +381,35 @@ export function AdminDiscipleship() {
                       </Badge>
                     )}
                     {getStatusBadge(rel.status)}
-                    
+                  </div>
+
+                  {/* Academia das Nações */}
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
+                    <GraduationCap className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground mr-2">Academia:</span>
+                    {[1, 2, 3, 4].map((nivel) => {
+                      const key = `academia_nivel_${nivel}` as keyof Relationship;
+                      const isChecked = rel[key] as boolean;
+                      return (
+                        <div key={nivel} className="flex items-center gap-1">
+                          <Checkbox
+                            id={`academia-${rel.id}-${nivel}`}
+                            checked={isChecked}
+                            onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <label 
+                            htmlFor={`academia-${rel.id}-${nivel}`}
+                            className="text-xs cursor-pointer"
+                          >
+                            N{nivel}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -425,6 +476,38 @@ export function AdminDiscipleship() {
                                   </AlertDialogContent>
                                 </AlertDialog>
                               )}
+                            </div>
+
+                            {/* Academia das Nações Progress */}
+                            <div className="space-y-3 p-4 rounded-lg bg-accent/10 border border-accent/20">
+                              <div className="flex items-center gap-2">
+                                <GraduationCap className="w-4 h-4 text-accent" />
+                                <span className="font-semibold text-foreground">Academia das Nações</span>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                {[1, 2, 3, 4].map((nivel) => {
+                                  const key = `academia_nivel_${nivel}` as keyof Relationship;
+                                  const isChecked = rel[key] as boolean;
+                                  return (
+                                    <div key={nivel} className="flex items-center gap-2">
+                                      <Checkbox
+                                        id={`progress-academia-${rel.id}-${nivel}`}
+                                        checked={isChecked}
+                                        onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                      />
+                                      <label 
+                                        htmlFor={`progress-academia-${rel.id}-${nivel}`}
+                                        className="text-sm cursor-pointer"
+                                      >
+                                        Nível {nivel}
+                                      </label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {[rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length}/4 níveis concluídos
+                              </p>
                             </div>
 
                             {/* Lessons Progress */}
