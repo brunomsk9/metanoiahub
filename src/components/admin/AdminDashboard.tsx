@@ -42,7 +42,7 @@ export function AdminDashboard() {
       supabase.from('lessons').select('id', { count: 'exact', head: true }),
       supabase.from('resources').select('id', { count: 'exact', head: true }),
       supabase.from('reading_plans').select('id', { count: 'exact', head: true }),
-      supabase.from('discipleship_relationships').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase.from('discipleship_relationships').select('discipulador_id').eq('status', 'active'),
       supabase.from('profiles').select('current_streak').gt('current_streak', 0),
       supabase.from('profiles').select('id, nome, created_at').order('created_at', { ascending: false }).limit(5)
     ]);
@@ -52,6 +52,11 @@ export function AdminDashboard() {
       ? Math.round(streakData.reduce((sum, p) => sum + (p.current_streak || 0), 0) / streakData.length)
       : 0;
 
+    // Count unique discipuladores (each discipulador = 1 discipulado)
+    const uniqueDiscipuladores = new Set(
+      (relationshipsRes.data || []).map(r => r.discipulador_id)
+    ).size;
+
     setStats({
       totalUsers: usersRes.count || 0,
       totalTracks: tracksRes.count || 0,
@@ -59,7 +64,7 @@ export function AdminDashboard() {
       totalLessons: lessonsRes.count || 0,
       totalResources: resourcesRes.count || 0,
       totalReadingPlans: plansRes.count || 0,
-      activeRelationships: relationshipsRes.count || 0,
+      activeRelationships: uniqueDiscipuladores,
       avgStreak,
       usersWithStreak: streakData.length
     });
