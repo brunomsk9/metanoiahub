@@ -192,6 +192,71 @@ export type Database = {
           },
         ]
       }
+      meeting_attendance: {
+        Row: {
+          created_at: string
+          discipulo_id: string
+          id: string
+          meeting_id: string
+          presente: boolean
+        }
+        Insert: {
+          created_at?: string
+          discipulo_id: string
+          id?: string
+          meeting_id: string
+          presente?: boolean
+        }
+        Update: {
+          created_at?: string
+          discipulo_id?: string
+          id?: string
+          meeting_id?: string
+          presente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendance_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          data_encontro: string
+          discipulador_id: string
+          discipulo_id: string | null
+          id: string
+          local: string | null
+          notas: string | null
+          tipo: Database["public"]["Enums"]["meeting_type"]
+        }
+        Insert: {
+          created_at?: string
+          data_encontro?: string
+          discipulador_id: string
+          discipulo_id?: string | null
+          id?: string
+          local?: string | null
+          notas?: string | null
+          tipo?: Database["public"]["Enums"]["meeting_type"]
+        }
+        Update: {
+          created_at?: string
+          data_encontro?: string
+          discipulador_id?: string
+          discipulo_id?: string | null
+          id?: string
+          local?: string | null
+          notas?: string | null
+          tipo?: Database["public"]["Enums"]["meeting_type"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -507,6 +572,7 @@ export type Database = {
     Enums: {
       app_role: "discipulo" | "discipulador" | "admin"
       lesson_type: "video" | "texto" | "checklist_interativo"
+      meeting_type: "individual" | "celula"
       resource_category: "sos" | "devocional" | "estudo" | "apoio"
     }
     CompositeTypes: {
@@ -637,6 +703,7 @@ export const Constants = {
     Enums: {
       app_role: ["discipulo", "discipulador", "admin"],
       lesson_type: ["video", "texto", "checklist_interativo"],
+      meeting_type: ["individual", "celula"],
       resource_category: ["sos", "devocional", "estudo", "apoio"],
     },
   },
