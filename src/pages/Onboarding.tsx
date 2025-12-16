@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   BookOpen, 
   Users, 
@@ -124,13 +125,36 @@ const onboardingSteps = [
 const Onboarding = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
   const step = onboardingSteps[currentStep];
   const isLastStep = currentStep === onboardingSteps.length - 1;
   const isFirstStep = currentStep === 0;
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  const completeOnboarding = async () => {
+    setIsCompleting(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('id', session.user.id);
+    }
+    navigate("/dashboard");
+  };
+
   const nextStep = () => {
     if (isLastStep) {
-      navigate("/dashboard");
+      completeOnboarding();
     } else {
       setCurrentStep(prev => prev + 1);
     }
@@ -143,7 +167,7 @@ const Onboarding = () => {
   };
 
   const skipOnboarding = () => {
-    navigate("/dashboard");
+    completeOnboarding();
   };
 
   return (
@@ -235,10 +259,10 @@ const Onboarding = () => {
                     Anterior
                   </Button>
 
-                  <Button onClick={nextStep} className="min-w-32">
+                  <Button onClick={nextStep} className="min-w-32" disabled={isCompleting}>
                     {isLastStep ? (
                       <>
-                        Começar
+                        {isCompleting ? "Salvando..." : "Começar"}
                         <Sparkles className="w-4 h-4 ml-2" />
                       </>
                     ) : (

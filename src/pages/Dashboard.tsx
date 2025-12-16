@@ -72,7 +72,7 @@ export default function Dashboard() {
       }
       
       const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes, rolesRes] = await Promise.all([
-        supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
+        supabase.from('profiles').select('nome, current_streak, xp_points, onboarding_completed').eq('id', session.user.id).maybeSingle(),
         supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
         supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
         supabase.from('reading_plans').select('*').order('duracao_dias', { ascending: false }),
@@ -82,6 +82,12 @@ export default function Dashboard() {
         supabase.from('discipleship_relationships').select('alicerce_completed_presencial').eq('discipulo_id', session.user.id).eq('alicerce_completed_presencial', true).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', session.user.id)
       ]);
+
+      // Redirect to onboarding if not completed
+      if (profileRes.data && !profileRes.data.onboarding_completed) {
+        navigate('/onboarding');
+        return;
+      }
 
       const userRoles = rolesRes.data?.map(r => r.role) || [];
       setIsDiscipulador(userRoles.includes('discipulador'));
