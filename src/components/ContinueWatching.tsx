@@ -1,4 +1,4 @@
-import { Play, Clock } from "lucide-react";
+import { Play, Clock, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CourseProgress {
@@ -101,30 +101,66 @@ interface TrackCardProps {
   thumbnail: string;
   coursesCount: number;
   onClick: (id: string) => void;
+  isBase?: boolean;
+  isLocked?: boolean;
 }
 
-export function TrackCard({ id, title, description, thumbnail, coursesCount, onClick }: TrackCardProps) {
+export function TrackCard({ id, title, description, thumbnail, coursesCount, onClick, isBase, isLocked }: TrackCardProps) {
+  const handleClick = () => {
+    if (!isLocked) {
+      onClick(id);
+    }
+  };
+
   return (
     <div 
-      className="group cursor-pointer rounded-2xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-      onClick={() => onClick(id)}
+      className={`group rounded-2xl overflow-hidden bg-card border shadow-sm transition-all duration-300 ${
+        isLocked 
+          ? 'cursor-not-allowed opacity-70 border-border' 
+          : 'cursor-pointer border-border hover:shadow-xl hover:-translate-y-1'
+      } ${isBase ? 'ring-2 ring-primary/50' : ''}`}
+      onClick={handleClick}
     >
-      <div className="aspect-[16/9] overflow-hidden">
+      <div className="aspect-[16/9] overflow-hidden relative">
         <img
           src={thumbnail}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className={`w-full h-full object-cover transition-transform duration-500 ${
+            isLocked ? 'grayscale' : 'group-hover:scale-110'
+          }`}
         />
+        {isLocked && (
+          <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
+            <div className="bg-card/90 rounded-full p-3">
+              <Lock className="w-6 h-6 text-muted-foreground" />
+            </div>
+          </div>
+        )}
+        {isBase && !isLocked && (
+          <div className="absolute top-3 left-3">
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+              Alicerce
+            </span>
+          </div>
+        )}
       </div>
       <div className="p-5">
-        <h3 className="text-lg font-display font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+        <h3 className={`text-lg font-display font-semibold mb-2 transition-colors ${
+          isLocked ? 'text-muted-foreground' : 'text-foreground group-hover:text-primary'
+        }`}>
           {title}
         </h3>
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{description}</p>
         <div className="flex items-center gap-2">
-          <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-            {coursesCount} cursos
-          </span>
+          {isLocked ? (
+            <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+              Complete o Alicerce primeiro
+            </span>
+          ) : (
+            <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+              {coursesCount} cursos
+            </span>
+          )}
         </div>
       </div>
     </div>
