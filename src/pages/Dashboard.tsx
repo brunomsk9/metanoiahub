@@ -10,6 +10,7 @@ import { DailyVerse } from "@/components/DailyVerse";
 import { StartPlanModal } from "@/components/StartPlanModal";
 import { DiscipuladorDashboardCards } from "@/components/DiscipuladorDashboardCards";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { MeetingsManager } from "@/components/MeetingsManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -318,7 +319,10 @@ export default function Dashboard() {
                 title="Meu Discipulado" 
                 icon={<Users className="w-4 h-4" />}
               >
-                <DiscipuladorDashboardCards />
+                <div className="space-y-6">
+                  <DiscipuladorDashboardCards />
+                  <MeetingsManager />
+                </div>
               </CollapsibleSection>
             )}
 
