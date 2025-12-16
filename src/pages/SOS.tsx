@@ -31,6 +31,20 @@ export default function SOS() {
         return;
       }
 
+      // Check if user is discipulador or admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+      
+      const userRoles = roles?.map(r => r.role) || [];
+      const hasAccess = userRoles.includes('discipulador') || userRoles.includes('admin');
+      
+      if (!hasAccess) {
+        navigate('/dashboard');
+        return;
+      }
+
       const [resourcesRes, lessonsRes] = await Promise.all([
         supabase
           .from('resources')
