@@ -28,11 +28,6 @@ interface ReadingPlanWithProgress {
   completedDays: number[];
 }
 
-// Versículo do dia (pode ser dinâmico futuramente)
-const verseOfDay = {
-  text: "Ensina-me, Senhor, o teu caminho, e andarei na tua verdade; une o meu coração ao temor do teu nome.",
-  reference: "Salmos 86:11"
-};
 
 export default function Dashboard() {
   const [streak, setStreak] = useState(0);
@@ -179,17 +174,6 @@ export default function Dashboard() {
               </h1>
             </header>
 
-            {/* Verse of the Day Card */}
-            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-              
-              <p className="text-xs uppercase tracking-wider opacity-80 mb-3">Versículo do Dia</p>
-              <p className="text-lg font-serif italic leading-relaxed mb-4 relative z-10">
-                "{verseOfDay.text}"
-              </p>
-              <p className="text-sm font-medium opacity-90">{verseOfDay.reference}</p>
-            </section>
 
             {/* Streak & Progress */}
             <section className="bg-card rounded-2xl border border-border p-5">
