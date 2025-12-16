@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
@@ -31,6 +32,7 @@ interface Relationship {
   academia_nivel_3: boolean;
   academia_nivel_4: boolean;
   discipulo?: Profile;
+  discipulador?: Profile;
 }
 
 interface DiscipleProgress {
@@ -45,11 +47,17 @@ interface DiscipleProgress {
 export function AdminDiscipleship() {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [availableDisciples, setAvailableDisciples] = useState<Profile[]>([]);
+  const [availableDiscipuladores, setAvailableDiscipuladores] = useState<Profile[]>([]);
+  const [allUnassignedDisciples, setAllUnassignedDisciples] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDisciple, setSelectedDisciple] = useState<string>("");
+  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>("");
+  const [selectedAdminDisciple, setSelectedAdminDisciple] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [viewingProgress, setViewingProgress] = useState<string | null>(null);
   const [discipleProgress, setDiscipleProgress] = useState<DiscipleProgress | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -61,11 +69,25 @@ export function AdminDiscipleship() {
     
     setCurrentUserId(user.id);
 
-    // Fetch existing relationships where current user is the discipulador
-    const { data: rels, error: relsError } = await supabase
-      .from('discipleship_relationships')
-      .select('*')
-      .eq('discipulador_id', user.id);
+    // Check if user is admin
+    const { data: adminCheck } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    const userIsAdmin = !!adminCheck;
+    setIsAdmin(userIsAdmin);
+
+    // Fetch relationships - all if admin, only own if discipulador
+    let relsQuery = supabase.from('discipleship_relationships').select('*');
+    
+    if (!userIsAdmin) {
+      relsQuery = relsQuery.eq('discipulador_id', user.id);
+    }
+
+    const { data: rels, error: relsError } = await relsQuery;
 
     if (relsError) {
       console.error('Error fetching relationships:', relsError);
@@ -73,17 +95,21 @@ export function AdminDiscipleship() {
       return;
     }
 
-    // Fetch profiles for disciples
+    // Fetch profiles for disciples and discipuladores
     if (rels && rels.length > 0) {
       const discipleIds = rels.map(r => r.discipulo_id);
+      const discipuladorIds = [...new Set(rels.map(r => r.discipulador_id))];
+      const allIds = [...new Set([...discipleIds, ...discipuladorIds])];
+      
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, nome, current_streak, xp_points')
-        .in('id', discipleIds);
+        .in('id', allIds);
 
       const relsWithProfiles = rels.map(rel => ({
         ...rel,
-        discipulo: profiles?.find(p => p.id === rel.discipulo_id)
+        discipulo: profiles?.find(p => p.id === rel.discipulo_id),
+        discipulador: profiles?.find(p => p.id === rel.discipulador_id)
       }));
       
       setRelationships(relsWithProfiles);
@@ -98,7 +124,7 @@ export function AdminDiscipleship() {
       .eq('role', 'discipulo');
 
     if (allDisciples) {
-      const assignedIds = rels?.map(r => r.discipulo_id) || [];
+      const assignedIds = rels?.filter(r => r.discipulador_id === user.id).map(r => r.discipulo_id) || [];
       const availableIds = allDisciples
         .map(d => d.user_id)
         .filter(id => !assignedIds.includes(id) && id !== user.id);
@@ -112,6 +138,43 @@ export function AdminDiscipleship() {
         setAvailableDisciples(profiles || []);
       } else {
         setAvailableDisciples([]);
+      }
+
+      // For admin: get all unassigned disciples (not assigned to ANY discipulador)
+      if (userIsAdmin) {
+        const allAssignedIds = rels?.map(r => r.discipulo_id) || [];
+        const unassignedIds = allDisciples
+          .map(d => d.user_id)
+          .filter(id => !allAssignedIds.includes(id));
+
+        if (unassignedIds.length > 0) {
+          const { data: unassignedProfiles } = await supabase
+            .from('profiles')
+            .select('id, nome, current_streak, xp_points')
+            .in('id', unassignedIds);
+          
+          setAllUnassignedDisciples(unassignedProfiles || []);
+        } else {
+          setAllUnassignedDisciples([]);
+        }
+      }
+    }
+
+    // Fetch discipuladores for admin association
+    if (userIsAdmin) {
+      const { data: discipuladoresRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'discipulador');
+
+      if (discipuladoresRoles && discipuladoresRoles.length > 0) {
+        const discipuladorIds = discipuladoresRoles.map(d => d.user_id);
+        const { data: discipuladorProfiles } = await supabase
+          .from('profiles')
+          .select('id, nome, current_streak, xp_points')
+          .in('id', discipuladorIds);
+        
+        setAvailableDiscipuladores(discipuladorProfiles || []);
       }
     }
 
@@ -142,6 +205,44 @@ export function AdminDiscipleship() {
     setSelectedDisciple("");
     fetchData();
   };
+
+  const handleAdminAssociate = async () => {
+    if (!selectedDiscipulador || !selectedAdminDisciple) {
+      toast.error('Selecione o discipulador e o discípulo');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('discipleship_relationships')
+      .insert({
+        discipulador_id: selectedDiscipulador,
+        discipulo_id: selectedAdminDisciple,
+        status: 'active'
+      });
+
+    if (error) {
+      console.error('Error associating:', error);
+      if (error.code === '23505') {
+        toast.error('Este discípulo já está associado a um discipulador');
+      } else {
+        toast.error('Erro ao associar discípulo');
+      }
+      return;
+    }
+
+    toast.success('Discípulo associado com sucesso');
+    setSelectedDiscipulador("");
+    setSelectedAdminDisciple("");
+    fetchData();
+  };
+
+  const filteredRelationships = relationships.filter(rel => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    const discipleName = rel.discipulo?.nome?.toLowerCase() || '';
+    const discipuladorName = rel.discipulador?.nome?.toLowerCase() || '';
+    return discipleName.includes(search) || discipuladorName.includes(search);
+  });
 
   const handleRemoveRelationship = async (id: string) => {
     const { error } = await supabase
@@ -296,56 +397,121 @@ export function AdminDiscipleship() {
 
   return (
     <div className="space-y-6">
-      {/* Add new disciple */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5" />
-            Adicionar Discípulo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-3">
-            <Select value={selectedDisciple} onValueChange={setSelectedDisciple}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Selecione um discípulo..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableDisciples.length === 0 ? (
-                  <SelectItem value="none" disabled>Nenhum discípulo disponível</SelectItem>
-                ) : (
-                  availableDisciples.map(disciple => (
-                    <SelectItem key={disciple.id} value={disciple.id}>
-                      {disciple.nome || 'Sem nome'}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAddDisciple} disabled={!selectedDisciple}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Adicionar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Admin association */}
+      {isAdmin && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Link className="w-5 h-5" />
+              Associar Discípulo a Discipulador (Admin)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3 flex-wrap">
+              <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
+                <SelectTrigger className="flex-1 min-w-[200px]">
+                  <SelectValue placeholder="Selecione o discipulador..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDiscipuladores.length === 0 ? (
+                    <SelectItem value="none" disabled>Nenhum discipulador disponível</SelectItem>
+                  ) : (
+                    availableDiscipuladores.map(d => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.nome || 'Sem nome'}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <Select value={selectedAdminDisciple} onValueChange={setSelectedAdminDisciple}>
+                <SelectTrigger className="flex-1 min-w-[200px]">
+                  <SelectValue placeholder="Selecione o discípulo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {allUnassignedDisciples.length === 0 ? (
+                    <SelectItem value="none" disabled>Nenhum discípulo disponível</SelectItem>
+                  ) : (
+                    allUnassignedDisciples.map(d => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.nome || 'Sem nome'}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleAdminAssociate} disabled={!selectedDiscipulador || !selectedAdminDisciple}>
+                <Link className="w-4 h-4 mr-2" />
+                Associar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* My disciples */}
+      {/* Add new disciple (for discipuladores) */}
+      {!isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Adicionar Discípulo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3">
+              <Select value={selectedDisciple} onValueChange={setSelectedDisciple}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Selecione um discípulo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDisciples.length === 0 ? (
+                    <SelectItem value="none" disabled>Nenhum discípulo disponível</SelectItem>
+                  ) : (
+                    availableDisciples.map(disciple => (
+                      <SelectItem key={disciple.id} value={disciple.id}>
+                        {disciple.nome || 'Sem nome'}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleAddDisciple} disabled={!selectedDisciple}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Relationships list */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Meus Discípulos ({relationships.length})
-          </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              {isAdmin ? `Todos os Relacionamentos (${relationships.length})` : `Meus Discípulos (${relationships.length})`}
+            </CardTitle>
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {relationships.length === 0 ? (
+          {filteredRelationships.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              Você ainda não tem discípulos vinculados.
+              {searchTerm ? 'Nenhum resultado encontrado.' : 'Nenhum relacionamento encontrado.'}
             </p>
           ) : (
             <div className="space-y-3">
-              {relationships.map(rel => (
+              {filteredRelationships.map(rel => (
                 <div
                   key={rel.id}
                   className="flex items-center justify-between p-4 rounded-lg border bg-card"
@@ -359,6 +525,11 @@ export function AdminDiscipleship() {
                     <div>
                       <p className="font-medium">{rel.discipulo?.nome || 'Sem nome'}</p>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        {isAdmin && rel.discipulador && (
+                          <span className="text-xs">
+                            Discipulador: <span className="font-medium">{rel.discipulador.nome}</span>
+                          </span>
+                        )}
                         <span className="flex items-center gap-1">
                           <Flame className="w-3 h-3 text-orange-500" />
                           {rel.discipulo?.current_streak || 0} dias
