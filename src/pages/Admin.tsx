@@ -122,70 +122,72 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-6">
-          <TabsList className="bg-card border border-border p-1 rounded-lg w-full sm:w-auto inline-flex flex-wrap">
-            {isAdmin && (
-              <>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="bg-card border border-border p-1 rounded-lg inline-flex min-w-max">
+              {isAdmin && (
+                <>
+                  <TabsTrigger 
+                    value="dashboard" 
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <LayoutDashboard className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tracks" 
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <BookOpen className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Trilhas</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="courses"
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <GraduationCap className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Cursos</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="lessons"
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <FileText className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Aulas</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="resources"
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <LifeBuoy className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Recursos</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="users"
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <Users className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Usuários</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="reading-plans"
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
+                  >
+                    <CalendarDays className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Planos</span>
+                  </TabsTrigger>
+                </>
+              )}
+              {isDiscipulador && (
                 <TabsTrigger 
-                  value="dashboard" 
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
+                  value="discipleship"
+                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-2 sm:px-4 py-2 text-muted-foreground text-xs sm:text-sm"
                 >
-                  <LayoutDashboard className="h-4 w-4 mr-2" />
-                  Dashboard
+                  <Heart className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Discipulado</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="tracks" 
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Trilhas
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="courses"
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-                >
-                  <GraduationCap className="h-4 w-4 mr-2" />
-                  Cursos
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="lessons"
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Aulas
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="resources"
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-                >
-                  <LifeBuoy className="h-4 w-4 mr-2" />
-                  Recursos
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="users"
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Usuários
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="reading-plans"
-                  className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-                >
-                  <CalendarDays className="h-4 w-4 mr-2" />
-                  Planos de Leitura
-                </TabsTrigger>
-              </>
-            )}
-            {isDiscipulador && (
-              <TabsTrigger 
-                value="discipleship"
-                className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 py-2 text-muted-foreground"
-              >
-                <Heart className="h-4 w-4 mr-2" />
-                Discipulado
-              </TabsTrigger>
-            )}
-          </TabsList>
+              )}
+            </TabsList>
+          </div>
 
           {isAdmin && (
             <>
