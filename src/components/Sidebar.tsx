@@ -94,7 +94,6 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
   );
 
   const isLearningActive = visibleLearningItems.some(item => location.pathname === item.path);
-  const activeLearningItem = visibleLearningItems.find(item => location.pathname === item.path);
 
   return (
     <>
@@ -133,26 +132,17 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                   ? "bg-primary/10 text-primary" 
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}>
-                {activeLearningItem ? (
-                  <>
-                    <activeLearningItem.icon className="w-4 h-4" />
-                    <span>{activeLearningItem.label}</span>
-                  </>
-                ) : (
-                  <>
-                    <GraduationCap className="w-4 h-4" />
-                    <span>Aprendizado</span>
-                  </>
-                )}
+                <GraduationCap className="w-4 h-4" />
+                <span>Aprendizado</span>
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-popover border border-border">
+              <DropdownMenuContent align="start" className="w-48 bg-popover border border-border">
                 {visibleLearningItems.map((item) => (
                   <DropdownMenuItem key={item.path} asChild>
                     <NavLink
                       to={item.path}
                       className={cn(
-                        "flex items-center gap-2 cursor-pointer",
+                        "flex items-center gap-2 cursor-pointer w-full",
                         location.pathname === item.path && "bg-primary/10 text-primary"
                       )}
                     >
