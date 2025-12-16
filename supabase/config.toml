@@ -2,3 +2,9 @@ project_id = "cnpvlloooyyxlgayfzth"
 
 [functions.mentor-chat]
 verify_jwt = false
+
+[functions.import-users]
+verify_jwt = false
+
+[functions.generate-verse-image]
+verify_jwt = false
