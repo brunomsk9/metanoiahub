@@ -5,6 +5,7 @@ import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
 import { PageTransition } from "@/components/PageTransition";
 import { ReadingPlanCard } from "@/components/ReadingPlanCard";
+import { AlicerceProgress } from "@/components/AlicerceProgress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +29,13 @@ interface ReadingPlanWithProgress {
   completedDays: number[];
 }
 
+interface BaseTrackProgress {
+  trackId: string;
+  trackTitle: string;
+  completedLessons: number;
+  totalLessons: number;
+  isCompleted: boolean;
+}
 
 export default function Dashboard() {
   const [streak, setStreak] = useState(0);
@@ -35,6 +43,7 @@ export default function Dashboard() {
   const [xpPoints, setXpPoints] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [readingPlans, setReadingPlans] = useState<ReadingPlanWithProgress[]>([]);
+  const [baseTrackProgress, setBaseTrackProgress] = useState<BaseTrackProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [habits, setHabits] = useState([
     { id: 'leitura', name: 'Leitura Bíblica', completed: false, icon: 'book' as const },
@@ -52,12 +61,14 @@ export default function Dashboard() {
       }
       
       // Fetch all data in parallel
-      const [profileRes, habitsRes, tracksRes, plansRes, progressRes] = await Promise.all([
+      const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes] = await Promise.all([
         supabase.from('profiles').select('nome, current_streak, xp_points').eq('id', session.user.id).maybeSingle(),
         supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
         supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
         supabase.from('reading_plans').select('*').order('created_at').limit(4),
-        supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id)
+        supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id),
+        supabase.from('tracks').select('id, titulo').eq('is_base', true).maybeSingle(),
+        supabase.rpc('user_completed_base_track', { _user_id: session.user.id })
       ]);
       
       if (profileRes.data) {
@@ -99,6 +110,36 @@ export default function Dashboard() {
           };
         });
         setReadingPlans(plansWithProgress);
+      }
+
+      // Fetch base track progress
+      if (baseTrackRes.data) {
+        const baseTrack = baseTrackRes.data;
+        const isCompleted = baseCompletedRes.data === true;
+        
+        // Get lessons count for base track
+        const { data: lessonsData } = await supabase
+          .from('courses')
+          .select('id')
+          .eq('track_id', baseTrack.id);
+        
+        if (lessonsData && lessonsData.length > 0) {
+          const courseIds = lessonsData.map(c => c.id);
+          const [totalLessonsRes, completedLessonsRes] = await Promise.all([
+            supabase.from('lessons').select('id', { count: 'exact' }).in('course_id', courseIds),
+            supabase.from('user_progress').select('id', { count: 'exact' }).eq('user_id', session.user.id).eq('completed', true).in('lesson_id', 
+              (await supabase.from('lessons').select('id').in('course_id', courseIds)).data?.map(l => l.id) || []
+            )
+          ]);
+          
+          setBaseTrackProgress({
+            trackId: baseTrack.id,
+            trackTitle: baseTrack.titulo,
+            completedLessons: completedLessonsRes.count || 0,
+            totalLessons: totalLessonsRes.count || 0,
+            isCompleted
+          });
+        }
       }
 
       setLoading(false);
@@ -207,6 +248,19 @@ export default function Dashboard() {
                 </div>
               </div>
             </section>
+
+            {/* Alicerce Progress */}
+            {baseTrackProgress && !baseTrackProgress.isCompleted && (
+              <section>
+                <AlicerceProgress
+                  trackId={baseTrackProgress.trackId}
+                  trackTitle={baseTrackProgress.trackTitle}
+                  completedLessons={baseTrackProgress.completedLessons}
+                  totalLessons={baseTrackProgress.totalLessons}
+                  isCompleted={baseTrackProgress.isCompleted}
+                />
+              </section>
+            )}
 
             {/* Daily Habits */}
             <section className="bg-card rounded-2xl border border-border p-5">
