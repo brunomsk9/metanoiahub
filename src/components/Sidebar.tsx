@@ -364,15 +364,17 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               </div>
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50">
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-semibold">
                     {userName?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
-                    <p className="text-xs text-muted-foreground">Discípulo</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
+                    </p>
                   </div>
                 </div>
                 <ThemeToggle />
