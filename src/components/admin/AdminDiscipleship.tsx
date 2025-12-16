@@ -6,11 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 interface Profile {
   id: string;
@@ -58,6 +61,8 @@ export function AdminDiscipleship() {
   const [viewingProgress, setViewingProgress] = useState<string | null>(null);
   const [discipleProgress, setDiscipleProgress] = useState<DiscipleProgress | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [openDiscipulador, setOpenDiscipulador] = useState(false);
+  const [openAdminDisciple, setOpenAdminDisciple] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -408,38 +413,96 @@ export function AdminDiscipleship() {
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 flex-wrap">
-              <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
-                <SelectTrigger className="flex-1 min-w-[200px]">
-                  <SelectValue placeholder="Selecione o discipulador..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableDiscipuladores.length === 0 ? (
-                    <SelectItem value="none" disabled>Nenhum discipulador disponível</SelectItem>
-                  ) : (
-                    availableDiscipuladores.map(d => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.nome || 'Sem nome'}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <Select value={selectedAdminDisciple} onValueChange={setSelectedAdminDisciple}>
-                <SelectTrigger className="flex-1 min-w-[200px]">
-                  <SelectValue placeholder="Selecione o discípulo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {allUnassignedDisciples.length === 0 ? (
-                    <SelectItem value="none" disabled>Nenhum discípulo disponível</SelectItem>
-                  ) : (
-                    allUnassignedDisciples.map(d => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.nome || 'Sem nome'}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              {/* Discipulador Combobox */}
+              <Popover open={openDiscipulador} onOpenChange={setOpenDiscipulador}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openDiscipulador}
+                    className="flex-1 min-w-[200px] justify-between"
+                  >
+                    {selectedDiscipulador
+                      ? availableDiscipuladores.find(d => d.id === selectedDiscipulador)?.nome || 'Sem nome'
+                      : "Selecione o discipulador..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar discipulador..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum discipulador encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {availableDiscipuladores.map(d => (
+                          <CommandItem
+                            key={d.id}
+                            value={d.nome || 'Sem nome'}
+                            onSelect={() => {
+                              setSelectedDiscipulador(d.id);
+                              setOpenDiscipulador(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedDiscipulador === d.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {d.nome || 'Sem nome'}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {/* Discípulo Combobox */}
+              <Popover open={openAdminDisciple} onOpenChange={setOpenAdminDisciple}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openAdminDisciple}
+                    className="flex-1 min-w-[200px] justify-between"
+                  >
+                    {selectedAdminDisciple
+                      ? allUnassignedDisciples.find(d => d.id === selectedAdminDisciple)?.nome || 'Sem nome'
+                      : "Selecione o discípulo..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar discípulo..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum discípulo encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {allUnassignedDisciples.map(d => (
+                          <CommandItem
+                            key={d.id}
+                            value={d.nome || 'Sem nome'}
+                            onSelect={() => {
+                              setSelectedAdminDisciple(d.id);
+                              setOpenAdminDisciple(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedAdminDisciple === d.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {d.nome || 'Sem nome'}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
               <Button onClick={handleAdminAssociate} disabled={!selectedDiscipulador || !selectedAdminDisciple}>
                 <Link className="w-4 h-4 mr-2" />
                 Associar
