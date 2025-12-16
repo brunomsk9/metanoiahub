@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import ReadingPlan from "./pages/ReadingPlan";
 import ChangePassword from "./pages/ChangePassword";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ function AnimatedRoutes() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/plano/:id" element={<ReadingPlan />} />
         <Route path="/alterar-senha" element={<ChangePassword />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
