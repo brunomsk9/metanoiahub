@@ -8,7 +8,8 @@ import {
   LogOut, 
   Shield,
   ChevronDown,
-  Menu
+  Menu,
+  Heart
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
@@ -43,11 +44,12 @@ const navItems = [
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDiscipulador, setIsDiscipulador] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
-    checkAdminRole();
+    checkRoles();
   }, []);
 
   // Close drawer on route change
@@ -55,16 +57,17 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
     setIsOpen(false);
   }, [location.pathname]);
 
-  const checkAdminRole = async () => {
+  const checkRoles = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      // Check if user has admin role in user_roles table
       const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', session.user.id)
-        .eq('role', 'admin');
-      setIsAdmin(roles && roles.length > 0);
+        .eq('user_id', session.user.id);
+      
+      const userRoles = roles?.map(r => r.role) || [];
+      setIsAdmin(userRoles.includes('admin'));
+      setIsDiscipulador(userRoles.includes('discipulador'));
     }
   };
 
@@ -118,6 +121,21 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 <span>Admin</span>
               </NavLink>
             )}
+            
+            {isDiscipulador && !isAdmin && (
+              <NavLink
+                to="/admin"
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  location.pathname === '/admin' 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <Heart className="w-4 h-4" />
+                <span>Discípulos</span>
+              </NavLink>
+            )}
           </nav>
 
           {/* User Menu */}
@@ -143,6 +161,14 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                   <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
                     <Shield className="w-4 h-4" />
                     Painel Admin
+                  </NavLink>
+                </DropdownMenuItem>
+              )}
+              {isDiscipulador && !isAdmin && (
+                <DropdownMenuItem asChild>
+                  <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                    <Heart className="w-4 h-4" />
+                    Meus Discípulos
                   </NavLink>
                 </DropdownMenuItem>
               )}
@@ -210,6 +236,21 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 >
                   <Shield className="w-5 h-5" />
                   <span>Painel Admin</span>
+                </NavLink>
+              )}
+              
+              {isDiscipulador && !isAdmin && (
+                <NavLink
+                  to="/admin"
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                    location.pathname === '/admin' 
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Heart className="w-5 h-5" />
+                  <span>Meus Discípulos</span>
                 </NavLink>
               )}
             </nav>

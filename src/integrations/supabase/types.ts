@@ -82,6 +82,42 @@ export type Database = {
         }
         Relationships: []
       }
+      discipleship_relationships: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          discipulador_id: string
+          discipulo_id: string
+          id: string
+          notes: string | null
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          discipulador_id: string
+          discipulo_id: string
+          id?: string
+          notes?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          discipulador_id?: string
+          discipulo_id?: string
+          id?: string
+          notes?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           checklist_items: Json | null
@@ -413,6 +449,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_discipulador_of: {
+        Args: { _discipulador_id: string; _discipulo_id: string }
+        Returns: boolean
+      }
       user_can_access_content: {
         Args: {
           _publico_alvo: Database["public"]["Enums"]["app_role"][]
