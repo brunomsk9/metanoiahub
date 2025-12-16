@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Users, User, MapPin, Trash2, Loader2 } from "lucide-react";
+import { Plus, Calendar, Users, User, MapPin, Trash2, Loader2, Clock, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface Disciple {
   id: string;
@@ -55,21 +55,18 @@ export function MeetingsManager() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Fetch meetings
     const { data: meetingsData } = await supabase
       .from('meetings')
       .select('*')
       .eq('discipulador_id', session.user.id)
       .order('data_encontro', { ascending: false });
 
-    // Fetch discipleship relationships to get disciples
     const { data: relsData } = await supabase
       .from('discipleship_relationships')
       .select('discipulo_id')
       .eq('discipulador_id', session.user.id)
       .eq('status', 'active');
 
-    // Fetch disciple profiles
     if (relsData && relsData.length > 0) {
       const discipleIds = relsData.map(r => r.discipulo_id);
       const { data: profilesData } = await supabase
@@ -83,7 +80,6 @@ export function MeetingsManager() {
     }
 
     if (meetingsData) {
-      // Fetch attendance and disciple names for meetings
       const meetingsWithDetails = await Promise.all(
         meetingsData.map(async (meeting) => {
           if (meeting.tipo === 'celula') {
@@ -92,7 +88,6 @@ export function MeetingsManager() {
               .select('discipulo_id, presente')
               .eq('meeting_id', meeting.id);
             
-            // Get disciple names for attendance
             const attendanceWithNames = await Promise.all(
               (attendance || []).map(async (att) => {
                 const { data: profile } = await supabase
@@ -154,7 +149,6 @@ export function MeetingsManager() {
 
       if (meetingError) throw meetingError;
 
-      // Insert attendance for cell meetings
       if (tipo === 'celula' && meeting) {
         const attendanceRecords = selectedAttendees.map(discipleId => ({
           meeting_id: meeting.id,
@@ -210,6 +204,14 @@ export function MeetingsManager() {
     );
   };
 
+  const selectAllAttendees = () => {
+    if (selectedAttendees.length === disciples.length) {
+      setSelectedAttendees([]);
+    } else {
+      setSelectedAttendees(disciples.map(d => d.id));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -229,101 +231,217 @@ export function MeetingsManager() {
               Novo Encontro
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Registrar Encontro</DialogTitle>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl">Novo Encontro</DialogTitle>
+                  <DialogDescription>
+                    Registre um encontro individual ou de célula
+                  </DialogDescription>
+                </div>
+              </div>
             </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={tipo} onValueChange={(v) => setTipo(v as 'individual' | 'celula')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individual">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Individual
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="celula">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        Célula
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+            
+            <div className="space-y-5 pt-4">
+              {/* Type Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Tipo de Encontro</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTipo('individual')}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                      tipo === 'individual'
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                      tipo === 'individual' ? "bg-primary/20" : "bg-muted"
+                    )}>
+                      <User className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium">Individual</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipo('celula')}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                      tipo === 'celula'
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                      tipo === 'celula' ? "bg-primary/20" : "bg-muted"
+                    )}>
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium">Célula</span>
+                  </button>
+                </div>
               </div>
 
+              {/* Disciple Selection */}
               {tipo === 'individual' ? (
-                <div className="space-y-2">
-                  <Label>Discípulo</Label>
-                  <Select value={selectedDisciple} onValueChange={setSelectedDisciple}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Discípulo</Label>
+                  {disciples.length === 0 ? (
+                    <div className="p-4 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                      Nenhum discípulo vinculado
+                    </div>
+                  ) : (
+                    <div className="grid gap-2 max-h-32 overflow-y-auto p-1">
                       {disciples.map(d => (
-                        <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => setSelectedDisciple(d.id)}
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
+                            selectedDisciple === d.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50 hover:bg-muted/30"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
+                            selectedDisciple === d.id ? "bg-primary text-primary-foreground" : "bg-muted"
+                          )}>
+                            {d.nome?.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium">{d.nome}</span>
+                        </button>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Label>Presentes ({selectedAttendees.length})</Label>
-                  <div className="border border-border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
-                    {disciples.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhum discípulo vinculado</p>
-                    ) : (
-                      disciples.map(d => (
-                        <div key={d.id} className="flex items-center gap-2">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">
+                      Presentes
+                      {selectedAttendees.length > 0 && (
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          {selectedAttendees.length}
+                        </Badge>
+                      )}
+                    </Label>
+                    {disciples.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7"
+                        onClick={selectAllAttendees}
+                      >
+                        {selectedAttendees.length === disciples.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                      </Button>
+                    )}
+                  </div>
+                  {disciples.length === 0 ? (
+                    <div className="p-4 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                      Nenhum discípulo vinculado
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-border bg-card/50 divide-y divide-border max-h-40 overflow-y-auto">
+                      {disciples.map(d => (
+                        <label
+                          key={d.id}
+                          className={cn(
+                            "flex items-center gap-3 p-3 cursor-pointer transition-colors",
+                            selectedAttendees.includes(d.id) ? "bg-primary/5" : "hover:bg-muted/30"
+                          )}
+                        >
                           <Checkbox
                             id={d.id}
                             checked={selectedAttendees.includes(d.id)}
                             onCheckedChange={() => toggleAttendee(d.id)}
                           />
-                          <label htmlFor={d.id} className="text-sm cursor-pointer">{d.nome}</label>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                          <div className={cn(
+                            "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium",
+                            selectedAttendees.includes(d.id) ? "bg-primary text-primary-foreground" : "bg-muted"
+                          )}>
+                            {d.nome?.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm">{d.nome}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label>Data e Hora</Label>
+              {/* Date & Time */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  Data e Hora
+                </Label>
                 <Input
                   type="datetime-local"
                   value={dataEncontro}
                   onChange={(e) => setDataEncontro(e.target.value)}
+                  className="h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Local (opcional)</Label>
+              {/* Location */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  Local
+                  <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+                </Label>
                 <Input
                   value={local}
                   onChange={(e) => setLocal(e.target.value)}
-                  placeholder="Ex: Igreja, casa..."
+                  placeholder="Ex: Igreja, casa, café..."
+                  className="h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Notas (opcional)</Label>
+              {/* Notes */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  Notas
+                  <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+                </Label>
                 <Textarea
                   value={notas}
                   onChange={(e) => setNotas(e.target.value)}
                   placeholder="Observações sobre o encontro..."
                   rows={3}
+                  className="resize-none"
                 />
               </div>
 
-              <Button onClick={handleSave} disabled={isSaving} className="w-full">
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Salvar Encontro
+              {/* Submit Button */}
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving || (tipo === 'individual' && !selectedDisciple) || (tipo === 'celula' && selectedAttendees.length === 0)} 
+                className="w-full h-11 text-base"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Registrar Encontro
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -331,65 +449,80 @@ export function MeetingsManager() {
       </div>
 
       {meetings.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
-            <p>Nenhum encontro registrado</p>
+        <Card className="border-dashed">
+          <CardContent className="py-10 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground mb-1">Nenhum encontro registrado</p>
+            <p className="text-xs text-muted-foreground">Clique em "Novo Encontro" para começar</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {meetings.map(meeting => (
-            <Card key={meeting.id} className="overflow-hidden">
+            <Card key={meeting.id} className="overflow-hidden hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant={meeting.tipo === 'individual' ? 'secondary' : 'default'} className="text-xs">
-                        {meeting.tipo === 'individual' ? (
-                          <><User className="w-3 h-3 mr-1" />Individual</>
-                        ) : (
-                          <><Users className="w-3 h-3 mr-1" />Célula</>
-                        )}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(meeting.data_encontro), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </span>
+                  <div className="flex gap-3 flex-1 min-w-0">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center",
+                      meeting.tipo === 'individual' ? "bg-secondary" : "bg-primary/10"
+                    )}>
+                      {meeting.tipo === 'individual' ? (
+                        <User className="w-5 h-5 text-secondary-foreground" />
+                      ) : (
+                        <Users className="w-5 h-5 text-primary" />
+                      )}
                     </div>
-                    
-                    {meeting.tipo === 'individual' && meeting.discipulo && (
-                      <p className="text-sm font-medium text-foreground">{meeting.discipulo.nome}</p>
-                    )}
-
-                    {meeting.tipo === 'celula' && meeting.attendance && meeting.attendance.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs text-muted-foreground mb-1">Presentes:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {meeting.attendance.map(att => (
-                            <Badge key={att.discipulo_id} variant="outline" className="text-xs">
-                              {att.discipulo?.nome || 'Desconhecido'}
-                            </Badge>
-                          ))}
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge variant={meeting.tipo === 'individual' ? 'secondary' : 'default'} className="text-xs">
+                          {meeting.tipo === 'individual' ? 'Individual' : 'Célula'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(meeting.data_encontro), "dd MMM yyyy, HH:mm", { locale: ptBR })}
+                        </span>
                       </div>
-                    )}
+                      
+                      {meeting.tipo === 'individual' && meeting.discipulo && (
+                        <p className="text-sm font-medium text-foreground">{meeting.discipulo.nome}</p>
+                      )}
 
-                    {meeting.local && (
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {meeting.local}
-                      </p>
-                    )}
+                      {meeting.tipo === 'celula' && meeting.attendance && meeting.attendance.length > 0 && (
+                        <div className="mt-2">
+                          <div className="flex flex-wrap gap-1">
+                            {meeting.attendance.slice(0, 3).map(att => (
+                              <Badge key={att.discipulo_id} variant="outline" className="text-xs">
+                                {att.discipulo?.nome || 'Desconhecido'}
+                              </Badge>
+                            ))}
+                            {meeting.attendance.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{meeting.attendance.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
-                    {meeting.notas && (
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{meeting.notas}</p>
-                    )}
+                      {meeting.local && (
+                        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {meeting.local}
+                        </p>
+                      )}
+
+                      {meeting.notas && (
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{meeting.notas}</p>
+                      )}
+                    </div>
                   </div>
                   
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(meeting.id)}
                   >
                     <Trash2 className="w-4 h-4" />
