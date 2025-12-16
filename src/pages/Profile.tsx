@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Edit2, Save, Loader2, Flame, Trophy, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Edit2, Save, Loader2, Flame, Trophy, Lock, Eye, EyeOff, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Profile() {
@@ -188,6 +188,16 @@ export default function Profile() {
 
             {/* Change Password Section */}
             <ChangePasswordSection />
+
+            {/* Tutorial Button */}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/onboarding')}
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Ver Tutorial
+            </Button>
           </div>
         </main>
       </PageTransition>
