@@ -360,58 +360,6 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 </div>
               )}
 
-              {/* Conta Section - Collapsible */}
-              <div className="pt-2">
-                <Collapsible open={isAccountOpen} onOpenChange={setIsAccountOpen}>
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between px-4 py-2.5 rounded-md hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={avatarUrl || undefined} alt={userName || 'Usuário'} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                            {userName?.charAt(0).toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-start">
-                          <span className="text-sm font-medium text-foreground">{userName || 'Usuário'}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                        isAccountOpen && "rotate-180"
-                      )} />
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 mt-1">
-                    <NavLink
-                      to="/perfil"
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ml-2",
-                        location.pathname === '/perfil' 
-                          ? "bg-primary/10 text-primary" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      )}
-                    >
-                      <UserCircle className="w-5 h-5" />
-                      <span>Meu Perfil</span>
-                    </NavLink>
-                    <div className="flex items-center justify-between px-4 py-2 ml-2">
-                      <span className="text-sm text-muted-foreground">Tema</span>
-                      <ThemeToggle />
-                    </div>
-                    <button 
-                      onClick={onLogout}
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors text-destructive hover:bg-destructive/10 w-full ml-2"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span>Sair</span>
-                    </button>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
             </nav>
           </SheetContent>
         </Sheet>
