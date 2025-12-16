@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { DailyHabits } from "@/components/StreakDisplay";
 import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
@@ -10,11 +9,13 @@ import { AlicerceProgress } from "@/components/AlicerceProgress";
 import { DailyVerse } from "@/components/DailyVerse";
 import { StartPlanModal } from "@/components/StartPlanModal";
 import { DiscipuladorDashboardCards } from "@/components/DiscipuladorDashboardCards";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Flame, ChevronRight, Calendar, BookMarked, Play, Clock } from "lucide-react";
+import { BookOpen, Flame, ChevronRight, BookMarked, Play, TrendingUp, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 interface Track {
   id: string;
   titulo: string;
@@ -82,7 +83,6 @@ export default function Dashboard() {
         supabase.from('user_roles').select('role').eq('user_id', session.user.id)
       ]);
 
-      // Check if user is discipulador
       const userRoles = rolesRes.data?.map(r => r.role) || [];
       setIsDiscipulador(userRoles.includes('discipulador'));
       
@@ -214,7 +214,6 @@ export default function Dashboard() {
   const completedHabits = habits.filter(h => h.completed).length;
   const totalHabits = habits.length;
 
-  // Separate plans by duration
   const annualPlans = readingPlans.filter(p => p.duracao_dias >= 365);
   const semesterPlans = readingPlans.filter(p => p.duracao_dias >= 180 && p.duracao_dias < 365);
   const otherPlans = readingPlans.filter(p => p.duracao_dias < 180);
@@ -226,7 +225,6 @@ export default function Dashboard() {
   };
 
   const handlePlanStarted = () => {
-    // Refresh plans data
     window.location.reload();
   };
 
@@ -254,324 +252,287 @@ export default function Dashboard() {
             {/* Daily Verse */}
             <DailyVerse />
 
-            {/* Stats Row */}
-            <section className="flex gap-3">
-              <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                  <Flame className="w-4 h-4 text-orange-500" />
+            {/* Seu Progresso */}
+            <CollapsibleSection 
+              title="Seu Progresso" 
+              icon={<TrendingUp className="w-4 h-4" />}
+              badge={`${completedHabits}/${totalHabits}`}
+            >
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                      <Flame className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-foreground">{streak}</p>
+                      <p className="text-[10px] text-muted-foreground">dias seguidos</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 p-3 rounded-lg bg-muted/50">
+                    <p className="text-lg font-semibold text-foreground">{xpPoints}</p>
+                    <p className="text-[10px] text-muted-foreground">XP total</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-semibold text-foreground">{streak}</p>
-                  <p className="text-[10px] text-muted-foreground">dias seguidos</p>
+
+                <div className="p-3 rounded-lg border border-border/50 bg-card">
+                  <div className="flex justify-between text-xs mb-2">
+                    <span className="text-muted-foreground">Hábitos de hoje</span>
+                    <span className="text-foreground">{completedHabits}/{totalHabits}</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-bar-fill"
+                      style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {baseTrackProgress && !baseTrackProgress.isCompleted && (
+                  <AlicerceProgress
+                    trackId={baseTrackProgress.trackId}
+                    trackTitle={baseTrackProgress.trackTitle}
+                    completedLessons={baseTrackProgress.completedLessons}
+                    totalLessons={baseTrackProgress.totalLessons}
+                    isCompleted={baseTrackProgress.isCompleted}
+                    completedPresencial={baseTrackProgress.completedPresencial}
+                  />
+                )}
+
+                <div className="p-4 rounded-lg border border-border/50 bg-card">
+                  <h3 className="text-sm font-medium text-foreground mb-3">Seu dia</h3>
+                  <DailyHabits habits={habits} onToggle={handleHabitToggle} />
                 </div>
               </div>
-              <div className="flex-1 p-3 rounded-lg bg-muted/50">
-                <p className="text-lg font-semibold text-foreground">{xpPoints}</p>
-                <p className="text-[10px] text-muted-foreground">XP total</p>
-              </div>
-            </section>
-
-            {/* Progress Bar */}
-            <section className="p-3 rounded-lg border border-border/50 bg-card">
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-muted-foreground">Hábitos de hoje</span>
-                <span className="text-foreground">{completedHabits}/{totalHabits}</span>
-              </div>
-              <div className="progress-bar">
-                <div 
-                  className="progress-bar-fill"
-                  style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
-                />
-              </div>
-            </section>
-
-            {/* Alicerce Progress */}
-            {baseTrackProgress && !baseTrackProgress.isCompleted && (
-              <AlicerceProgress
-                trackId={baseTrackProgress.trackId}
-                trackTitle={baseTrackProgress.trackTitle}
-                completedLessons={baseTrackProgress.completedLessons}
-                totalLessons={baseTrackProgress.totalLessons}
-                isCompleted={baseTrackProgress.isCompleted}
-                completedPresencial={baseTrackProgress.completedPresencial}
-              />
-            )}
-
-            {/* Daily Habits */}
-            <section className="p-4 rounded-lg border border-border/50 bg-card">
-              <h2 className="text-sm font-medium text-foreground mb-3">Seu dia</h2>
-              <DailyHabits habits={habits} onToggle={handleHabitToggle} />
-            </section>
+            </CollapsibleSection>
 
             {/* Discipulador Management Cards */}
-            {isDiscipulador && <DiscipuladorDashboardCards />}
+            {isDiscipulador && (
+              <CollapsibleSection 
+                title="Meu Discipulado" 
+                icon={<Users className="w-4 h-4" />}
+              >
+                <DiscipuladorDashboardCards />
+              </CollapsibleSection>
+            )}
 
-            {plansInProgress.length > 0 && (
-              <section>
-                <h2 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                  <BookMarked className="w-4 h-4 text-primary" />
-                  Continue sua leitura
-                </h2>
-                <div className="space-y-2">
-                  {plansInProgress.slice(0, 2).map((plan) => {
-                    const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
-                    return (
-                      <button
-                        key={plan.id}
-                        onClick={() => navigate(`/plano/${plan.id}`)}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors text-left"
+            {/* Leitura Bíblica */}
+            <CollapsibleSection 
+              title="Leitura Bíblica" 
+              icon={<BookMarked className="w-4 h-4" />}
+              badge={plansInProgress.length > 0 ? `${plansInProgress.length} em andamento` : undefined}
+            >
+              <div className="space-y-6">
+                {/* Continue Reading */}
+                {plansInProgress.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Continue sua leitura</h3>
+                    {plansInProgress.slice(0, 2).map((plan) => {
+                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                      return (
+                        <button
+                          key={plan.id}
+                          onClick={() => navigate(`/plano/${plan.id}`)}
+                          className="w-full flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors text-left"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Play className="w-4 h-4 text-primary fill-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{plan.titulo}</p>
+                            <p className="text-xs text-muted-foreground">Dia {plan.currentDay} de {plan.duracao_dias}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-primary">{progress}%</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Annual Plans */}
+                {(loading || annualPlans.length > 0) && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Planos Anuais</h3>
+                    {loading ? (
+                      <Skeleton className="h-32 rounded-xl" />
+                    ) : (
+                      annualPlans.map((plan, index) => {
+                        const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                        const isStarted = plan.hasProgress;
+                        return (
+                          <div
+                            key={plan.id}
+                            className={cn(
+                              "relative overflow-hidden rounded-xl transition-all",
+                              index === 0 ? "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30" : "bg-card border border-border hover:border-primary/30"
+                            )}
+                          >
+                            <div className="flex items-start gap-4 p-4">
+                              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                                <img
+                                  src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
+                                  alt={plan.titulo}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <h4 className="font-medium text-foreground mb-0.5">{plan.titulo}</h4>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{plan.descricao}</p>
+                                  </div>
+                                  {isStarted && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/20 text-primary flex-shrink-0">
+                                      {progress}%
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-3 flex items-center gap-3">
+                                  {isStarted ? (
+                                    <>
+                                      <div className="flex-1">
+                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                                        </div>
+                                      </div>
+                                      <button onClick={() => navigate(`/plano/${plan.id}`)} className="text-xs text-primary font-medium hover:underline">
+                                        Continuar
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-[10px] text-muted-foreground flex-shrink-0">{getDurationLabel(plan.duracao_dias)}</span>
+                                      <button onClick={() => handleOpenStartModal(plan)} className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
+                                        Iniciar
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
+                {/* Semester Plans */}
+                {(loading || semesterPlans.length > 0) && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Planos de 6 Meses</h3>
+                    {loading ? (
+                      <Skeleton className="h-28 rounded-xl" />
+                    ) : (
+                      semesterPlans.map((plan) => {
+                        const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                        const isStarted = plan.hasProgress;
+                        return (
+                          <div key={plan.id} className="relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/30 transition-all">
+                            <div className="flex items-start gap-4 p-4">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"} alt={plan.titulo} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-foreground text-sm mb-0.5">{plan.titulo}</h4>
+                                <div className="flex items-center gap-3">
+                                  {isStarted ? (
+                                    <>
+                                      <div className="flex-1">
+                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                                        </div>
+                                      </div>
+                                      <span className="text-xs text-primary font-medium">{progress}%</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-[10px] text-muted-foreground">{getDurationLabel(plan.duracao_dias)}</span>
+                                      <button onClick={() => handleOpenStartModal(plan)} className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
+                                        Iniciar
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
+                {/* Other Plans */}
+                {(loading || otherPlans.length > 0) && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Planos Curtos</h3>
+                    {loading ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        {[1, 2].map((i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {otherPlans.map((plan) => (
+                          <ReadingPlanCard
+                            key={plan.id}
+                            id={plan.id}
+                            titulo={plan.titulo}
+                            descricao={plan.descricao}
+                            coverImage={plan.cover_image}
+                            duracaoDias={plan.duracao_dias}
+                            currentDay={plan.currentDay}
+                            completedDays={plan.completedDays}
+                            onClick={(id) => plan.hasProgress ? navigate(`/plano/${id}`) : handleOpenStartModal(plan)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CollapsibleSection>
+
+            {/* Trilhas */}
+            <CollapsibleSection 
+              title="Trilhas" 
+              icon={<BookOpen className="w-4 h-4" />}
+              badge={tracks.length}
+            >
+              <div className="space-y-2">
+                {loading ? (
+                  [1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)
+                ) : (
+                  <>
+                    {tracks.map((track) => (
+                      <div
+                        key={track.id}
+                        onClick={() => navigate(`/trilhas`)}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors cursor-pointer"
                       >
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Play className="w-4 h-4 text-primary fill-primary" />
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="w-4 h-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{plan.titulo}</p>
-                          <p className="text-xs text-muted-foreground">Dia {plan.currentDay} de {plan.duracao_dias}</p>
+                          <h3 className="text-sm font-medium text-foreground truncate">{track.titulo}</h3>
+                          <p className="text-xs text-muted-foreground">{track.coursesCount} cursos</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-primary">{progress}%</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* Annual Reading Plans - Featured Section */}
-            {(loading || annualPlans.length > 0) && (
-              <section className="pt-2">
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-medium text-foreground">Planos Anuais de Leitura Bíblica</h2>
-                </div>
-                
-                {loading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-32 rounded-xl" />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {annualPlans.map((plan, index) => {
-                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
-                      const isStarted = plan.hasProgress;
-                      
-                      return (
-                        <div
-                          key={plan.id}
-                          className={cn(
-                            "relative overflow-hidden rounded-xl transition-all",
-                            index === 0 ? "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30" : "bg-card border border-border hover:border-primary/30"
-                          )}
-                        >
-                          <div className="flex items-start gap-4 p-4">
-                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                              <img
-                                src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
-                                alt={plan.titulo}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <h3 className="font-medium text-foreground mb-0.5">{plan.titulo}</h3>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">{plan.descricao}</p>
-                                </div>
-                                {isStarted && (
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/20 text-primary flex-shrink-0">
-                                    {progress}%
-                                  </span>
-                                )}
-                              </div>
-                              <div className="mt-3 flex items-center gap-3">
-                                {isStarted ? (
-                                  <>
-                                    <div className="flex-1">
-                                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-primary rounded-full transition-all"
-                                          style={{ width: `${progress}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                    <button
-                                      onClick={() => navigate(`/plano/${plan.id}`)}
-                                      className="text-xs text-primary font-medium hover:underline"
-                                    >
-                                      Continuar
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                                      {getDurationLabel(plan.duracao_dias)}
-                                    </span>
-                                    <button
-                                      onClick={() => handleOpenStartModal(plan)}
-                                      className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
-                                    >
-                                      Iniciar
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* Semester Reading Plans */}
-            {(loading || semesterPlans.length > 0) && (
-              <section className="pt-2">
-                <div className="flex items-center gap-2 mb-3">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-medium text-foreground">Planos de 6 Meses</h2>
-                </div>
-                
-                {loading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-28 rounded-xl" />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {semesterPlans.map((plan) => {
-                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
-                      const isStarted = plan.hasProgress;
-                      
-                      return (
-                        <div
-                          key={plan.id}
-                          className="relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/30 transition-all"
-                        >
-                          <div className="flex items-start gap-4 p-4">
-                            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                              <img
-                                src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
-                                alt={plan.titulo}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-foreground text-sm mb-0.5">{plan.titulo}</h3>
-                              <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{plan.descricao}</p>
-                              <div className="flex items-center gap-2">
-                                {isStarted ? (
-                                  <>
-                                    <div className="flex-1">
-                                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-primary rounded-full transition-all"
-                                          style={{ width: `${progress}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                    <span className="text-[10px] text-primary font-medium">{progress}%</span>
-                                    <button
-                                      onClick={() => navigate(`/plano/${plan.id}`)}
-                                      className="text-xs text-primary font-medium hover:underline"
-                                    >
-                                      Continuar
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-[10px] text-muted-foreground">{getDurationLabel(plan.duracao_dias)}</span>
-                                    <button
-                                      onClick={() => handleOpenStartModal(plan)}
-                                      className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
-                                    >
-                                      Iniciar
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* Other Reading Plans */}
-            {(loading || otherPlans.length > 0) && (
-              <section>
-                <h2 className="text-sm font-medium text-foreground mb-3">Planos Curtos</h2>
-                
-                {loading ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {[1, 2].map((i) => (
-                      <Skeleton key={i} className="h-40 rounded-xl" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {otherPlans.map((plan) => (
-                      <ReadingPlanCard
-                        key={plan.id}
-                        id={plan.id}
-                        titulo={plan.titulo}
-                        descricao={plan.descricao}
-                        coverImage={plan.cover_image}
-                        duracaoDias={plan.duracao_dias}
-                        currentDay={plan.currentDay}
-                        completedDays={plan.completedDays}
-                        onClick={(id) => plan.hasProgress ? navigate(`/plano/${id}`) : handleOpenStartModal(plan)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* Tracks */}
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-foreground">Trilhas</h2>
-                <button 
-                  onClick={() => navigate('/trilhas')}
-                  className="text-xs text-primary font-medium flex items-center gap-1"
-                >
-                  Ver todas
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-              
-              {loading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 rounded-lg" />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {tracks.map((track) => (
-                    <div
-                      key={track.id}
-                      onClick={() => navigate(`/trilhas`)}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors cursor-pointer"
+                    <button 
+                      onClick={() => navigate('/trilhas')}
+                      className="w-full text-xs text-primary font-medium flex items-center justify-center gap-1 py-2"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-foreground truncate">{track.titulo}</h3>
-                        <p className="text-xs text-muted-foreground">{track.coursesCount} cursos</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+                      Ver todas
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </CollapsibleSection>
 
           </div>
         </main>
