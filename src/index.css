@@ -2,83 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Metanoia Hub - Modern Blue Design System */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+/* Metanoia Hub - Refined Design System */
 
 @layer base {
   :root {
-    /* Clean White Background */
-    --background: 220 20% 98%;
-    --foreground: 222 47% 11%;
+    /* Background - Warm off-white */
+    --background: 40 20% 98%;
+    --foreground: 230 25% 18%;
 
-    /* Card surfaces */
+    /* Card surfaces - Pure white with subtle warmth */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --card-hover: 220 20% 97%;
+    --card-foreground: 230 25% 18%;
+    --card-hover: 40 15% 97%;
 
     /* Popover/Dialog */
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 230 25% 18%;
 
-    /* Indigo Primary - Modern & Professional */
-    --primary: 245 85% 55%;
+    /* Primary - Deep Indigo (refined & sophisticated) */
+    --primary: 238 65% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 245 90% 65%;
+    --primary-glow: 238 70% 62%;
 
-    /* Light Blue Secondary */
-    --secondary: 220 30% 96%;
-    --secondary-foreground: 222 47% 30%;
+    /* Secondary - Soft sage */
+    --secondary: 160 20% 95%;
+    --secondary-foreground: 230 20% 35%;
 
     /* Muted surfaces */
-    --muted: 220 20% 94%;
-    --muted-foreground: 220 15% 50%;
+    --muted: 40 15% 94%;
+    --muted-foreground: 230 10% 50%;
 
-    /* Cyan Accent */
-    --accent: 200 95% 50%;
+    /* Accent - Warm coral */
+    --accent: 12 80% 60%;
     --accent-foreground: 0 0% 100%;
 
-    /* Success */
-    --success: 152 70% 45%;
+    /* Success - Fresh green */
+    --success: 158 64% 42%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning */
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
+    /* Warning - Warm amber */
+    --warning: 40 95% 55%;
+    --warning-foreground: 230 25% 18%;
 
     /* Destructive */
-    --destructive: 0 72% 55%;
+    --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders - clean and subtle */
-    --border: 220 20% 92%;
-    --input: 220 20% 94%;
-    --ring: 245 85% 55%;
+    /* Borders - Subtle and refined */
+    --border: 40 15% 90%;
+    --input: 40 15% 92%;
+    --ring: 238 65% 52%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     /* Modern Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(245 85% 55%) 0%, hsl(270 80% 60%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(200 95% 50%) 0%, hsl(180 90% 45%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
-    --gradient-surface: linear-gradient(135deg, hsl(220 30% 99%) 0%, hsl(245 20% 98%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(245 40% 97%) 0%, hsl(220 30% 97%) 50%, hsl(200 30% 97%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(238 65% 52%) 0%, hsl(280 60% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(12 80% 60%) 0%, hsl(35 90% 55%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 20% 98%) 100%);
+    --gradient-surface: linear-gradient(135deg, hsl(40 25% 99%) 0%, hsl(238 15% 98%) 100%);
+    --gradient-hero: linear-gradient(160deg, hsl(238 30% 97%) 0%, hsl(40 25% 98%) 50%, hsl(160 20% 97%) 100%);
 
-    /* Shadows - modern and soft */
-    --shadow-sm: 0 1px 3px hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 12px hsl(222 47% 11% / 0.08);
-    --shadow-lg: 0 8px 24px hsl(222 47% 11% / 0.1);
-    --shadow-glow: 0 4px 20px hsl(245 85% 55% / 0.2);
-    --shadow-accent-glow: 0 4px 20px hsl(200 95% 50% / 0.25);
+    /* Shadows - Refined and elegant */
+    --shadow-xs: 0 1px 2px hsl(230 25% 18% / 0.04);
+    --shadow-sm: 0 2px 4px hsl(230 25% 18% / 0.05), 0 1px 2px hsl(230 25% 18% / 0.03);
+    --shadow-md: 0 4px 16px hsl(230 25% 18% / 0.06), 0 2px 4px hsl(230 25% 18% / 0.04);
+    --shadow-lg: 0 12px 32px hsl(230 25% 18% / 0.08), 0 4px 8px hsl(230 25% 18% / 0.04);
+    --shadow-glow: 0 4px 24px hsl(238 65% 52% / 0.18);
+    --shadow-accent-glow: 0 4px 24px hsl(12 80% 60% / 0.22);
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 30%;
-    --sidebar-primary: 245 85% 55%;
+    --sidebar-foreground: 230 20% 35%;
+    --sidebar-primary: 238 65% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 30% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 20% 94%;
-    --sidebar-ring: 245 85% 55%;
+    --sidebar-accent: 40 15% 96%;
+    --sidebar-accent-foreground: 230 25% 18%;
+    --sidebar-border: 40 15% 92%;
+    --sidebar-ring: 238 65% 52%;
   }
 }
 
@@ -89,12 +89,36 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.011em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    @apply font-semibold tracking-tight;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    @apply font-semibold;
+    letter-spacing: -0.025em;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl;
+    letter-spacing: -0.03em;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+    letter-spacing: -0.025em;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Refined prose for reading */
+  .prose-refined {
+    font-family: 'DM Serif Display', Georgia, serif;
+    @apply text-lg leading-relaxed;
+    letter-spacing: 0.01em;
   }
 }
 
