@@ -122,7 +122,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-6">
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
             <TabsList className="bg-card border border-border p-1 rounded-lg inline-flex min-w-max">
               {isAdmin && (
                 <>
