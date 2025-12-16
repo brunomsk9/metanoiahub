@@ -40,9 +40,9 @@ interface SidebarProps {
 }
 
 const learningItems = [
-  { path: '/trilhas', label: 'Trilhas', icon: BookOpen },
-  { path: '/sos', label: 'S.O.S.', icon: LifeBuoy },
-  { path: '/biblioteca', label: 'Biblioteca', icon: Library },
+  { path: '/trilhas', label: 'Trilhas', icon: BookOpen, requiresDiscipulador: false },
+  { path: '/biblioteca', label: 'Biblioteca', icon: Library, requiresDiscipulador: false },
+  { path: '/sos', label: 'S.O.S.', icon: LifeBuoy, requiresDiscipulador: true },
 ];
 
 export function Sidebar({ onLogout, userName }: SidebarProps) {
@@ -73,8 +73,12 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
     }
   };
 
-  const isLearningActive = learningItems.some(item => location.pathname === item.path);
-  const activeLearningItem = learningItems.find(item => location.pathname === item.path);
+  const visibleLearningItems = learningItems.filter(item => 
+    !item.requiresDiscipulador || isDiscipulador || isAdmin
+  );
+
+  const isLearningActive = visibleLearningItems.some(item => location.pathname === item.path);
+  const activeLearningItem = visibleLearningItems.find(item => location.pathname === item.path);
 
   return (
     <>
@@ -127,7 +131,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="bg-popover border border-border">
-                {learningItems.map((item) => (
+                {visibleLearningItems.map((item) => (
                   <DropdownMenuItem key={item.path} asChild>
                     <NavLink
                       to={item.path}
@@ -275,7 +279,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Aprendizado
                 </p>
-                {learningItems.map((item) => (
+                {visibleLearningItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
