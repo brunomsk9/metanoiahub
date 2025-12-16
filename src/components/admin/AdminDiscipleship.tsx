@@ -683,11 +683,11 @@ export function AdminDiscipleship() {
                       <DialogTrigger asChild>
                         <Button 
                           variant="outline" 
-                          size="sm"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => handleViewProgress(rel.discipulo_id)}
                         >
-                          <Eye className="w-4 h-4 mr-1" />
-                          Ver Progresso
+                          <Eye className="w-4 h-4" />
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
