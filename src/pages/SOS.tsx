@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchSOS } from "@/components/SearchSOS";
 import { Sidebar } from "@/components/Sidebar";
@@ -21,6 +21,7 @@ export default function SOS() {
   const navigate = useNavigate();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTag, setSelectedTag] = useState('');
 
   useEffect(() => {
     const fetchAllContent = async () => {
@@ -90,6 +91,21 @@ export default function SOS() {
     fetchAllContent();
   }, [navigate]);
 
+  // Extract unique tags from resources for quick filter buttons
+  const quickTags = useMemo(() => {
+    const tagCounts = new Map<string, number>();
+    resources.forEach(r => {
+      r.tags.forEach(tag => {
+        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      });
+    });
+    // Sort by count and take top 6
+    return Array.from(tagCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([tag]) => tag);
+  }, [resources]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/auth');
@@ -103,6 +119,10 @@ export default function SOS() {
     } else if (resource.url) {
       window.open(resource.url, '_blank');
     }
+  };
+
+  const handleQuickTagClick = (tag: string) => {
+    setSelectedTag(tag);
   };
 
   return (
@@ -127,19 +147,23 @@ export default function SOS() {
               resources={resources}
               onSelect={handleResourceSelect}
               loading={loading}
+              initialQuery={selectedTag}
             />
 
             {/* Quick Tags */}
-            <div className="mt-12 flex flex-wrap gap-2 justify-center">
-              {['Crise', 'Dúvidas', 'Relacionamentos', 'Vícios'].map((tag) => (
-                <button
-                  key={tag}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
+            {!loading && quickTags.length > 0 && (
+              <div className="mt-12 flex flex-wrap gap-2 justify-center">
+                {quickTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleQuickTagClick(tag)}
+                    className="px-4 py-2 rounded-full text-sm font-medium bg-secondary/50 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </PageTransition>
