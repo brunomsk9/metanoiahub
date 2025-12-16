@@ -2,58 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-/* METANOIA HUB - Refined Dark Design System */
+/* METANOIA HUB - Refined Design System with Light/Dark themes */
 
 @layer base {
+  /* Light Theme (default) */
   :root {
-    /* Background - Soft dark, not pure black */
-    --background: 225 15% 8%;
-    --foreground: 220 15% 92%;
+    --background: 0 0% 98%;
+    --foreground: 225 15% 12%;
 
-    /* Card surfaces */
-    --card: 225 12% 11%;
-    --card-foreground: 220 15% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 15% 12%;
 
-    /* Popover/Dialog */
-    --popover: 225 12% 13%;
-    --popover-foreground: 220 15% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 15% 12%;
 
-    /* Primary - Soft teal */
-    --primary: 175 50% 50%;
-    --primary-foreground: 225 15% 8%;
+    --primary: 175 50% 40%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary */
-    --secondary: 225 10% 16%;
-    --secondary-foreground: 220 10% 70%;
+    --secondary: 220 10% 94%;
+    --secondary-foreground: 225 12% 35%;
 
-    /* Muted */
-    --muted: 225 10% 14%;
-    --muted-foreground: 220 8% 50%;
+    --muted: 220 10% 92%;
+    --muted-foreground: 220 8% 45%;
 
-    /* Accent - Warm amber */
-    --accent: 38 70% 55%;
-    --accent-foreground: 225 15% 8%;
+    --accent: 38 70% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Success */
-    --success: 155 50% 45%;
-    --success-foreground: 225 15% 8%;
+    --success: 155 50% 40%;
+    --success-foreground: 0 0% 100%;
 
-    /* Warning */
     --warning: 35 80% 50%;
     --warning-foreground: 225 15% 8%;
 
-    /* Destructive */
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 10% 88%;
+    --input: 220 10% 92%;
+    --ring: 175 50% 40%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 10% 45%;
+    --sidebar-primary: 175 50% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 10% 94%;
+    --sidebar-accent-foreground: 225 15% 12%;
+    --sidebar-border: 220 10% 90%;
+    --sidebar-ring: 175 50% 40%;
+  }
+
+  /* Dark Theme */
+  .dark {
+    --background: 225 15% 8%;
+    --foreground: 220 15% 92%;
+
+    --card: 225 12% 11%;
+    --card-foreground: 220 15% 92%;
+
+    --popover: 225 12% 13%;
+    --popover-foreground: 220 15% 92%;
+
+    --primary: 175 50% 50%;
+    --primary-foreground: 225 15% 8%;
+
+    --secondary: 225 10% 16%;
+    --secondary-foreground: 220 10% 70%;
+
+    --muted: 225 10% 14%;
+    --muted-foreground: 220 8% 50%;
+
+    --accent: 38 70% 55%;
+    --accent-foreground: 225 15% 8%;
+
+    --success: 155 50% 45%;
+    --success-foreground: 225 15% 8%;
+
+    --warning: 35 80% 50%;
+    --warning-foreground: 225 15% 8%;
+
     --destructive: 0 60% 50%;
     --destructive-foreground: 220 15% 92%;
 
-    /* Borders */
     --border: 225 10% 18%;
     --input: 225 10% 16%;
     --ring: 175 50% 50%;
 
-    --radius: 0.625rem;
-
-    /* Sidebar */
     --sidebar-background: 225 12% 9%;
     --sidebar-foreground: 220 10% 70%;
     --sidebar-primary: 175 50% 50%;
@@ -100,12 +135,10 @@
 }
 
 @layer components {
-  /* Simple elevated card */
   .card-elevated {
     @apply rounded-xl bg-card border border-border;
   }
 
-  /* Clean hover card */
   .card-interactive {
     @apply rounded-xl bg-card border border-border transition-colors duration-200;
   }
@@ -114,12 +147,10 @@
     @apply border-primary/40 bg-card;
   }
 
-  /* Minimal stats card */
   .stats-card {
     @apply rounded-xl p-4 bg-card border border-border;
   }
 
-  /* Clean navigation item */
   .nav-item {
     @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-muted-foreground transition-colors duration-150;
   }
@@ -132,7 +163,6 @@
     @apply bg-primary/10 text-primary;
   }
 
-  /* Simple track card */
   .track-card {
     @apply rounded-xl p-5 bg-card border border-border transition-all duration-200;
   }
@@ -141,7 +171,6 @@
     @apply border-primary/30 -translate-y-0.5;
   }
 
-  /* Clean search input */
   .search-input {
     @apply w-full h-12 px-4 pl-11 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground transition-colors duration-150;
   }
@@ -150,12 +179,10 @@
     @apply border-primary/50 outline-none ring-1 ring-primary/20;
   }
 
-  /* Verse card - elegant */
   .verse-card {
     @apply rounded-xl p-6 bg-card border border-border;
   }
 
-  /* Chat bubbles */
   .chat-bubble {
     @apply max-w-[85%] p-3 rounded-2xl;
   }
@@ -168,7 +195,6 @@
     @apply bg-secondary text-foreground mr-auto rounded-bl-sm;
   }
 
-  /* Floating button */
   .fab {
     @apply fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-primary text-primary-foreground shadow-lg transition-transform duration-200;
   }
@@ -177,7 +203,6 @@
     @apply scale-105;
   }
 
-  /* Continue watching card */
   .continue-card {
     @apply relative aspect-video overflow-hidden rounded-xl bg-card border border-border transition-all duration-200 cursor-pointer;
   }
@@ -186,7 +211,6 @@
     @apply border-primary/40 scale-[1.02];
   }
 
-  /* Checklist item */
   .checklist-item {
     @apply flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border transition-colors duration-150;
   }
@@ -199,17 +223,14 @@
     @apply bg-success/10 border-success/30;
   }
 
-  /* Tag pill */
   .tag-pill {
     @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-secondary text-secondary-foreground;
   }
 
-  /* Video container */
   .video-container {
     @apply relative aspect-video w-full overflow-hidden rounded-xl bg-card border border-border;
   }
 
-  /* Progress indicator */
   .progress-bar {
     @apply h-1.5 rounded-full bg-secondary overflow-hidden;
   }
@@ -220,12 +241,10 @@
 }
 
 @layer utilities {
-  /* Text colors */
   .text-gradient-primary {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70;
   }
 
-  /* Simple animations */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
   }
@@ -250,7 +269,6 @@
     }
   }
 
-  /* Scrollbar */
   .scrollbar-thin::-webkit-scrollbar {
     @apply w-1.5;
   }

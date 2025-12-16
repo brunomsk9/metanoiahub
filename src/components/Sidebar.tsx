@@ -14,6 +14,7 @@ import {
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,50 +141,54 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
             )}
           </nav>
 
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors outline-none">
-              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-                {userName?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <span className="text-sm text-foreground max-w-[100px] truncate">
-                {userName || 'Usuário'}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem asChild>
-                <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
-                  <User className="w-4 h-4" />
-                  Meu Perfil
-                </NavLink>
-              </DropdownMenuItem>
-              {isAdmin && (
+          {/* Right side: Theme Toggle + User Menu */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors outline-none">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                  {userName?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <span className="text-sm text-foreground max-w-[100px] truncate">
+                  {userName || 'Usuário'}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem asChild>
-                  <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
-                    <Shield className="w-4 h-4" />
-                    Painel Admin
+                  <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
+                    <User className="w-4 h-4" />
+                    Meu Perfil
                   </NavLink>
                 </DropdownMenuItem>
-              )}
-              {isDiscipulador && !isAdmin && (
-                <DropdownMenuItem asChild>
-                  <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
-                    <Heart className="w-4 h-4" />
-                    Meus Discípulos
-                  </NavLink>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                      <Shield className="w-4 h-4" />
+                      Painel Admin
+                    </NavLink>
+                  </DropdownMenuItem>
+                )}
+                {isDiscipulador && !isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
+                      <Heart className="w-4 h-4" />
+                      Meus Discípulos
+                    </NavLink>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={onLogout}
+                  className="flex items-center gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sair
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={onLogout}
-                className="flex items-center gap-2 text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
@@ -247,14 +252,17 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
             </nav>
 
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
-                  {userName?.charAt(0).toUpperCase() || 'U'}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                    {userName?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
+                    <p className="text-xs text-muted-foreground">Discípulo</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
-                  <p className="text-xs text-muted-foreground">Discípulo</p>
-                </div>
+                <ThemeToggle />
               </div>
               <Button 
                 variant="ghost" 
@@ -274,9 +282,12 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
           <span className="font-display font-semibold text-foreground text-sm">Metanoia</span>
         </div>
 
-        {/* User Avatar */}
-        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-          {userName?.charAt(0).toUpperCase() || 'U'}
+        {/* Theme Toggle + Avatar */}
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+            {userName?.charAt(0).toUpperCase() || 'U'}
+          </div>
         </div>
       </header>
     </>
