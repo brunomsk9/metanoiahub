@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, TrendingUp, BookOpen, Flame, ChevronRight } from "lucide-react";
+import { Users, Flame, BookOpen } from "lucide-react";
 
 interface DiscipleInfo {
   id: string;
@@ -14,7 +13,6 @@ interface DiscipleInfo {
 export function DiscipuladorDashboardCards() {
   const [disciples, setDisciples] = useState<DiscipleInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDisciples();
@@ -60,20 +58,7 @@ export function DiscipuladorDashboardCards() {
   const alicerceCompleted = disciples.filter(d => d.alicerce_completed).length;
 
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
-          Meu Discipulado
-        </h2>
-        <button 
-          onClick={() => navigate('/admin')}
-          className="text-xs text-primary flex items-center gap-1 hover:underline"
-        >
-          Ver todos
-          <ChevronRight className="w-3 h-3" />
-        </button>
-      </div>
+    <div className="space-y-3">
       
       <div className="grid grid-cols-3 gap-2">
         <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
@@ -121,6 +106,6 @@ export function DiscipuladorDashboardCards() {
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
