@@ -637,56 +637,45 @@ export function AdminDiscipleship() {
                     {getStatusBadge(rel.status)}
                   </div>
 
-                  {/* Conexão Inicial */}
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
-                    <Link className="w-4 h-4 text-accent" />
-                    <span className="text-xs font-medium text-muted-foreground mr-2">Conexão:</span>
-                    {[1, 2].map((nivel) => {
-                      const key = `conexao_inicial_${nivel}` as keyof Relationship;
-                      const isChecked = rel[key] as boolean;
-                      return (
-                        <div key={nivel} className="flex items-center gap-1">
+                  {/* Jornadas */}
+                  <div className="flex items-center gap-4 px-3 py-2 rounded-lg bg-muted/50">
+                    {/* Conexão Inicial */}
+                    <div className="flex items-center gap-2">
+                      <Link className="w-4 h-4 text-accent" />
+                      {[1, 2].map((nivel) => {
+                        const key = `conexao_inicial_${nivel}` as keyof Relationship;
+                        const isChecked = rel[key] as boolean;
+                        return (
                           <Checkbox
+                            key={nivel}
                             id={`conexao-${rel.id}-${nivel}`}
                             checked={isChecked}
                             onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
                             className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                           />
-                          <label 
-                            htmlFor={`conexao-${rel.id}-${nivel}`}
-                            className="text-xs cursor-pointer"
-                          >
-                            E{nivel}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
 
-                  {/* Academia das Nações */}
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50">
-                    <GraduationCap className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-medium text-muted-foreground mr-2">Academia:</span>
-                    {[1, 2, 3, 4].map((nivel) => {
-                      const key = `academia_nivel_${nivel}` as keyof Relationship;
-                      const isChecked = rel[key] as boolean;
-                      return (
-                        <div key={nivel} className="flex items-center gap-1">
+                    <div className="w-px h-4 bg-border" />
+
+                    {/* Academia das Nações */}
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-primary" />
+                      {[1, 2, 3, 4].map((nivel) => {
+                        const key = `academia_nivel_${nivel}` as keyof Relationship;
+                        const isChecked = rel[key] as boolean;
+                        return (
                           <Checkbox
+                            key={nivel}
                             id={`academia-${rel.id}-${nivel}`}
                             checked={isChecked}
                             onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
                             className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           />
-                          <label 
-                            htmlFor={`academia-${rel.id}-${nivel}`}
-                            className="text-xs cursor-pointer"
-                          >
-                            N{nivel}
-                          </label>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
