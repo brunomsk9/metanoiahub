@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ interface Meeting {
 }
 
 export function MeetingsManager() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [disciples, setDisciples] = useState<Disciple[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,16 @@ export function MeetingsManager() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Open dialog if URL param is set
+  useEffect(() => {
+    if (searchParams.get('novoEncontro') === 'true') {
+      setIsDialogOpen(true);
+      // Remove the param from URL
+      searchParams.delete('novoEncontro');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
