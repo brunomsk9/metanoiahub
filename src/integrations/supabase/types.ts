@@ -389,6 +389,8 @@ export type Database = {
           current_day: number
           id: string
           plan_id: string
+          reminder_enabled: boolean | null
+          reminder_time: string | null
           started_at: string
           user_id: string
         }
@@ -398,6 +400,8 @@ export type Database = {
           current_day?: number
           id?: string
           plan_id: string
+          reminder_enabled?: boolean | null
+          reminder_time?: string | null
           started_at?: string
           user_id: string
         }
@@ -407,6 +411,8 @@ export type Database = {
           current_day?: number
           id?: string
           plan_id?: string
+          reminder_enabled?: boolean | null
+          reminder_time?: string | null
           started_at?: string
           user_id?: string
         }

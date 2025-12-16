@@ -8,12 +8,12 @@ import { PageTransition } from "@/components/PageTransition";
 import { ReadingPlanCard } from "@/components/ReadingPlanCard";
 import { AlicerceProgress } from "@/components/AlicerceProgress";
 import { DailyVerse } from "@/components/DailyVerse";
+import { StartPlanModal } from "@/components/StartPlanModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Flame, ChevronRight, Calendar, BookMarked, Play } from "lucide-react";
+import { BookOpen, Flame, ChevronRight, Calendar, BookMarked, Play, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 interface Track {
   id: string;
   titulo: string;
@@ -51,6 +51,8 @@ export default function Dashboard() {
   const [readingPlans, setReadingPlans] = useState<ReadingPlanWithProgress[]>([]);
   const [baseTrackProgress, setBaseTrackProgress] = useState<BaseTrackProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPlanForModal, setSelectedPlanForModal] = useState<ReadingPlanWithProgress | null>(null);
+  const [showStartModal, setShowStartModal] = useState(false);
   const [habits, setHabits] = useState([
     { id: 'leitura', name: 'Leitura Bíblica', completed: false, icon: 'book' as const },
     { id: 'oracao', name: 'Oração', completed: false, icon: 'heart' as const },
@@ -205,10 +207,28 @@ export default function Dashboard() {
   const completedHabits = habits.filter(h => h.completed).length;
   const totalHabits = habits.length;
 
-  // Separate annual plans from others
+  // Separate plans by duration
   const annualPlans = readingPlans.filter(p => p.duracao_dias >= 365);
-  const otherPlans = readingPlans.filter(p => p.duracao_dias < 365);
+  const semesterPlans = readingPlans.filter(p => p.duracao_dias >= 180 && p.duracao_dias < 365);
+  const otherPlans = readingPlans.filter(p => p.duracao_dias < 180);
   const plansInProgress = readingPlans.filter(p => p.hasProgress && p.completedDays.length > 0 && p.completedDays.length < p.duracao_dias);
+
+  const handleOpenStartModal = (plan: ReadingPlanWithProgress) => {
+    setSelectedPlanForModal(plan);
+    setShowStartModal(true);
+  };
+
+  const handlePlanStarted = () => {
+    // Refresh plans data
+    window.location.reload();
+  };
+
+  const getDurationLabel = (days: number) => {
+    if (days >= 365) return `${Math.round(days / 365)} ano`;
+    if (days >= 180) return `${Math.round(days / 30)} meses`;
+    if (days >= 30) return `${Math.round(days / 7)} semanas`;
+    return `${days} dias`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -328,11 +348,10 @@ export default function Dashboard() {
                       const isStarted = plan.hasProgress;
                       
                       return (
-                        <button
+                        <div
                           key={plan.id}
-                          onClick={() => navigate(`/plano/${plan.id}`)}
                           className={cn(
-                            "w-full relative overflow-hidden rounded-xl text-left transition-all",
+                            "relative overflow-hidden rounded-xl transition-all",
                             index === 0 ? "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30" : "bg-card border border-border hover:border-primary/30"
                           )}
                         >
@@ -357,21 +376,115 @@ export default function Dashboard() {
                                 )}
                               </div>
                               <div className="mt-3 flex items-center gap-3">
-                                <div className="flex-1">
-                                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-primary rounded-full transition-all"
-                                      style={{ width: `${progress}%` }}
-                                    />
-                                  </div>
-                                </div>
-                                <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                                  {plan.duracao_dias} dias
-                                </span>
+                                {isStarted ? (
+                                  <>
+                                    <div className="flex-1">
+                                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                          className="h-full bg-primary rounded-full transition-all"
+                                          style={{ width: `${progress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => navigate(`/plano/${plan.id}`)}
+                                      className="text-xs text-primary font-medium hover:underline"
+                                    >
+                                      Continuar
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                                      {getDurationLabel(plan.duracao_dias)}
+                                    </span>
+                                    <button
+                                      onClick={() => handleOpenStartModal(plan)}
+                                      className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
+                                    >
+                                      Iniciar
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
-                        </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Semester Reading Plans */}
+            {(loading || semesterPlans.length > 0) && (
+              <section className="pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-medium text-foreground">Planos de 6 Meses</h2>
+                </div>
+                
+                {loading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-28 rounded-xl" />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {semesterPlans.map((plan) => {
+                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                      const isStarted = plan.hasProgress;
+                      
+                      return (
+                        <div
+                          key={plan.id}
+                          className="relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/30 transition-all"
+                        >
+                          <div className="flex items-start gap-4 p-4">
+                            <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                              <img
+                                src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
+                                alt={plan.titulo}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-foreground text-sm mb-0.5">{plan.titulo}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{plan.descricao}</p>
+                              <div className="flex items-center gap-2">
+                                {isStarted ? (
+                                  <>
+                                    <div className="flex-1">
+                                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                          className="h-full bg-primary rounded-full transition-all"
+                                          style={{ width: `${progress}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                    <span className="text-[10px] text-primary font-medium">{progress}%</span>
+                                    <button
+                                      onClick={() => navigate(`/plano/${plan.id}`)}
+                                      className="text-xs text-primary font-medium hover:underline"
+                                    >
+                                      Continuar
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[10px] text-muted-foreground">{getDurationLabel(plan.duracao_dias)}</span>
+                                    <button
+                                      onClick={() => handleOpenStartModal(plan)}
+                                      className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
+                                    >
+                                      Iniciar
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
@@ -382,7 +495,7 @@ export default function Dashboard() {
             {/* Other Reading Plans */}
             {(loading || otherPlans.length > 0) && (
               <section>
-                <h2 className="text-sm font-medium text-foreground mb-3">Outros Planos de Leitura</h2>
+                <h2 className="text-sm font-medium text-foreground mb-3">Planos Curtos</h2>
                 
                 {loading ? (
                   <div className="grid grid-cols-2 gap-3">
@@ -402,7 +515,7 @@ export default function Dashboard() {
                         duracaoDias={plan.duracao_dias}
                         currentDay={plan.currentDay}
                         completedDays={plan.completedDays}
-                        onClick={(id) => navigate(`/plano/${id}`)}
+                        onClick={(id) => plan.hasProgress ? navigate(`/plano/${id}`) : handleOpenStartModal(plan)}
                       />
                     ))}
                   </div>
@@ -456,6 +569,13 @@ export default function Dashboard() {
       </PageTransition>
 
       <MentorChatButton />
+
+      <StartPlanModal
+        open={showStartModal}
+        onOpenChange={setShowStartModal}
+        plan={selectedPlanForModal}
+        onPlanStarted={handlePlanStarted}
+      />
     </div>
   );
 }
