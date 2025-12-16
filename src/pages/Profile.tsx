@@ -103,13 +103,13 @@ export default function Profile() {
       <Sidebar onLogout={handleLogout} userName={profile.nome} />
       
       <PageTransition>
-        <main className="pt-16 lg:pt-20 pb-8">
-          <div className="px-4 lg:px-6 max-w-lg mx-auto space-y-6">
+        <main className="pt-14 lg:pt-16 pb-8">
+          <div className="px-4 lg:px-6 max-w-md mx-auto space-y-6">
             
             {/* Profile Header */}
-            <header className="pt-4 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-6 h-6 text-primary" />
+            <header className="pt-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
                 {isEditing ? (
@@ -118,19 +118,19 @@ export default function Profile() {
                       type="text"
                       value={editedNome}
                       onChange={(e) => setEditedNome(e.target.value)}
-                      className="text-lg font-semibold bg-secondary border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:border-primary"
+                      className="text-base font-medium bg-muted border border-border rounded-md px-3 py-1.5 text-foreground focus:outline-none focus:border-primary"
                       autoFocus
                     />
-                    <Button size="icon" variant="ghost" onClick={handleSave} disabled={isSaving}>
+                    <Button size="icon" variant="ghost" onClick={handleSave} disabled={isSaving} className="h-8 w-8">
                       {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold text-foreground">
+                    <h1 className="text-base font-medium text-foreground">
                       {profile.nome || 'Discípulo'}
                     </h1>
-                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-7 w-7">
+                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-6 w-6">
                       <Edit2 className="w-3 h-3" />
                     </Button>
                   </div>
@@ -141,26 +141,26 @@ export default function Profile() {
             </header>
 
             {/* Stats */}
-            <section className="flex gap-4">
-              <div className="flex-1 stats-card flex items-center gap-3">
-                <Flame className="w-5 h-5 text-warning" />
+            <section className="flex gap-3">
+              <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+                <Flame className="w-4 h-4 text-orange-500" />
                 <div>
-                  <p className="text-lg font-semibold text-foreground">{profile.current_streak}</p>
+                  <p className="text-base font-medium text-foreground">{profile.current_streak}</p>
                   <p className="text-xs text-muted-foreground">Streak</p>
                 </div>
               </div>
-              <div className="flex-1 stats-card flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-accent" />
+              <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+                <Trophy className="w-4 h-4 text-amber-500" />
                 <div>
-                  <p className="text-lg font-semibold text-foreground">{profile.xp_points.toLocaleString()}</p>
+                  <p className="text-base font-medium text-foreground">{profile.xp_points.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">XP</p>
                 </div>
               </div>
             </section>
 
             {/* Achievements */}
-            <section className="card-elevated p-4">
-              <h2 className="text-sm font-medium text-muted-foreground mb-4">Conquistas</h2>
+            <section className="p-4 rounded-lg border border-border/50 bg-card">
+              <h2 className="text-xs font-medium text-muted-foreground mb-3">Conquistas</h2>
               <div className="grid grid-cols-4 gap-2">
                 {[
                   { emoji: '🎯', label: 'Primeira Aula', unlocked: true },
@@ -171,14 +171,14 @@ export default function Profile() {
                   <div
                     key={achievement.label}
                     className={cn(
-                      "aspect-square rounded-xl flex flex-col items-center justify-center transition-opacity",
+                      "aspect-square rounded-lg flex flex-col items-center justify-center transition-opacity",
                       achievement.unlocked
-                        ? "bg-primary/10 border border-primary/20"
-                        : "bg-muted opacity-40"
+                        ? "bg-primary/8 border border-primary/20"
+                        : "bg-muted/30 opacity-40"
                     )}
                   >
-                    <span className="text-xl mb-1">{achievement.emoji}</span>
-                    <span className="text-[10px] text-muted-foreground text-center px-1">{achievement.label}</span>
+                    <span className="text-lg mb-0.5">{achievement.emoji}</span>
+                    <span className="text-[9px] text-muted-foreground text-center px-1 leading-tight">{achievement.label}</span>
                   </div>
                 ))}
               </div>

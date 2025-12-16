@@ -59,7 +59,6 @@ export default function Tracks() {
 
       setTracks(formattedTracks);
       
-      // Get base track title
       const baseTrack = formattedTracks.find(t => t.is_base);
       if (baseTrack) {
         setBaseTrackTitle(baseTrack.titulo);
@@ -68,7 +67,6 @@ export default function Tracks() {
       const uniqueCategories = ['Todos', ...new Set(formattedTracks.map(t => t.categoria))];
       setCategories(uniqueCategories);
 
-      // Check if user completed the base track (either by lessons or by discipulador marking presencial)
       const [completedData, presencialData] = await Promise.all([
         supabase.rpc('user_completed_base_track', { _user_id: session.user.id }),
         supabase
@@ -82,7 +80,6 @@ export default function Tracks() {
       const isCompleted = completedData.data === true || !!presencialData.data;
       setCompletedBaseTrack(isCompleted);
 
-      // Check if celebration should be shown (just completed)
       const celebrationShown = sessionStorage.getItem('alicerce_celebration_shown');
       if (isCompleted && !celebrationShown) {
         setShowCelebration(true);
@@ -109,26 +106,26 @@ export default function Tracks() {
       <Sidebar onLogout={handleLogout} />
       
       <PageTransition>
-        <main className="pt-16 lg:pt-20 pb-8">
-          <div className="px-4 lg:px-8 max-w-6xl mx-auto space-y-8">
-            {/* Minimal Header */}
-            <header className="pt-4">
-              <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground tracking-tight">
+        <main className="pt-14 lg:pt-16 pb-8">
+          <div className="px-4 lg:px-6 max-w-5xl mx-auto space-y-6">
+            {/* Header */}
+            <header className="pt-6">
+              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
                 Trilhas
               </h1>
-              <p className="text-muted-foreground mt-1">Sua jornada de aprendizado</p>
+              <p className="text-sm text-muted-foreground mt-1">Sua jornada de aprendizado</p>
             </header>
 
-            {/* Filters - Minimal pills */}
-            <div className="flex flex-wrap gap-2">
+            {/* Filters */}
+            <div className="flex flex-wrap gap-1.5">
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                     selectedCategory === category 
                       ? "bg-primary text-primary-foreground" 
-                      : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {category}
@@ -140,7 +137,7 @@ export default function Tracks() {
             {loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-56 rounded-2xl" />
+                  <Skeleton key={i} className="h-48 rounded-xl" />
                 ))}
               </div>
             )}
@@ -149,7 +146,6 @@ export default function Tracks() {
             {!loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredTracks.map((track) => {
-                  // Check if track should be locked (not base and base track not completed)
                   const hasBaseTrack = tracks.some(t => t.is_base);
                   const isLocked = hasBaseTrack && !track.is_base && !completedBaseTrack;
                   
@@ -171,8 +167,8 @@ export default function Tracks() {
             )}
 
             {!loading && filteredTracks.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground">Nenhuma trilha encontrada</p>
+              <div className="text-center py-12">
+                <p className="text-sm text-muted-foreground">Nenhuma trilha encontrada</p>
               </div>
             )}
           </div>
