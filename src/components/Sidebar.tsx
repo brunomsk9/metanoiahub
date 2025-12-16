@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { 
   Home, 
-  BookOpen, 
   LifeBuoy, 
-  User, 
   LogOut, 
-  Shield,
   ChevronDown,
   Menu,
-  Heart,
   GraduationCap,
-  Plus,
-  Library
+  CalendarPlus,
+  BookMarked,
+  Settings,
+  Users,
+  UserCircle,
+  Compass
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
@@ -41,8 +41,8 @@ interface SidebarProps {
 }
 
 const learningItems = [
-  { path: '/trilhas', label: 'Trilhas', icon: BookOpen, requiresDiscipulador: false },
-  { path: '/biblioteca', label: 'Biblioteca', icon: Library, requiresDiscipulador: false },
+  { path: '/trilhas', label: 'Trilhas', icon: Compass, requiresDiscipulador: false },
+  { path: '/biblioteca', label: 'Biblioteca', icon: BookMarked, requiresDiscipulador: false },
   { path: '/sos', label: 'S.O.S.', icon: LifeBuoy, requiresDiscipulador: true },
 ];
 
@@ -169,7 +169,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
-                <Shield className="w-4 h-4" />
+                <Settings className="w-4 h-4" />
                 <span>Admin</span>
               </NavLink>
             )}
@@ -184,7 +184,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
-                <Heart className="w-4 h-4" />
+                <Users className="w-4 h-4" />
                 <span>Discipulado</span>
               </NavLink>
             )}
@@ -194,7 +194,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 to="/dashboard?novoEncontro=true"
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
-                <Plus className="w-4 h-4" />
+                <CalendarPlus className="w-4 h-4" />
                 <span>Novo Encontro</span>
               </NavLink>
             )}
@@ -217,14 +217,14 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
               <DropdownMenuContent align="end" className="w-44 bg-popover border border-border">
                 <DropdownMenuItem asChild>
                   <NavLink to="/perfil" className="flex items-center gap-2 cursor-pointer">
-                    <User className="w-4 h-4" />
+                    <UserCircle className="w-4 h-4" />
                     Meu Perfil
                   </NavLink>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
-                      <Shield className="w-4 h-4" />
+                      <Settings className="w-4 h-4" />
                       Painel Admin
                     </NavLink>
                   </DropdownMenuItem>
@@ -232,7 +232,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 {isDiscipulador && !isAdmin && (
                   <DropdownMenuItem asChild>
                     <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
-                      <Heart className="w-4 h-4" />
+                      <Users className="w-4 h-4" />
                       Discipulado
                     </NavLink>
                   </DropdownMenuItem>
@@ -322,7 +322,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       )}
                     >
-                      <Shield className="w-5 h-5" />
+                      <Settings className="w-5 h-5" />
                       <span>Painel Admin</span>
                     </NavLink>
                   )}
@@ -337,7 +337,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       )}
                     >
-                      <Heart className="w-5 h-5" />
+                      <Users className="w-5 h-5" />
                       <span>Discipulado</span>
                     </NavLink>
                   )}
@@ -347,7 +347,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                       to="/dashboard?novoEncontro=true"
                       className="flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     >
-                      <Plus className="w-5 h-5" />
+                      <CalendarPlus className="w-5 h-5" />
                       <span>Novo Encontro</span>
                     </NavLink>
                   )}
@@ -368,7 +368,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <User className="w-5 h-5" />
+                  <UserCircle className="w-5 h-5" />
                   <span>Meu Perfil</span>
                 </NavLink>
               </div>
