@@ -191,11 +191,11 @@ export function DailyVerse() {
         </DropdownMenu>
       </div>
       
-      <blockquote>
-        <p className="font-serif text-lg leading-relaxed text-foreground/90 mb-3">
+      <blockquote className="border-l-2 border-primary/30 pl-4">
+        <p className="font-serif text-xl leading-relaxed text-foreground italic mb-4">
           "{verse.text}"
         </p>
-        <footer className="text-sm text-primary font-medium">
+        <footer className="text-sm text-primary font-semibold tracking-wide">
           — {verse.reference}
         </footer>
       </blockquote>
