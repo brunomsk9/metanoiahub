@@ -33,6 +33,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
@@ -51,6 +56,7 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
   const [isDiscipulador, setIsDiscipulador] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -354,53 +360,59 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
                 </div>
               )}
 
-              {/* Perfil Section */}
+              {/* Conta Section - Collapsible */}
               <div className="pt-2">
-                <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Conta
-                </p>
-                <NavLink
-                  to="/perfil"
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                    location.pathname === '/perfil' 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <UserCircle className="w-5 h-5" />
-                  <span>Meu Perfil</span>
-                </NavLink>
+                <Collapsible open={isAccountOpen} onOpenChange={setIsAccountOpen}>
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between px-4 py-2.5 rounded-md hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={avatarUrl || undefined} alt={userName || 'Usuário'} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                            {userName?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium text-foreground">{userName || 'Usuário'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                        isAccountOpen && "rotate-180"
+                      )} />
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-1 mt-1">
+                    <NavLink
+                      to="/perfil"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ml-2",
+                        location.pathname === '/perfil' 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <UserCircle className="w-5 h-5" />
+                      <span>Meu Perfil</span>
+                    </NavLink>
+                    <div className="flex items-center justify-between px-4 py-2 ml-2">
+                      <span className="text-sm text-muted-foreground">Tema</span>
+                      <ThemeToggle />
+                    </div>
+                    <button 
+                      onClick={onLogout}
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors text-destructive hover:bg-destructive/10 w-full ml-2"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Sair</span>
+                    </button>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </nav>
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={avatarUrl || undefined} alt={userName || 'Usuário'} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                      {userName?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
-                    </p>
-                  </div>
-                </div>
-                <ThemeToggle />
-              </div>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={onLogout}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </Button>
-            </div>
           </SheetContent>
         </Sheet>
 
