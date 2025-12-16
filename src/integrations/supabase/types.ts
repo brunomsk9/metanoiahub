@@ -200,6 +200,7 @@ export type Database = {
           id: string
           needs_password_change: boolean
           nome: string
+          onboarding_completed: boolean
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           xp_points: number
@@ -211,6 +212,7 @@ export type Database = {
           id: string
           needs_password_change?: boolean
           nome?: string
+          onboarding_completed?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           xp_points?: number
@@ -222,6 +224,7 @@ export type Database = {
           id?: string
           needs_password_change?: boolean
           nome?: string
+          onboarding_completed?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           xp_points?: number
