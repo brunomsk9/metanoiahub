@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -198,7 +198,7 @@ export default function Lesson() {
               {/* Material Principal (PDF/Ebook/Livro) */}
               {lesson.url_pdf && (
                 <div className="mb-4 p-4 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-3">
                       {lesson.tipo_material === 'livro' ? (
                         <Book className="w-5 h-5 text-amber-500" />
@@ -212,18 +212,49 @@ export default function Lesson() {
                           {lesson.tipo_material === 'livro' && 'Livro'}
                           {!lesson.tipo_material && 'Material'}
                         </p>
-                        <p className="text-xs text-muted-foreground">Clique para baixar ou visualizar</p>
+                        <p className="text-xs text-muted-foreground">Visualize ou baixe o material</p>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(lesson.url_pdf!, '_blank')}
-                      className="gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Baixar
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Convert Google Drive view link to preview/embed
+                          let viewUrl = lesson.url_pdf!;
+                          if (viewUrl.includes('drive.google.com/file/d/')) {
+                            const fileId = viewUrl.match(/\/d\/([^\/]+)/)?.[1];
+                            if (fileId) {
+                              viewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+                            }
+                          }
+                          window.open(viewUrl, '_blank');
+                        }}
+                        className="gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Visualizar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Convert Google Drive to direct download link
+                          let downloadUrl = lesson.url_pdf!;
+                          if (downloadUrl.includes('drive.google.com/file/d/')) {
+                            const fileId = downloadUrl.match(/\/d\/([^\/]+)/)?.[1];
+                            if (fileId) {
+                              downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                            }
+                          }
+                          window.open(downloadUrl, '_blank');
+                        }}
+                        className="gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Baixar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
