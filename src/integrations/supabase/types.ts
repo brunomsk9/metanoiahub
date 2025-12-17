@@ -185,6 +185,7 @@ export type Database = {
           ordem: number
           texto_apoio: string | null
           tipo: Database["public"]["Enums"]["lesson_type"]
+          tipo_material: string | null
           titulo: string
           url_pdf: string | null
           video_url: string | null
@@ -199,6 +200,7 @@ export type Database = {
           ordem?: number
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
+          tipo_material?: string | null
           titulo: string
           url_pdf?: string | null
           video_url?: string | null
@@ -213,6 +215,7 @@ export type Database = {
           ordem?: number
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
+          tipo_material?: string | null
           titulo?: string
           url_pdf?: string | null
           video_url?: string | null
