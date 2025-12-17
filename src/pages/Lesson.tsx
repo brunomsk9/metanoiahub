@@ -11,6 +11,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CelebrationModal } from "@/components/CelebrationModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { XPGainToast } from "@/components/XPGainToast";
+
+const XP_PER_LESSON = 10;
 
 interface ChecklistItem {
   id: string;
@@ -69,6 +72,7 @@ export default function Lesson() {
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
   const [courseLessonsList, setCourseLessonsList] = useState<CourseLesson[]>([]);
   const [showLessonsList, setShowLessonsList] = useState(false);
+  const [showXPGain, setShowXPGain] = useState(false);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -230,10 +234,26 @@ export default function Lesson() {
 
       if (error) throw error;
 
+      // Add XP to user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('xp_points')
+        .eq('id', userId)
+        .single();
+
+      if (profile) {
+        await supabase
+          .from('profiles')
+          .update({ xp_points: (profile.xp_points || 0) + XP_PER_LESSON })
+          .eq('id', userId);
+      }
+
       setIsCompleted(true);
       setCourseProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
       setCourseLessonsList(prev => prev.map(l => l.id === id ? { ...l, completed: true } : l));
-      toast.success('Aula concluída!');
+      
+      // Show XP animation
+      setShowXPGain(true);
 
       // Check if this completes the course (last lesson)
       if (isLastLesson) {
@@ -655,6 +675,13 @@ export default function Lesson() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* XP Gain Animation */}
+      <XPGainToast 
+        xpAmount={XP_PER_LESSON} 
+        show={showXPGain} 
+        onComplete={() => setShowXPGain(false)} 
+      />
 
       {/* Course Completion Celebration */}
       <CelebrationModal
