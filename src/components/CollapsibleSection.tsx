@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, memo } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ interface CollapsibleSectionProps {
   badge?: string | number;
 }
 
-export function CollapsibleSection({ 
+export const CollapsibleSection = memo(function CollapsibleSection({ 
   title, 
   icon, 
   children, 
@@ -50,4 +50,4 @@ export function CollapsibleSection({
       </div>
     </section>
   );
-}
+});

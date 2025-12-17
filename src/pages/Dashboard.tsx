@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { DailyHabits } from "@/components/StreakDisplay";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -170,12 +170,12 @@ export default function Dashboard() {
     checkAuthAndFetchData();
   }, [navigate]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     navigate('/auth');
-  };
+  }, [navigate]);
 
-  const handleHabitToggle = async (id: string) => {
+  const handleHabitToggle = useCallback(async (id: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -216,31 +216,31 @@ export default function Dashboard() {
         ));
       }
     }
-  };
+  }, [habits, toast]);
 
-  const completedHabits = habits.filter(h => h.completed).length;
+  const completedHabits = useMemo(() => habits.filter(h => h.completed).length, [habits]);
   const totalHabits = habits.length;
 
-  const annualPlans = readingPlans.filter(p => p.duracao_dias >= 365);
-  const semesterPlans = readingPlans.filter(p => p.duracao_dias >= 180 && p.duracao_dias < 365);
-  const otherPlans = readingPlans.filter(p => p.duracao_dias < 180);
-  const plansInProgress = readingPlans.filter(p => p.hasProgress && p.completedDays.length > 0 && p.completedDays.length < p.duracao_dias);
+  const annualPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias >= 365), [readingPlans]);
+  const semesterPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias >= 180 && p.duracao_dias < 365), [readingPlans]);
+  const otherPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias < 180), [readingPlans]);
+  const plansInProgress = useMemo(() => readingPlans.filter(p => p.hasProgress && p.completedDays.length > 0 && p.completedDays.length < p.duracao_dias), [readingPlans]);
 
-  const handleOpenStartModal = (plan: ReadingPlanWithProgress) => {
+  const handleOpenStartModal = useCallback((plan: ReadingPlanWithProgress) => {
     setSelectedPlanForModal(plan);
     setShowStartModal(true);
-  };
+  }, []);
 
-  const handlePlanStarted = () => {
+  const handlePlanStarted = useCallback(() => {
     window.location.reload();
-  };
+  }, []);
 
-  const getDurationLabel = (days: number) => {
+  const getDurationLabel = useCallback((days: number) => {
     if (days >= 365) return `${Math.round(days / 365)} ano`;
     if (days >= 180) return `${Math.round(days / 30)} meses`;
     if (days >= 30) return `${Math.round(days / 7)} semanas`;
     return `${days} dias`;
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

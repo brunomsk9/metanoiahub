@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { BookOpen, CheckCircle2, Circle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ interface ReadingPlanCardProps {
   onClick: (id: string) => void;
 }
 
-export function ReadingPlanCard({
+export const ReadingPlanCard = memo(function ReadingPlanCard({
   id,
   titulo,
   descricao,
@@ -85,7 +86,7 @@ export function ReadingPlanCard({
       </div>
     </button>
   );
-}
+});
 
 interface ReadingPlanMiniCardProps {
   id: string;
@@ -96,7 +97,7 @@ interface ReadingPlanMiniCardProps {
   onClick: (id: string) => void;
 }
 
-export function ReadingPlanMiniCard({
+export const ReadingPlanMiniCard = memo(function ReadingPlanMiniCard({
   id,
   titulo,
   coverImage,
@@ -132,7 +133,7 @@ export function ReadingPlanMiniCard({
       </div>
     </button>
   );
-}
+});
 
 interface DayProgressDotsProps {
   totalDays: number;
@@ -141,7 +142,7 @@ interface DayProgressDotsProps {
   onDayClick?: (day: number) => void;
 }
 
-export function DayProgressDots({ totalDays, completedDays, currentDay, onDayClick }: DayProgressDotsProps) {
+export const DayProgressDots = memo(function DayProgressDots({ totalDays, completedDays, currentDay, onDayClick }: DayProgressDotsProps) {
   return (
     <div className="flex flex-wrap gap-2 justify-center">
       {Array.from({ length: totalDays }, (_, i) => i + 1).map((day) => {
@@ -167,4 +168,4 @@ export function DayProgressDots({ totalDays, completedDays, currentDay, onDayCli
       })}
     </div>
   );
-}
+});
