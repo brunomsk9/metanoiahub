@@ -24,6 +24,7 @@ interface Lesson {
   duracao_minutos: number | null;
   ordem: number;
   materiais: string[];
+  url_pdf: string | null;
 }
 
 interface Course {
@@ -63,7 +64,8 @@ export function AdminLessons() {
     checklist_items: '[]',
     duracao_minutos: 0,
     ordem: 0,
-    materiais: [] as string[]
+    materiais: [] as string[],
+    url_pdf: ''
   });
 
   const totalPages = Math.ceil(lessons.length / ITEMS_PER_PAGE);
@@ -111,7 +113,8 @@ export function AdminLessons() {
         checklist_items: JSON.stringify(lesson.checklist_items || [], null, 2),
         duracao_minutos: lesson.duracao_minutos || 0,
         ordem: lesson.ordem,
-        materiais: Array.isArray(lesson.materiais) ? lesson.materiais : []
+        materiais: Array.isArray(lesson.materiais) ? lesson.materiais : [],
+        url_pdf: lesson.url_pdf || ''
       });
     } else {
       setEditing(null);
@@ -124,7 +127,8 @@ export function AdminLessons() {
         checklist_items: '[]',
         duracao_minutos: 0,
         ordem: lessons.length,
-        materiais: []
+        materiais: [],
+        url_pdf: ''
       });
     }
     setDialogOpen(true);
@@ -242,7 +246,8 @@ export function AdminLessons() {
       checklist_items: checklistParsed,
       duracao_minutos: form.duracao_minutos,
       ordem: form.ordem,
-      materiais: form.materiais
+      materiais: form.materiais,
+      url_pdf: form.url_pdf || null
     };
 
     if (editing) {
@@ -378,6 +383,79 @@ export function AdminLessons() {
                 </div>
               )}
               
+              {/* PDF URL Field */}
+              <div className="space-y-2">
+                <Label>PDF da Aula</Label>
+                <Input
+                  value={form.url_pdf}
+                  onChange={(e) => setForm({ ...form, url_pdf: e.target.value })}
+                  placeholder="Cole o link do PDF ou faça upload abaixo"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error('Arquivo muito grande. Máximo: 10MB');
+                        return;
+                      }
+                      setUploading(true);
+                      try {
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `aulas/pdf/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const { error: uploadError } = await supabase.storage
+                          .from('materiais')
+                          .upload(fileName, file, { cacheControl: '3600', upsert: false });
+                        if (uploadError) {
+                          toast.error('Erro ao fazer upload: ' + uploadError.message);
+                          return;
+                        }
+                        const { data: { publicUrl } } = supabase.storage
+                          .from('materiais')
+                          .getPublicUrl(fileName);
+                        setForm(prev => ({ ...prev, url_pdf: publicUrl }));
+                        toast.success('PDF anexado!');
+                      } catch (error) {
+                        toast.error('Erro ao fazer upload');
+                      } finally {
+                        setUploading(false);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="hidden"
+                    id="pdf-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('pdf-upload')?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                    Upload PDF
+                  </Button>
+                  {form.url_pdf && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(form.url_pdf, '_blank')}
+                      className="text-primary"
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      Ver PDF
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cole um link direto para PDF ou faça upload de um arquivo PDF (máx. 10MB).
+                </p>
+              </div>
+
               {/* Multiple Materials Upload */}
               <div className="space-y-2">
                 <Label>Materiais Complementares</Label>

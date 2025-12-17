@@ -186,6 +186,7 @@ export type Database = {
           texto_apoio: string | null
           tipo: Database["public"]["Enums"]["lesson_type"]
           titulo: string
+          url_pdf: string | null
           video_url: string | null
         }
         Insert: {
@@ -199,6 +200,7 @@ export type Database = {
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
           titulo: string
+          url_pdf?: string | null
           video_url?: string | null
         }
         Update: {
@@ -212,6 +214,7 @@ export type Database = {
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
           titulo?: string
+          url_pdf?: string | null
           video_url?: string | null
         }
         Relationships: [
