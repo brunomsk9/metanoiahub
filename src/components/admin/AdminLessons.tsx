@@ -298,27 +298,26 @@ export function AdminLessons() {
               Nova Aula
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-gray-900">{editing ? 'Editar Aula' : 'Nova Aula'}</DialogTitle>
+              <DialogTitle>{editing ? 'Editar Aula' : 'Nova Aula'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label className="text-gray-700">Título *</Label>
+                <Label>Título *</Label>
                 <Input
                   value={form.titulo}
                   onChange={(e) => setForm({ ...form, titulo: e.target.value })}
                   placeholder="Ex: Introdução ao Discipulado"
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">Curso *</Label>
+                <Label>Curso *</Label>
                 <Select value={form.course_id} onValueChange={(v) => setForm({ ...form, course_id: v })}>
-                  <SelectTrigger className="border-gray-300 bg-white">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione um curso" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-popover border-border">
                     {courses.map((course) => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.titulo}
@@ -328,12 +327,12 @@ export function AdminLessons() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">Tipo</Label>
+                <Label>Tipo</Label>
                 <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v as any })}>
-                  <SelectTrigger className="border-gray-300 bg-white">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-popover border-border">
                     <SelectItem value="video">Vídeo</SelectItem>
                     <SelectItem value="texto">Texto</SelectItem>
                     <SelectItem value="checklist_interativo">Checklist Interativo</SelectItem>
@@ -342,37 +341,36 @@ export function AdminLessons() {
               </div>
               {form.tipo === 'video' && (
                 <div className="space-y-2">
-                  <Label className="text-gray-700">URL do Vídeo</Label>
+                  <Label>URL do Vídeo</Label>
                   <Input
                     value={form.video_url}
                     onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                     placeholder="https://youtube.com/..."
-                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-gray-700">Conteúdo de Texto</Label>
+                <Label>Conteúdo de Texto</Label>
                 <RichTextEditor
                   value={form.texto_apoio}
                   onChange={(html) => setForm({ ...form, texto_apoio: html })}
                   placeholder="Escreva o conteúdo da aula aqui..."
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Use a barra de ferramentas para formatar o texto com negrito, listas, títulos, etc.
                 </p>
               </div>
               {form.tipo === 'checklist_interativo' && (
                 <div className="space-y-2">
-                  <Label className="text-gray-700">Checklist Items (JSON)</Label>
+                  <Label>Checklist Items (JSON)</Label>
                   <Textarea
                     value={form.checklist_items}
                     onChange={(e) => setForm({ ...form, checklist_items: e.target.value })}
                     placeholder='[{"id": "1", "label": "Item 1"}]'
                     rows={4}
-                    className="font-mono text-sm border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                    className="font-mono text-sm"
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Formato: [{"{"}"id": "1", "label": "Texto do item"{"}"}]
                   </p>
                 </div>
@@ -380,29 +378,29 @@ export function AdminLessons() {
               
               {/* Multiple Materials Upload */}
               <div className="space-y-2">
-                <Label className="text-gray-700">Materiais Complementares</Label>
+                <Label>Materiais Complementares</Label>
                 
                 {/* List of uploaded materials */}
                 {form.materiais.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {form.materiais.map((url, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                      <div key={index} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border/50">
                         {getFileIcon(url)}
-                        <span className="text-xs px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded">
+                        <span className="text-xs px-1.5 py-0.5 bg-muted text-muted-foreground rounded">
                           {getFileTypeLabel(url)}
                         </span>
                         <a
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-amber-600 hover:underline truncate flex-1"
+                          className="text-sm text-primary hover:underline truncate flex-1"
                         >
                           {getFileName(url)}
                         </a>
                         <button
                           type="button"
                           onClick={() => handleRemoveMaterial(index)}
-                          className="text-gray-400 hover:text-red-500 p-1"
+                          className="text-muted-foreground hover:text-destructive p-1 transition-colors"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -425,7 +423,6 @@ export function AdminLessons() {
                     variant="outline"
                     onClick={() => document.getElementById('material-upload')?.click()}
                     disabled={uploading}
-                    className="border-gray-300 hover:bg-gray-50"
                   >
                     {uploading ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -435,32 +432,30 @@ export function AdminLessons() {
                     Adicionar Arquivo
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Formatos aceitos: PDF, Word, PowerPoint, Excel, Imagens. Máximo 10MB por arquivo.
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-700">Duração (min)</Label>
+                  <Label>Duração (min)</Label>
                   <Input
                     type="number"
                     value={form.duracao_minutos}
                     onChange={(e) => setForm({ ...form, duracao_minutos: parseInt(e.target.value) || 0 })}
-                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-700">Ordem</Label>
+                  <Label>Ordem</Label>
                   <Input
                     type="number"
                     value={form.ordem}
                     onChange={(e) => setForm({ ...form, ordem: parseInt(e.target.value) || 0 })}
-                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+              <Button onClick={handleSave} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {editing ? 'Salvar Alterações' : 'Criar Aula'}
               </Button>
