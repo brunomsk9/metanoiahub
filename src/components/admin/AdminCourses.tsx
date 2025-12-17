@@ -188,27 +188,26 @@ export function AdminCourses() {
               Novo Curso
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-gray-900">{editing ? 'Editar Curso' : 'Novo Curso'}</DialogTitle>
+              <DialogTitle>{editing ? 'Editar Curso' : 'Novo Curso'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label className="text-gray-700">Título *</Label>
+                <Label>Título *</Label>
                 <Input
                   value={form.titulo}
                   onChange={(e) => setForm({ ...form, titulo: e.target.value })}
                   placeholder="Ex: 01 - Identidade em Cristo"
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">Trilha *</Label>
+                <Label>Trilha *</Label>
                 <Select value={form.track_id} onValueChange={(v) => setForm({ ...form, track_id: v })}>
-                  <SelectTrigger className="border-gray-300 bg-white">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione uma trilha" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-popover border-border">
                     {tracks.map((track) => (
                       <SelectItem key={track.id} value={track.id}>
                         {track.titulo}
@@ -218,15 +217,15 @@ export function AdminCourses() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">Público Alvo *</Label>
-                <div className="flex gap-4 p-3 bg-gray-50 rounded-lg">
+                <Label>Público Alvo *</Label>
+                <div className="flex gap-4 p-3 bg-muted/50 rounded-lg border border-border/50">
                   <div className="flex items-center gap-2">
                     <Checkbox 
                       id="course-discipulo"
                       checked={form.publico_alvo.includes('discipulo')}
                       onCheckedChange={() => togglePublicoAlvo('discipulo')}
                     />
-                    <label htmlFor="course-discipulo" className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer">
+                    <label htmlFor="course-discipulo" className="text-sm text-foreground flex items-center gap-1 cursor-pointer">
                       <Users className="h-4 w-4" />
                       Discípulos
                     </label>
@@ -237,53 +236,49 @@ export function AdminCourses() {
                       checked={form.publico_alvo.includes('discipulador')}
                       onCheckedChange={() => togglePublicoAlvo('discipulador')}
                     />
-                    <label htmlFor="course-discipulador" className="text-sm text-gray-700 flex items-center gap-1 cursor-pointer">
+                    <label htmlFor="course-discipulador" className="text-sm text-foreground flex items-center gap-1 cursor-pointer">
                       <UserCheck className="h-4 w-4" />
                       Discipuladores
                     </label>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">Selecione quem terá acesso a este curso</p>
+                <p className="text-xs text-muted-foreground">Selecione quem terá acesso a este curso</p>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">Descrição</Label>
+                <Label>Descrição</Label>
                 <Textarea
                   value={form.descricao}
                   onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                   placeholder="Descrição do curso..."
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">URL da Thumbnail</Label>
+                <Label>URL da Thumbnail</Label>
                 <Input
                   value={form.thumbnail}
                   onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
                   placeholder="https://..."
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-700">Duração (min)</Label>
+                  <Label>Duração (min)</Label>
                   <Input
                     type="number"
                     value={form.duracao_minutos}
                     onChange={(e) => setForm({ ...form, duracao_minutos: parseInt(e.target.value) || 0 })}
-                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-700">Ordem</Label>
+                  <Label>Ordem</Label>
                   <Input
                     type="number"
                     value={form.ordem}
                     onChange={(e) => setForm({ ...form, ordem: parseInt(e.target.value) || 0 })}
-                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                   />
                 </div>
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+              <Button onClick={handleSave} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {editing ? 'Salvar Alterações' : 'Criar Curso'}
               </Button>
