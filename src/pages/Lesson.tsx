@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CelebrationModal } from "@/components/CelebrationModal";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChecklistItem {
   id: string;
@@ -43,6 +44,13 @@ interface NextLesson {
   titulo: string;
 }
 
+interface CourseLesson {
+  id: string;
+  titulo: string;
+  ordem: number;
+  completed: boolean;
+}
+
 export default function Lesson() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -59,6 +67,8 @@ export default function Lesson() {
   const [showCourseComplete, setShowCourseComplete] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
+  const [courseLessonsList, setCourseLessonsList] = useState<CourseLesson[]>([]);
+  const [showLessonsList, setShowLessonsList] = useState(false);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -153,11 +163,21 @@ export default function Lesson() {
           .eq('completed', true)
           .in('lesson_id', courseLessons.map(l => l.id));
 
-        const completedCount = completedLessons?.length || 0;
+        const completedIds = new Set(completedLessons?.map(l => l.lesson_id) || []);
+        const completedCount = completedIds.size;
+        
         setCourseProgress({ 
           completed: completedCount, 
           total: courseLessons.length 
         });
+
+        // Build lessons list with completion status
+        setCourseLessonsList(courseLessons.map(l => ({
+          id: l.id,
+          titulo: l.titulo,
+          ordem: l.ordem,
+          completed: completedIds.has(l.id)
+        })));
       }
 
       setLoading(false);
@@ -212,6 +232,7 @@ export default function Lesson() {
 
       setIsCompleted(true);
       setCourseProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
+      setCourseLessonsList(prev => prev.map(l => l.id === id ? { ...l, completed: true } : l));
       toast.success('Aula concluída!');
 
       // Check if this completes the course (last lesson)
@@ -337,8 +358,18 @@ export default function Lesson() {
         <div className="bg-muted/50 border-b border-border">
           <div className="max-w-7xl mx-auto px-4 py-2">
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowLessonsList(!showLessonsList)}
+                className="gap-2 h-7 px-2"
+              >
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline text-xs">Aulas</span>
+                {showLessonsList ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </Button>
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {courseProgress.completed}/{courseProgress.total} aulas
+                {courseProgress.completed}/{courseProgress.total}
               </span>
               <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                 <div 
@@ -351,6 +382,55 @@ export default function Lesson() {
               </span>
             </div>
           </div>
+
+          {/* Collapsible Lessons List */}
+          {showLessonsList && (
+            <div className="border-t border-border bg-background animate-fade-in">
+              <div className="max-w-7xl mx-auto">
+                <ScrollArea className="max-h-64">
+                  <div className="p-2 space-y-1">
+                    {courseLessonsList.map((lessonItem, index) => (
+                      <button
+                        key={lessonItem.id}
+                        onClick={() => {
+                          if (lessonItem.id !== id) {
+                            navigate(`/aula/${lessonItem.id}`);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                          lessonItem.id === id 
+                            ? 'bg-primary/10 text-primary' 
+                            : 'hover:bg-muted text-foreground'
+                        }`}
+                      >
+                        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                          lessonItem.completed 
+                            ? 'bg-emerald-500/20 text-emerald-500' 
+                            : lessonItem.id === id
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {lessonItem.completed ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : (
+                            index + 1
+                          )}
+                        </div>
+                        <span className={`flex-1 text-sm truncate ${
+                          lessonItem.completed ? 'text-muted-foreground' : ''
+                        }`}>
+                          {lessonItem.titulo}
+                        </span>
+                        {lessonItem.id === id && (
+                          <Play className="w-3 h-3 text-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
