@@ -58,6 +58,7 @@ export default function Lesson() {
   const [isLastLesson, setIsLastLesson] = useState(false);
   const [showCourseComplete, setShowCourseComplete] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
+  const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -127,7 +128,7 @@ export default function Lesson() {
         })));
       }
 
-      // Find next lesson in the course
+      // Find next lesson in the course and calculate progress
       const { data: courseLessons } = await supabase
         .from('lessons')
         .select('id, titulo, ordem')
@@ -143,6 +144,20 @@ export default function Lesson() {
         } else {
           setIsLastLesson(true);
         }
+
+        // Get completed lessons count for course progress
+        const { data: completedLessons } = await supabase
+          .from('user_progress')
+          .select('lesson_id')
+          .eq('user_id', session.user.id)
+          .eq('completed', true)
+          .in('lesson_id', courseLessons.map(l => l.id));
+
+        const completedCount = completedLessons?.length || 0;
+        setCourseProgress({ 
+          completed: completedCount, 
+          total: courseLessons.length 
+        });
       }
 
       setLoading(false);
@@ -196,6 +211,7 @@ export default function Lesson() {
       if (error) throw error;
 
       setIsCompleted(true);
+      setCourseProgress(prev => ({ ...prev, completed: prev.completed + 1 }));
       toast.success('Aula concluída!');
 
       // Check if this completes the course (last lesson)
@@ -315,6 +331,28 @@ export default function Lesson() {
           )}
         </div>
       </header>
+
+      {/* Course Progress Bar */}
+      {courseProgress.total > 0 && (
+        <div className="bg-muted/50 border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 py-2">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {courseProgress.completed}/{courseProgress.total} aulas
+              </span>
+              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-500"
+                  style={{ width: `${(courseProgress.completed / courseProgress.total) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium text-primary whitespace-nowrap">
+                {Math.round((courseProgress.completed / courseProgress.total) * 100)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto p-4 lg:p-8">
         <div className="grid lg:grid-cols-3 gap-6">
