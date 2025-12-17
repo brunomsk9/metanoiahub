@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video, ExternalLink, FileText, Play } from 'lucide-react';
 import { FileUpload } from './FileUpload';
 
 type ResourceCategory = 'sos' | 'apoio' | 'devocional' | 'estudo' | 'livro' | 'musica' | 'pregacao';
@@ -331,6 +331,39 @@ export function AdminResources() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
+                      {resource.link_externo && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => window.open(resource.link_externo!, '_blank')} 
+                          className="h-8 w-8 text-blue-500 hover:text-blue-700"
+                          title="Abrir link externo"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {resource.video_url && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => window.open(resource.video_url!, '_blank')} 
+                          className="h-8 w-8 text-red-500 hover:text-red-700"
+                          title="Assistir vídeo"
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {resource.url_pdf && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => window.open(resource.url_pdf!, '_blank')} 
+                          className="h-8 w-8 text-amber-500 hover:text-amber-700"
+                          title="Abrir PDF"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
                         <Pencil className="h-4 w-4" />
                       </Button>
