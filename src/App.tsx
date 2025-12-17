@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import SOS from "./pages/SOS";
 import Lesson from "./pages/Lesson";
 import Tracks from "./pages/Tracks";
+import TrackDetail from "./pages/TrackDetail";
+import CourseDetail from "./pages/CourseDetail";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import ReadingPlan from "./pages/ReadingPlan";
@@ -41,7 +43,8 @@ function AnimatedRoutes() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trilhas" element={<Tracks />} />
-        <Route path="/trilha/:id" element={<Tracks />} />
+        <Route path="/trilha/:id" element={<TrackDetail />} />
+        <Route path="/curso/:id" element={<CourseDetail />} />
         <Route path="/sos" element={<SOS />} />
         <Route path="/biblioteca" element={<Library />} />
         <Route path="/aula/:id" element={<Lesson />} />
