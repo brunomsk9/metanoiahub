@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserCheck } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -29,6 +29,8 @@ interface Track {
   titulo: string;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -36,6 +38,7 @@ export function AdminCourses() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [form, setForm] = useState({
     titulo: '',
@@ -46,6 +49,12 @@ export function AdminCourses() {
     ordem: 0,
     publico_alvo: ['discipulo'] as AppRole[]
   });
+
+  const totalPages = Math.ceil(courses.length / ITEMS_PER_PAGE);
+  const paginatedCourses = courses.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   useEffect(() => {
     fetchData();
@@ -302,7 +311,7 @@ export function AdminCourses() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {courses.map((course) => (
+              {paginatedCourses.map((course) => (
                 <tr key={course.id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-500">{course.ordem}</td>
                   <td className="py-3 px-4">
@@ -337,6 +346,38 @@ export function AdminCourses() {
           </table>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+          <p className="text-sm text-gray-500">
+            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, courses.length)} de {courses.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="h-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-600">
+              {currentPage} de {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="h-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

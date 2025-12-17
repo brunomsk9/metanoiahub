@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
+
+const ITEMS_PER_PAGE = 10;
 
 interface Lesson {
   id: string;
@@ -48,6 +50,7 @@ export function AdminLessons() {
   const [editing, setEditing] = useState<Lesson | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [form, setForm] = useState({
     titulo: '',
@@ -60,6 +63,12 @@ export function AdminLessons() {
     ordem: 0,
     materiais: [] as string[]
   });
+
+  const totalPages = Math.ceil(lessons.length / ITEMS_PER_PAGE);
+  const paginatedLessons = lessons.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   useEffect(() => {
     fetchData();
@@ -480,7 +489,7 @@ export function AdminLessons() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {lessons.map((lesson) => (
+              {paginatedLessons.map((lesson) => (
                 <tr key={lesson.id} className="hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-500">{lesson.ordem}</td>
                   <td className="py-3 px-4">
@@ -520,6 +529,38 @@ export function AdminLessons() {
           </table>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+          <p className="text-sm text-gray-500">
+            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, lessons.length)} de {lessons.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="h-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-600">
+              {currentPage} de {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="h-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
