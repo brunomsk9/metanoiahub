@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, BookOpen, Users, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -32,6 +33,7 @@ export function AdminTracks() {
   const [editing, setEditing] = useState<Track | null>(null);
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -130,7 +132,7 @@ export function AdminTracks() {
       if (error) {
         toast.error('Erro ao atualizar trilha');
       } else {
-        toast.success('Trilha atualizada!');
+        triggerSuccess('Trilha atualizada!');
         setDialogOpen(false);
         fetchTracks();
       }
@@ -142,7 +144,7 @@ export function AdminTracks() {
       if (error) {
         toast.error('Erro ao criar trilha');
       } else {
-        toast.success('Trilha criada!');
+        triggerSuccess('Trilha criada!');
         setDialogOpen(false);
         fetchTracks();
       }
@@ -388,6 +390,7 @@ export function AdminTracks() {
           </div>
         </div>
       )}
+      <SaveSuccess show={showSuccess} message={successMessage} />
     </div>
   );
 }
