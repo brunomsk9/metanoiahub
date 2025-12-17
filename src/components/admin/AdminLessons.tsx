@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
+import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -51,6 +52,7 @@ export function AdminLessons() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -247,7 +249,7 @@ export function AdminLessons() {
       const { error } = await supabase.from('lessons').update(payload).eq('id', editing.id);
       if (error) toast.error('Erro ao atualizar aula');
       else {
-        toast.success('Aula atualizada!');
+        triggerSuccess('Aula atualizada!');
         setDialogOpen(false);
         fetchData();
       }
@@ -255,7 +257,7 @@ export function AdminLessons() {
       const { error } = await supabase.from('lessons').insert(payload);
       if (error) toast.error('Erro ao criar aula');
       else {
-        toast.success('Aula criada!');
+        triggerSuccess('Aula criada!');
         setDialogOpen(false);
         fetchData();
       }
@@ -556,6 +558,7 @@ export function AdminLessons() {
           </div>
         </div>
       )}
+      <SaveSuccess show={showSuccess} message={successMessage} />
     </div>
   );
 }

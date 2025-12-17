@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -39,6 +40,7 @@ export function AdminCourses() {
   const [editing, setEditing] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -127,7 +129,7 @@ export function AdminCourses() {
       const { error } = await supabase.from('courses').update(payload).eq('id', editing.id);
       if (error) toast.error('Erro ao atualizar curso');
       else {
-        toast.success('Curso atualizado!');
+        triggerSuccess('Curso atualizado!');
         setDialogOpen(false);
         fetchData();
       }
@@ -135,7 +137,7 @@ export function AdminCourses() {
       const { error } = await supabase.from('courses').insert(payload);
       if (error) toast.error('Erro ao criar curso');
       else {
-        toast.success('Curso criado!');
+        triggerSuccess('Curso criado!');
         setDialogOpen(false);
         fetchData();
       }
@@ -373,6 +375,7 @@ export function AdminCourses() {
           </div>
         </div>
       )}
+      <SaveSuccess show={showSuccess} message={successMessage} />
     </div>
   );
 }
