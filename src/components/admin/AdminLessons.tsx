@@ -25,6 +25,7 @@ interface Lesson {
   ordem: number;
   materiais: string[];
   url_pdf: string | null;
+  tipo_material: string | null;
 }
 
 interface Course {
@@ -65,7 +66,8 @@ export function AdminLessons() {
     duracao_minutos: 0,
     ordem: 0,
     materiais: [] as string[],
-    url_pdf: ''
+    url_pdf: '',
+    tipo_material: 'pdf' as 'pdf' | 'ebook' | 'livro'
   });
 
   const totalPages = Math.ceil(lessons.length / ITEMS_PER_PAGE);
@@ -114,7 +116,8 @@ export function AdminLessons() {
         duracao_minutos: lesson.duracao_minutos || 0,
         ordem: lesson.ordem,
         materiais: Array.isArray(lesson.materiais) ? lesson.materiais : [],
-        url_pdf: lesson.url_pdf || ''
+        url_pdf: lesson.url_pdf || '',
+        tipo_material: (lesson.tipo_material as 'pdf' | 'ebook' | 'livro') || 'pdf'
       });
     } else {
       setEditing(null);
@@ -128,7 +131,8 @@ export function AdminLessons() {
         duracao_minutos: 0,
         ordem: lessons.length,
         materiais: [],
-        url_pdf: ''
+        url_pdf: '',
+        tipo_material: 'pdf'
       });
     }
     setDialogOpen(true);
@@ -247,7 +251,8 @@ export function AdminLessons() {
       duracao_minutos: form.duracao_minutos,
       ordem: form.ordem,
       materiais: form.materiais,
-      url_pdf: form.url_pdf || null
+      url_pdf: form.url_pdf || null,
+      tipo_material: form.tipo_material
     };
 
     if (editing) {
@@ -383,18 +388,31 @@ export function AdminLessons() {
                 </div>
               )}
               
-              {/* PDF URL Field */}
+              {/* Material Principal (PDF/Ebook/Livro) */}
               <div className="space-y-2">
-                <Label>PDF da Aula</Label>
-                <Input
-                  value={form.url_pdf}
-                  onChange={(e) => setForm({ ...form, url_pdf: e.target.value })}
-                  placeholder="Cole o link do PDF ou faça upload abaixo"
-                />
+                <Label>Material Principal (PDF, Ebook ou Livro)</Label>
+                <div className="flex gap-2 mb-2">
+                  <Select value={form.tipo_material} onValueChange={(v) => setForm({ ...form, tipo_material: v as any })}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="pdf">PDF</SelectItem>
+                      <SelectItem value="ebook">Ebook</SelectItem>
+                      <SelectItem value="livro">Livro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={form.url_pdf}
+                    onChange={(e) => setForm({ ...form, url_pdf: e.target.value })}
+                    placeholder="Cole o link do material"
+                    className="flex-1"
+                  />
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="file"
-                    accept=".pdf"
+                    accept=".pdf,.epub"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -405,7 +423,7 @@ export function AdminLessons() {
                       setUploading(true);
                       try {
                         const fileExt = file.name.split('.').pop();
-                        const fileName = `aulas/pdf/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                        const fileName = `aulas/materiais/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
                         const { error: uploadError } = await supabase.storage
                           .from('materiais')
                           .upload(fileName, file, { cacheControl: '3600', upsert: false });
@@ -417,7 +435,7 @@ export function AdminLessons() {
                           .from('materiais')
                           .getPublicUrl(fileName);
                         setForm(prev => ({ ...prev, url_pdf: publicUrl }));
-                        toast.success('PDF anexado!');
+                        toast.success('Arquivo anexado!');
                       } catch (error) {
                         toast.error('Erro ao fazer upload');
                       } finally {
@@ -436,7 +454,7 @@ export function AdminLessons() {
                     disabled={uploading}
                   >
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-                    Upload PDF
+                    Upload Arquivo
                   </Button>
                   {form.url_pdf && (
                     <Button
@@ -447,12 +465,12 @@ export function AdminLessons() {
                       className="text-primary"
                     >
                       <FileText className="h-4 w-4 mr-1" />
-                      Ver PDF
+                      Ver Material
                     </Button>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Cole um link direto para PDF ou faça upload de um arquivo PDF (máx. 10MB).
+                  Selecione o tipo e cole um link ou faça upload (PDF ou EPUB, máx. 10MB).
                 </p>
               </div>
 
