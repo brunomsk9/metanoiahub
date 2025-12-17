@@ -45,7 +45,11 @@ const categoriaColors: Record<ResourceCategory, string> = {
   pregacao: 'bg-indigo-100 text-indigo-700'
 };
 
-export function AdminResources() {
+interface AdminResourcesProps {
+  isAdmin?: boolean;
+}
+
+export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -170,18 +174,19 @@ export function AdminResources() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-gray-500">{resources.length} recurso(s) cadastrado(s)</p>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Recurso
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-gray-900">{editing ? 'Editar Recurso' : 'Novo Recurso'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+        {isAdmin && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Recurso
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-gray-900">{editing ? 'Editar Recurso' : 'Novo Recurso'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label className="text-gray-700">Título *</Label>
                 <Input
@@ -283,6 +288,7 @@ export function AdminResources() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -364,12 +370,16 @@ export function AdminResources() {
                           <FileText className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(resource.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isAdmin && (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(resource.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

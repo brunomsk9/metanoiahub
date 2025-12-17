@@ -107,7 +107,7 @@ export default function Admin() {
       case 'tracks': return <AdminTracks />;
       case 'courses': return <AdminCourses />;
       case 'lessons': return <AdminLessons />;
-      case 'resources': return <AdminResources />;
+      case 'resources': return <AdminResources isAdmin={isAdmin} />;
       case 'users': return <AdminUsers />;
       case 'reading-plans': return <AdminReadingPlanDays />;
       case 'discipleship': return <AdminDiscipleship />;
