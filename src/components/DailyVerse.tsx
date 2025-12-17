@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import { BookOpen, Share2, Check, Copy, Image, Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,7 +59,7 @@ function getDayOfYear(): number {
   return Math.floor(diff / oneDay);
 }
 
-export function DailyVerse() {
+export const DailyVerse = memo(function DailyVerse() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -231,4 +231,4 @@ export function DailyVerse() {
       </Dialog>
     </>
   );
-}
+});

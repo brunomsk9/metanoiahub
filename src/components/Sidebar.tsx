@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { 
   Home, 
@@ -45,9 +45,16 @@ const learningItems = [
   { path: '/sos', label: 'S.O.S.', icon: LifeBuoy, requiresDiscipulador: true },
 ];
 
-export function Sidebar({ onLogout, userName }: SidebarProps) {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isDiscipulador, setIsDiscipulador] = useState(false);
+// Cache for user roles to avoid repeated fetches
+let cachedRoles: { isAdmin: boolean; isDiscipulador: boolean; userId: string | null } = {
+  isAdmin: false,
+  isDiscipulador: false,
+  userId: null
+};
+
+export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProps) {
+  const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
+  const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -59,19 +66,32 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
     setIsOpen(false);
   }, [location.pathname]);
 
-  const checkRoles = async () => {
+  const checkRoles = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
+      // Use cached roles if same user
+      if (cachedRoles.userId === session.user.id) {
+        setIsAdmin(cachedRoles.isAdmin);
+        setIsDiscipulador(cachedRoles.isDiscipulador);
+        return;
+      }
+
       const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id);
       
       const userRoles = roles?.map(r => r.role) || [];
-      setIsAdmin(userRoles.includes('admin'));
-      setIsDiscipulador(userRoles.includes('discipulador'));
+      const admin = userRoles.includes('admin');
+      const discipulador = userRoles.includes('discipulador');
+      
+      // Cache the roles
+      cachedRoles = { isAdmin: admin, isDiscipulador: discipulador, userId: session.user.id };
+      
+      setIsAdmin(admin);
+      setIsDiscipulador(discipulador);
     }
-  };
+  }, []);
 
   const visibleLearningItems = learningItems.filter(item => 
     !item.requiresDiscipulador || isDiscipulador || isAdmin
@@ -396,4 +416,4 @@ export function Sidebar({ onLogout, userName }: SidebarProps) {
       </header>
     </>
   );
-}
+});

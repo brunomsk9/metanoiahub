@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Flame, BookOpen } from "lucide-react";
 
@@ -10,7 +10,7 @@ interface DiscipleInfo {
   alicerce_completed: boolean;
 }
 
-export function DiscipuladorDashboardCards() {
+export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCards() {
   const [disciples, setDisciples] = useState<DiscipleInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,14 +48,14 @@ export function DiscipuladorDashboardCards() {
     setLoading(false);
   };
 
+  const avgStreak = useMemo(() => disciples.length > 0 
+    ? Math.round(disciples.reduce((sum, d) => sum + d.current_streak, 0) / disciples.length)
+    : 0, [disciples]);
+
+  const alicerceCompleted = useMemo(() => disciples.filter(d => d.alicerce_completed).length, [disciples]);
+
   if (loading) return null;
   if (disciples.length === 0) return null;
-
-  const avgStreak = disciples.length > 0 
-    ? Math.round(disciples.reduce((sum, d) => sum + d.current_streak, 0) / disciples.length)
-    : 0;
-
-  const alicerceCompleted = disciples.filter(d => d.alicerce_completed).length;
 
   return (
     <div className="space-y-3">
@@ -108,4 +108,4 @@ export function DiscipuladorDashboardCards() {
       </div>
     </div>
   );
-}
+});
