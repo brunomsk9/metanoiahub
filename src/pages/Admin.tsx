@@ -221,15 +221,30 @@ export default function Admin() {
           )}
 
           {isDiscipulador && (
-            <Button
-              variant={activeSection === 'discipleship' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveSection('discipleship')}
-              className="gap-2"
-            >
-              <Heart className="h-4 w-4" />
-              <span className="hidden sm:inline">Discipulado</span>
-            </Button>
+            <>
+              <Button
+                variant={activeSection === 'discipleship' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('discipleship')}
+                className="gap-2"
+              >
+                <Heart className="h-4 w-4" />
+                <span className="hidden sm:inline">Discipulado</span>
+              </Button>
+              
+              {/* Recursos button for discipuladores who aren't admins */}
+              {!isAdmin && (
+                <Button
+                  variant={activeSection === 'resources' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveSection('resources')}
+                  className="gap-2"
+                >
+                  <LifeBuoy className="h-4 w-4" />
+                  <span className="hidden sm:inline">Recursos</span>
+                </Button>
+              )}
+            </>
           )}
         </div>
 
