@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -20,6 +20,9 @@ interface LessonData {
   video_url: string | null;
   texto_apoio: string | null;
   checklist_items: { id: string; label: string }[] | null;
+  url_pdf: string | null;
+  tipo_material: string | null;
+  materiais: string[] | null;
   course: {
     titulo: string;
     track: {
@@ -61,6 +64,9 @@ export default function Lesson() {
           video_url,
           texto_apoio,
           checklist_items,
+          url_pdf,
+          tipo_material,
+          materiais,
           course:courses(
             titulo,
             track:tracks(titulo)
@@ -188,6 +194,39 @@ export default function Lesson() {
               <h2 className="text-xl font-display font-semibold text-foreground mb-4">
                 {lesson.titulo}
               </h2>
+
+              {/* Material Principal (PDF/Ebook/Livro) */}
+              {lesson.url_pdf && (
+                <div className="mb-4 p-4 rounded-lg bg-muted/50 border border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {lesson.tipo_material === 'livro' ? (
+                        <Book className="w-5 h-5 text-amber-500" />
+                      ) : (
+                        <FileText className="w-5 h-5 text-red-500" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {lesson.tipo_material === 'pdf' && 'PDF da Aula'}
+                          {lesson.tipo_material === 'ebook' && 'Ebook'}
+                          {lesson.tipo_material === 'livro' && 'Livro'}
+                          {!lesson.tipo_material && 'Material'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Clique para baixar ou visualizar</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(lesson.url_pdf!, '_blank')}
+                      className="gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Baixar
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               {lesson.texto_apoio && (
                 <>
