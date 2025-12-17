@@ -14,7 +14,8 @@ import { MeetingsManager } from "@/components/MeetingsManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Flame, ChevronRight, BookMarked, Play, TrendingUp, Users } from "lucide-react";
+import { Leaderboard } from "@/components/Leaderboard";
+import { BookOpen, Flame, ChevronRight, BookMarked, Play, TrendingUp, Users, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Track {
@@ -311,6 +312,15 @@ export default function Dashboard() {
                   <DailyHabits habits={habits} onToggle={handleHabitToggle} />
                 </div>
               </div>
+            </CollapsibleSection>
+
+            {/* Ranking de XP */}
+            <CollapsibleSection 
+              title="Ranking" 
+              icon={<Trophy className="w-4 h-4" />}
+              defaultOpen={false}
+            >
+              <Leaderboard />
             </CollapsibleSection>
 
             {/* Discipulador Management Cards */}
