@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, Minimize2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -8,6 +8,8 @@ import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { CelebrationModal } from "@/components/CelebrationModal";
 
 interface ChecklistItem {
   id: string;
@@ -24,12 +26,21 @@ interface LessonData {
   url_pdf: string | null;
   tipo_material: string | null;
   materiais: string[] | null;
+  course_id: string;
+  ordem: number;
   course: {
+    id: string;
     titulo: string;
+    track_id: string;
     track: {
       titulo: string;
     } | null;
   } | null;
+}
+
+interface NextLesson {
+  id: string;
+  titulo: string;
 }
 
 export default function Lesson() {
@@ -42,6 +53,11 @@ export default function Lesson() {
   const [userId, setUserId] = useState<string | null>(null);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [nextLesson, setNextLesson] = useState<NextLesson | null>(null);
+  const [isLastLesson, setIsLastLesson] = useState(false);
+  const [showCourseComplete, setShowCourseComplete] = useState(false);
+  const [savingProgress, setSavingProgress] = useState(false);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -70,8 +86,12 @@ export default function Lesson() {
           url_pdf,
           tipo_material,
           materiais,
+          course_id,
+          ordem,
           course:courses(
+            id,
             titulo,
+            track_id,
             track:tracks(titulo)
           )
         `)
@@ -83,26 +103,46 @@ export default function Lesson() {
         return;
       }
 
-      setLesson(lessonData as unknown as LessonData);
+      const lessonInfo = lessonData as unknown as LessonData;
+      setLesson(lessonInfo);
 
-      // Parse checklist items and fetch user progress
+      // Fetch user progress for this lesson (completion status)
+      const { data: progressData } = await supabase
+        .from('user_progress')
+        .select('completed, checklist_progress')
+        .eq('user_id', session.user.id)
+        .eq('lesson_id', id)
+        .maybeSingle();
+
+      setIsCompleted(progressData?.completed || false);
+
+      // Parse checklist items
       const items = lessonData.checklist_items as { id: string; label: string }[] | null;
       if (items && Array.isArray(items)) {
-        // Fetch user progress for this lesson
-        const { data: progressData } = await supabase
-          .from('user_progress')
-          .select('checklist_progress')
-          .eq('user_id', session.user.id)
-          .eq('lesson_id', id)
-          .maybeSingle();
-
         const completedIds = (progressData?.checklist_progress as string[] | null) || [];
-
         setChecklistItems(items.map(item => ({
           id: item.id,
           text: item.label,
           completed: completedIds.includes(item.id)
         })));
+      }
+
+      // Find next lesson in the course
+      const { data: courseLessons } = await supabase
+        .from('lessons')
+        .select('id, titulo, ordem')
+        .eq('course_id', lessonInfo.course_id)
+        .order('ordem');
+
+      if (courseLessons) {
+        const currentIndex = courseLessons.findIndex(l => l.id === id);
+        const nextLessonData = courseLessons[currentIndex + 1];
+        
+        if (nextLessonData) {
+          setNextLesson({ id: nextLessonData.id, titulo: nextLessonData.titulo });
+        } else {
+          setIsLastLesson(true);
+        }
       }
 
       setLoading(false);
@@ -128,10 +168,71 @@ export default function Lesson() {
         user_id: userId,
         lesson_id: id,
         checklist_progress: completedIds,
-        completed: completedIds.length === checklistItems.length
+        completed: isCompleted || (completedIds.length === checklistItems.length)
       }, {
         onConflict: 'user_id,lesson_id'
       });
+  };
+
+  const handleMarkCompleted = async () => {
+    if (!userId || !id || !lesson) return;
+    
+    setSavingProgress(true);
+    
+    try {
+      // Mark lesson as completed
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: userId,
+          lesson_id: id,
+          completed: true,
+          completed_at: new Date().toISOString(),
+          checklist_progress: checklistItems.filter(i => i.completed).map(i => i.id)
+        }, {
+          onConflict: 'user_id,lesson_id'
+        });
+
+      if (error) throw error;
+
+      setIsCompleted(true);
+      toast.success('Aula concluída!');
+
+      // Check if this completes the course (last lesson)
+      if (isLastLesson) {
+        // Verify all lessons in course are completed
+        const { data: courseLessons } = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('course_id', lesson.course_id);
+
+        if (courseLessons) {
+          const { data: completedLessons } = await supabase
+            .from('user_progress')
+            .select('lesson_id')
+            .eq('user_id', userId)
+            .eq('completed', true)
+            .in('lesson_id', courseLessons.map(l => l.id));
+
+          // All lessons completed (including this one)
+          if (completedLessons && completedLessons.length >= courseLessons.length) {
+            setShowCourseComplete(true);
+          }
+        }
+      }
+    } catch (error) {
+      toast.error('Erro ao salvar progresso');
+    } finally {
+      setSavingProgress(false);
+    }
+  };
+
+  const handleNextLesson = () => {
+    if (nextLesson) {
+      navigate(`/aula/${nextLesson.id}`);
+    } else if (lesson?.course?.id) {
+      navigate(`/curso/${lesson.course.id}`);
+    }
   };
 
   if (loading) {
@@ -189,15 +290,29 @@ export default function Lesson() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            {trackTitle && <p className="text-xs text-primary font-medium">{trackTitle}</p>}
+            <div className="flex items-center gap-2">
+              {trackTitle && <p className="text-xs text-primary font-medium">{trackTitle}</p>}
+              {isCompleted && (
+                <span className="inline-flex items-center gap-1 text-xs text-emerald-500">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Concluída
+                </span>
+              )}
+            </div>
             <h1 className="text-sm font-display font-semibold text-foreground truncate">
               {lesson.titulo}
             </h1>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
-            <ChevronRight className="w-4 h-4 mr-1" />
-            Próxima Aula
-          </Button>
+          {nextLesson ? (
+            <Button variant="outline" size="sm" onClick={handleNextLesson}>
+              Próxima
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => lesson?.course?.id && navigate(`/curso/${lesson.course.id}`)}>
+              Ver Curso
+            </Button>
+          )}
         </div>
       </header>
 
@@ -310,6 +425,58 @@ export default function Lesson() {
                   )}
                 </>
               )}
+
+              {/* Mark as Completed Section */}
+              <div className="mt-6 pt-6 border-t border-border">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                    ) : (
+                      <Circle className="w-6 h-6 text-muted-foreground" />
+                    )}
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {isCompleted ? 'Aula concluída!' : 'Marcar como concluída'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isCompleted 
+                          ? 'Você completou esta aula' 
+                          : isLastLesson 
+                            ? 'Esta é a última aula do curso' 
+                            : 'Conclua para avançar no curso'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {!isCompleted && (
+                      <Button 
+                        onClick={handleMarkCompleted}
+                        disabled={savingProgress}
+                        className="gap-2"
+                      >
+                        {savingProgress ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4" />
+                        )}
+                        Concluir Aula
+                      </Button>
+                    )}
+                    {isCompleted && nextLesson && (
+                      <Button onClick={handleNextLesson} className="gap-2">
+                        Próxima Aula
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {isCompleted && isLastLesson && (
+                      <Button onClick={() => lesson?.course?.id && navigate(`/curso/${lesson.course.id}`)} variant="outline">
+                        Ver Curso
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -370,6 +537,18 @@ export default function Lesson() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Course Completion Celebration */}
+      <CelebrationModal
+        isOpen={showCourseComplete}
+        onClose={() => {
+          setShowCourseComplete(false);
+          if (lesson?.course?.id) {
+            navigate(`/curso/${lesson.course.id}`);
+          }
+        }}
+        trackTitle={lesson?.course?.titulo || 'Curso'}
+      />
     </div>
     </PageTransition>
   );
