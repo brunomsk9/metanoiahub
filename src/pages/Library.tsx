@@ -15,7 +15,8 @@ import {
   Download, 
   ExternalLink, 
   Search,
-  User
+  User,
+  ShieldX
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,12 +39,28 @@ export default function Library() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("livro");
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchResources = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
+        return;
+      }
+
+      // Check user roles
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+
+      const userRoles = roles?.map(r => r.role) || [];
+      const canAccess = userRoles.includes('discipulador') || userRoles.includes('admin');
+      setHasAccess(canAccess);
+
+      if (!canAccess) {
+        setLoading(false);
         return;
       }
 
@@ -107,6 +124,37 @@ export default function Library() {
       window.open(resource.url_pdf, '_blank');
     }
   };
+
+  // Access denied view for non-discipuladores
+  if (hasAccess === false) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Sidebar onLogout={handleLogout} />
+        
+        <PageTransition>
+          <main className="pt-14 lg:pt-16 pb-8">
+            <div className="px-4 lg:px-6 max-w-5xl mx-auto">
+              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <ShieldX className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h1 className="text-xl font-display font-semibold text-foreground mb-2">
+                  Acesso Restrito
+                </h1>
+                <p className="text-sm text-muted-foreground max-w-md mb-6">
+                  A Biblioteca está disponível apenas para discipuladores. 
+                  Continue sua jornada de discipulado e em breve você terá acesso a esses recursos.
+                </p>
+                <Button onClick={() => navigate('/dashboard')}>
+                  Voltar ao Dashboard
+                </Button>
+              </div>
+            </div>
+          </main>
+        </PageTransition>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
