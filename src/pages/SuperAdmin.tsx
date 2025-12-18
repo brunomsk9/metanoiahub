@@ -137,6 +137,7 @@ export default function SuperAdmin() {
   });
   const [userFormData, setUserFormData] = useState({
     nome: '',
+    email: '',
     telefone: '',
     church_id: '',
     roles: [] as string[],
@@ -296,6 +297,7 @@ export default function SuperAdmin() {
     setSelectedUser(user);
     setUserFormData({
       nome: user.nome,
+      email: user.email || '',
       telefone: user.telefone || '',
       church_id: user.church_id || '',
       roles: [...user.roles],
@@ -989,6 +991,18 @@ export default function SuperAdmin() {
 
                     {/* Form Fields */}
                     <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="user_email" className="text-sm font-medium">E-mail</Label>
+                        <Input
+                          id="user_email"
+                          type="email"
+                          value={userFormData.email}
+                          className="h-10 bg-muted/50"
+                          readOnly
+                          disabled
+                        />
+                      </div>
+                      
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="user_nome" className="text-sm font-medium">Nome</Label>
