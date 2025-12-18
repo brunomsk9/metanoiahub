@@ -41,9 +41,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, UserPlus, Search } from 'lucide-react';
+import { 
+  Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, 
+  Search, BookOpen, GraduationCap, FileText, LifeBuoy, CalendarDays, 
+  ClipboardList, BarChart3, Bot, Presentation, Sparkles, ChevronDown, LayoutDashboard
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+
+// Admin components
+import { AdminTracks } from '@/components/admin/AdminTracks';
+import { AdminCourses } from '@/components/admin/AdminCourses';
+import { AdminLessons } from '@/components/admin/AdminLessons';
+import { AdminResources } from '@/components/admin/AdminResources';
+import { AdminUsers } from '@/components/admin/AdminUsers';
+import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
+import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
+import { AdminDashboard } from '@/components/admin/AdminDashboard';
+import { AdminWeeklyChecklist } from '@/components/admin/AdminWeeklyChecklist';
+import { AdminChecklistCompliance } from '@/components/admin/AdminChecklistCompliance';
+import { AdminAISettings } from '@/components/admin/AdminAISettings';
+import { AdminHabits } from '@/components/admin/AdminHabits';
+import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
+
+type ContentSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'admin-users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits';
+
+const contentSections = [
+  { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
+  { id: 'courses' as const, label: 'Cursos', icon: GraduationCap },
+  { id: 'lessons' as const, label: 'Aulas', icon: FileText },
+  { id: 'resources' as const, label: 'Recursos', icon: LifeBuoy },
+  { id: 'reading-plans' as const, label: 'Planos de Leitura', icon: CalendarDays },
+  { id: 'habits' as const, label: 'Hábitos Diários', icon: Sparkles },
+  { id: 'weekly-checklist' as const, label: 'Checklist Semanal', icon: ClipboardList },
+  { id: 'checklist-compliance' as const, label: 'Relatório Compliance', icon: BarChart3 },
+  { id: 'ai-settings' as const, label: 'Configurações IA', icon: Bot },
+  { id: 'presentation' as const, label: 'Apresentação', icon: Presentation },
+  { id: 'admin-users' as const, label: 'Usuários (Admin)', icon: Users },
+];
 
 interface ChurchData {
   id: string;
@@ -81,6 +124,7 @@ export default function SuperAdmin() {
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [editingChurch, setEditingChurch] = useState<ChurchData | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [activeContentSection, setActiveContentSection] = useState<ContentSection>('dashboard');
   const [formData, setFormData] = useState({
     nome: '',
     slug: '',
@@ -148,7 +192,6 @@ export default function SuperAdmin() {
   };
 
   const loadUsers = async () => {
-    // Fetch all profiles with their church info
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, nome, telefone, church_id, created_at')
@@ -163,12 +206,10 @@ export default function SuperAdmin() {
       return;
     }
 
-    // Fetch all user roles
     const { data: allRoles } = await supabase
       .from('user_roles')
       .select('user_id, role');
 
-    // Fetch all churches for name mapping
     const { data: churchesData } = await supabase
       .from('churches')
       .select('id, nome');
@@ -183,12 +224,11 @@ export default function SuperAdmin() {
       rolesMap.get(r.user_id)!.push(r.role);
     });
 
-    // Fetch emails from auth (we'll use user ids)
     const usersWithData: UserData[] = (profiles || []).map(profile => ({
       id: profile.id,
       nome: profile.nome || 'Sem nome',
       telefone: profile.telefone,
-      email: '', // Will be filled if we can get it
+      email: '',
       church_id: profile.church_id,
       church_name: profile.church_id ? churchMap.get(profile.church_id) || 'Igreja desconhecida' : 'Sem igreja',
       roles: rolesMap.get(profile.id) || ['discipulo'],
@@ -255,7 +295,8 @@ export default function SuperAdmin() {
       nome: user.nome,
       telefone: user.telefone || '',
       church_id: user.church_id || '',
-      role: user.roles.includes('church_admin') ? 'church_admin' : 
+      role: user.roles.includes('super_admin') ? 'super_admin' :
+            user.roles.includes('church_admin') ? 'church_admin' : 
             user.roles.includes('admin') ? 'admin' : 
             user.roles.includes('discipulador') ? 'discipulador' : 'discipulo',
     });
@@ -323,7 +364,6 @@ export default function SuperAdmin() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    // Update profile data (nome, telefone and church_id)
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ 
@@ -342,23 +382,23 @@ export default function SuperAdmin() {
       return;
     }
 
-    // Update role - remove old admin roles and add new one
-    const adminRoles: ('admin' | 'church_admin')[] = ['admin', 'church_admin'];
+    // Update roles - handle all role types
+    const allAdminRoles: ('admin' | 'church_admin' | 'super_admin' | 'discipulador')[] = ['admin', 'church_admin', 'super_admin', 'discipulador'];
     
     // Remove existing admin roles
     await supabase
       .from('user_roles')
       .delete()
       .eq('user_id', selectedUser.id)
-      .in('role', adminRoles);
+      .in('role', allAdminRoles);
 
     // Add new role if it's an admin role
-    if (userFormData.role === 'admin' || userFormData.role === 'church_admin') {
+    if (userFormData.role !== 'discipulo') {
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
           user_id: selectedUser.id,
-          role: userFormData.role as 'admin' | 'church_admin',
+          role: userFormData.role as 'admin' | 'church_admin' | 'super_admin' | 'discipulador',
         });
 
       if (roleError) {
@@ -425,6 +465,27 @@ export default function SuperAdmin() {
     return <Badge variant="secondary">Discípulo</Badge>;
   };
 
+  const renderContentSection = () => {
+    switch (activeContentSection) {
+      case 'dashboard': return <AdminDashboard />;
+      case 'tracks': return <AdminTracks />;
+      case 'courses': return <AdminCourses />;
+      case 'lessons': return <AdminLessons />;
+      case 'resources': return <AdminResources isAdmin={true} />;
+      case 'admin-users': return <AdminUsers />;
+      case 'reading-plans': return <AdminReadingPlanDays />;
+      case 'discipleship': return <AdminDiscipleship />;
+      case 'weekly-checklist': return <AdminWeeklyChecklist />;
+      case 'checklist-compliance': return <AdminChecklistCompliance />;
+      case 'ai-settings': return <AdminAISettings />;
+      case 'habits': return <AdminHabits />;
+      case 'presentation': return <PresentationPdfGenerator />;
+      default: return null;
+    }
+  };
+
+  const activeSection = contentSections.find(s => s.id === activeContentSection);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -482,14 +543,18 @@ export default function SuperAdmin() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs defaultValue="churches" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
               <TabsTrigger value="churches" className="flex items-center gap-2">
                 <Church className="h-4 w-4" />
-                Igrejas
+                <span className="hidden sm:inline">Igrejas</span>
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Usuários
+                <span className="hidden sm:inline">Usuários</span>
+              </TabsTrigger>
+              <TabsTrigger value="content" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Conteúdo</span>
               </TabsTrigger>
             </TabsList>
 
@@ -820,6 +885,64 @@ export default function SuperAdmin() {
                 </Table>
               </div>
             </TabsContent>
+
+            {/* Content Tab (Admin functionality) */}
+            <TabsContent value="content" className="space-y-6">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Gerenciar Conteúdo</h1>
+                  <p className="text-muted-foreground mt-1">
+                    Adicione e edite trilhas, cursos, lições e recursos
+                  </p>
+                </div>
+
+                {/* Content Navigation */}
+                <div className="flex flex-wrap gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        {activeSection ? (
+                          <>
+                            <activeSection.icon className="h-4 w-4" />
+                            <span className="hidden sm:inline">{activeSection.label}</span>
+                          </>
+                        ) : (
+                          <>
+                            <BookOpen className="h-4 w-4" />
+                            <span>Selecionar</span>
+                          </>
+                        )}
+                        <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="bg-popover border border-border max-h-80 overflow-y-auto">
+                      {contentSections.map((section) => (
+                        <DropdownMenuItem
+                          key={section.id}
+                          onClick={() => setActiveContentSection(section.id)}
+                          className={cn(
+                            "gap-2 cursor-pointer",
+                            activeContentSection === section.id && "bg-primary/10 text-primary"
+                          )}
+                        >
+                          <section.icon className="h-4 w-4" />
+                          {section.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="mt-4">
+                {renderContentSection()}
+              </div>
+            </TabsContent>
           </Tabs>
 
           {/* User Edit Dialog */}
@@ -858,6 +981,7 @@ export default function SuperAdmin() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label>Igreja</Label>
                     <Select 
                       value={userFormData.church_id} 
                       onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value })}
@@ -866,6 +990,7 @@ export default function SuperAdmin() {
                         <SelectValue placeholder="Selecione uma igreja" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="">Sem igreja</SelectItem>
                         {churches.map((church) => (
                           <SelectItem key={church.id} value={church.id}>
                             {church.nome}
@@ -876,7 +1001,7 @@ export default function SuperAdmin() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="user_role">Papel Administrativo</Label>
+                    <Label>Papel Principal</Label>
                     <Select 
                       value={userFormData.role} 
                       onValueChange={(value) => setUserFormData({ ...userFormData, role: value })}
@@ -885,14 +1010,15 @@ export default function SuperAdmin() {
                         <SelectValue placeholder="Selecione um papel" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="discipulo">Discípulo (sem acesso admin)</SelectItem>
+                        <SelectItem value="discipulo">Discípulo</SelectItem>
                         <SelectItem value="discipulador">Discipulador</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="church_admin">Admin da Igreja</SelectItem>
+                        <SelectItem value="church_admin">Admin Igreja</SelectItem>
+                        <SelectItem value="super_admin">Super Admin</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Admin da Igreja pode gerenciar todos os dados da sua igreja
+                      Super Admin: define papéis de qualquer usuário
                     </p>
                   </div>
 
