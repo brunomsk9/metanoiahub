@@ -983,14 +983,14 @@ export default function SuperAdmin() {
                   <div className="space-y-2">
                     <Label>Igreja</Label>
                     <Select 
-                      value={userFormData.church_id} 
-                      onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value })}
+                      value={userFormData.church_id || "none"} 
+                      onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value === "none" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma igreja" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sem igreja</SelectItem>
+                        <SelectItem value="none">Sem igreja</SelectItem>
                         {churches.map((church) => (
                           <SelectItem key={church.id} value={church.id}>
                             {church.nome}
