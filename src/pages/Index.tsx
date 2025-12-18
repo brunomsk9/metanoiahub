@@ -7,9 +7,7 @@ import {
   MessageCircle, 
   Flame,
   Users,
-  CheckCircle2,
-  Compass,
-  Heart
+  Compass
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
@@ -216,53 +214,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* O que está incluso */}
-        <section className="py-20 px-4 bg-muted/30">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                O que está incluso
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                "Trilha Alicerce - fundamentos da fé",
-                "Trilhas avançadas para discipuladores",
-                "Planos de leitura bíblica de 7 a 365 dias",
-                "Sistema de acompanhamento de discípulos",
-                "S.O.S. com recursos para situações difíceis",
-                "Biblioteca com livros, músicas e pregações",
-                "Mentor IA para tirar dúvidas",
-                "Registro de encontros e reuniões",
-                "Controle de hábitos diários",
-                "Versículo do dia compartilhável",
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3 p-4 bg-background rounded-lg border border-border">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span className="text-sm text-foreground">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Final */}
-        <section className="py-24 px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-8">
-            <Heart className="w-16 h-16 text-primary mx-auto" />
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-              Pronto para transformar vidas?
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Junte-se a discipuladores que estão formando o caráter de Cristo em suas comunidades
-            </p>
-            <Button size="lg" className="text-base px-10 py-6" onClick={() => navigate('/auth')}>
-              Começar Gratuitamente
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        </section>
 
         {/* Footer */}
         <footer className="py-8 px-4 border-t border-border">
