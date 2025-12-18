@@ -16,6 +16,7 @@ import TrackDetail from "./pages/TrackDetail";
 import CourseDetail from "./pages/CourseDetail";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import SuperAdmin from "./pages/SuperAdmin";
 import ReadingPlan from "./pages/ReadingPlan";
 import ChangePassword from "./pages/ChangePassword";
 import Onboarding from "./pages/Onboarding";
@@ -51,6 +52,7 @@ function AnimatedRoutes() {
         <Route path="/aula/:id" element={<Lesson />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/super-admin" element={<SuperAdmin />} />
         <Route path="/plano/:id" element={<ReadingPlan />} />
         <Route path="/alterar-senha" element={<ChangePassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
