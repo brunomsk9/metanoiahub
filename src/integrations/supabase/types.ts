@@ -853,7 +853,12 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "discipulo" | "discipulador" | "admin"
+      app_role:
+        | "discipulo"
+        | "discipulador"
+        | "admin"
+        | "super_admin"
+        | "church_admin"
       lesson_type: "video" | "texto" | "checklist_interativo"
       meeting_type: "individual" | "celula"
       resource_category:
@@ -991,7 +996,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["discipulo", "discipulador", "admin"],
+      app_role: [
+        "discipulo",
+        "discipulador",
+        "admin",
+        "super_admin",
+        "church_admin",
+      ],
       lesson_type: ["video", "texto", "checklist_interativo"],
       meeting_type: ["individual", "celula"],
       resource_category: [
