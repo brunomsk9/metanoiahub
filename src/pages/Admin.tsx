@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminTracks } from '@/components/admin/AdminTracks';
 import { AdminCourses } from '@/components/admin/AdminCourses';
@@ -33,6 +33,7 @@ const contentSections = [
 
 export default function Admin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
@@ -41,6 +42,14 @@ export default function Admin() {
   useEffect(() => {
     checkAdminAccess();
   }, []);
+
+  // Handle section from URL params
+  useEffect(() => {
+    const sectionParam = searchParams.get('section');
+    if (sectionParam === 'recursos') {
+      setActiveSection('resources');
+    }
+  }, [searchParams]);
 
   const checkAdminAccess = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -61,7 +70,14 @@ export default function Admin() {
     
     setIsAdmin(userIsAdmin);
     setIsDiscipulador(userIsDiscipulador);
-    setActiveSection(userIsAdmin ? 'dashboard' : 'discipleship');
+    
+    // Check URL param first, then default based on role
+    const sectionParam = searchParams.get('section');
+    if (sectionParam === 'recursos') {
+      setActiveSection('resources');
+    } else {
+      setActiveSection(userIsAdmin ? 'dashboard' : 'discipleship');
+    }
     setLoading(false);
   };
 
