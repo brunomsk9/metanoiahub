@@ -48,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, 
   Search, BookOpen, GraduationCap, FileText, LifeBuoy, CalendarDays, 
@@ -137,8 +138,9 @@ export default function SuperAdmin() {
     nome: '',
     telefone: '',
     church_id: '',
-    role: '',
+    roles: [] as string[],
   });
+  const [savingRole, setSavingRole] = useState(false);
 
   useEffect(() => {
     checkSuperAdminAccess();
@@ -295,12 +297,18 @@ export default function SuperAdmin() {
       nome: user.nome,
       telefone: user.telefone || '',
       church_id: user.church_id || '',
-      role: user.roles.includes('super_admin') ? 'super_admin' :
-            user.roles.includes('church_admin') ? 'church_admin' : 
-            user.roles.includes('admin') ? 'admin' : 
-            user.roles.includes('discipulador') ? 'discipulador' : 'discipulo',
+      roles: [...user.roles],
     });
     setIsUserDialogOpen(true);
+  };
+
+  const toggleUserRole = (role: string) => {
+    setUserFormData(prev => ({
+      ...prev,
+      roles: prev.roles.includes(role)
+        ? prev.roles.filter(r => r !== role)
+        : [...prev.roles, role]
+    }));
   };
 
   const handleSubmitChurch = async (e: React.FormEvent) => {
@@ -363,6 +371,8 @@ export default function SuperAdmin() {
   const handleSubmitUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    
+    setSavingRole(true);
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -379,39 +389,39 @@ export default function SuperAdmin() {
         title: 'Erro',
         description: 'Erro ao atualizar dados do usuário.',
       });
+      setSavingRole(false);
       return;
     }
 
-    // Update roles - handle all role types
-    const allAdminRoles: ('admin' | 'church_admin' | 'super_admin' | 'discipulador')[] = ['admin', 'church_admin', 'super_admin', 'discipulador'];
-    
-    // Remove existing admin roles
-    await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', selectedUser.id)
-      .in('role', allAdminRoles);
+    // Get current roles from selectedUser
+    const currentRoles = selectedUser.roles;
+    const newRoles = userFormData.roles;
 
-    // Add new role if it's an admin role
-    if (userFormData.role !== 'discipulo') {
-      const { error: roleError } = await supabase
+    // Find roles to remove and roles to add
+    const rolesToRemove = currentRoles.filter(r => !newRoles.includes(r));
+    const rolesToAdd = newRoles.filter(r => !currentRoles.includes(r));
+
+    // Remove roles
+    for (const role of rolesToRemove) {
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', selectedUser.id)
+        .eq('role', role as 'discipulo' | 'discipulador' | 'admin' | 'church_admin' | 'super_admin');
+    }
+
+    // Add roles
+    for (const role of rolesToAdd) {
+      await supabase
         .from('user_roles')
         .insert({
           user_id: selectedUser.id,
-          role: userFormData.role as 'admin' | 'church_admin' | 'super_admin' | 'discipulador',
+          role: role as 'discipulo' | 'discipulador' | 'admin' | 'church_admin' | 'super_admin',
         });
-
-      if (roleError) {
-        toast({
-          variant: 'destructive',
-          title: 'Erro',
-          description: 'Erro ao atualizar papel do usuário.',
-        });
-        return;
-      }
     }
 
     toast({ title: 'Sucesso', description: 'Usuário atualizado com sucesso.' });
+    setSavingRole(false);
     setIsUserDialogOpen(false);
     loadUsers();
   };
@@ -1000,26 +1010,31 @@ export default function SuperAdmin() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Papel Principal</Label>
-                    <Select 
-                      value={userFormData.role} 
-                      onValueChange={(value) => setUserFormData({ ...userFormData, role: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um papel" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="discipulo">Discípulo</SelectItem>
-                        <SelectItem value="discipulador">Discipulador</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="church_admin">Admin Igreja</SelectItem>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Super Admin: define papéis de qualquer usuário
-                    </p>
+                  <div className="space-y-3">
+                    <Label>Papéis do Usuário</Label>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'discipulo', label: 'Discípulo', description: 'Acesso às trilhas e cursos para discípulos' },
+                        { id: 'discipulador', label: 'Discipulador', description: 'Acesso às trilhas e cursos para discipuladores' },
+                        { id: 'admin', label: 'Admin', description: 'Acesso total ao painel administrativo' },
+                        { id: 'church_admin', label: 'Admin Igreja', description: 'Gerencia conteúdo da sua igreja' },
+                        { id: 'super_admin', label: 'Super Admin', description: 'Gerencia todas as igrejas e usuários' },
+                      ].map((role) => (
+                        <div key={role.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50">
+                          <Checkbox
+                            id={`role-${role.id}`}
+                            checked={userFormData.roles.includes(role.id)}
+                            onCheckedChange={() => toggleUserRole(role.id)}
+                          />
+                          <div className="flex-1">
+                            <label htmlFor={`role-${role.id}`} className="text-sm font-medium cursor-pointer">
+                              {role.label}
+                            </label>
+                            <p className="text-xs text-muted-foreground">{role.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="flex gap-2 pt-4">
