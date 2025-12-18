@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_prompt_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_value: string
+          old_value: string | null
+          setting_key: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_value: string
+          old_value?: string | null
+          setting_key: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_value?: string
+          old_value?: string | null
+          setting_key?: string
+        }
+        Relationships: []
+      }
       ai_settings: {
         Row: {
           created_at: string
