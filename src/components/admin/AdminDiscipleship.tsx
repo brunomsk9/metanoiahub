@@ -194,12 +194,25 @@ export function AdminDiscipleship() {
       return;
     }
 
+    // Fetch the current user's church_id to ensure proper association
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('church_id')
+      .eq('id', currentUserId)
+      .maybeSingle();
+
+    if (!currentProfile?.church_id) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     const { error } = await supabase
       .from('discipleship_relationships')
       .insert({
         discipulador_id: currentUserId,
         discipulo_id: selectedDisciple,
-        status: 'active'
+        status: 'active',
+        church_id: currentProfile.church_id
       });
 
     if (error) {
@@ -219,12 +232,25 @@ export function AdminDiscipleship() {
       return;
     }
 
+    // Fetch the discipulador's church_id to ensure proper association
+    const { data: discipuladorProfile } = await supabase
+      .from('profiles')
+      .select('church_id')
+      .eq('id', selectedDiscipulador)
+      .maybeSingle();
+
+    if (!discipuladorProfile?.church_id) {
+      toast.error('Erro: Discipulador não está associado a uma igreja');
+      return;
+    }
+
     const { error } = await supabase
       .from('discipleship_relationships')
       .insert({
         discipulador_id: selectedDiscipulador,
         discipulo_id: selectedAdminDisciple,
-        status: 'active'
+        status: 'active',
+        church_id: discipuladorProfile.church_id
       });
 
     if (error) {
