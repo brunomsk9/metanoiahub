@@ -544,6 +544,7 @@ export type Database = {
           nome: string
           onboarding_completed: boolean
           role: Database["public"]["Enums"]["app_role"]
+          telefone: string | null
           updated_at: string
           xp_points: number
         }
@@ -557,6 +558,7 @@ export type Database = {
           nome?: string
           onboarding_completed?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          telefone?: string | null
           updated_at?: string
           xp_points?: number
         }
@@ -570,6 +572,7 @@ export type Database = {
           nome?: string
           onboarding_completed?: boolean
           role?: Database["public"]["Enums"]["app_role"]
+          telefone?: string | null
           updated_at?: string
           xp_points?: number
         }

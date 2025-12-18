@@ -59,6 +59,7 @@ interface ChurchData {
 interface UserData {
   id: string;
   nome: string;
+  telefone: string | null;
   email: string;
   church_id: string | null;
   church_name?: string;
@@ -90,6 +91,7 @@ export default function SuperAdmin() {
   });
   const [userFormData, setUserFormData] = useState({
     nome: '',
+    telefone: '',
     church_id: '',
     role: '',
   });
@@ -149,7 +151,7 @@ export default function SuperAdmin() {
     // Fetch all profiles with their church info
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, nome, church_id, created_at')
+      .select('id, nome, telefone, church_id, created_at')
       .order('nome');
 
     if (profilesError) {
@@ -185,6 +187,7 @@ export default function SuperAdmin() {
     const usersWithData: UserData[] = (profiles || []).map(profile => ({
       id: profile.id,
       nome: profile.nome || 'Sem nome',
+      telefone: profile.telefone,
       email: '', // Will be filled if we can get it
       church_id: profile.church_id,
       church_name: profile.church_id ? churchMap.get(profile.church_id) || 'Igreja desconhecida' : 'Sem igreja',
@@ -250,6 +253,7 @@ export default function SuperAdmin() {
     setSelectedUser(user);
     setUserFormData({
       nome: user.nome,
+      telefone: user.telefone || '',
       church_id: user.church_id || '',
       role: user.roles.includes('church_admin') ? 'church_admin' : 
             user.roles.includes('admin') ? 'admin' : 
@@ -319,11 +323,12 @@ export default function SuperAdmin() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    // Update profile data (nome and church_id)
+    // Update profile data (nome, telefone and church_id)
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ 
         nome: userFormData.nome,
+        telefone: userFormData.telefone || null,
         church_id: userFormData.church_id || null 
       })
       .eq('id', selectedUser.id);
@@ -843,7 +848,16 @@ export default function SuperAdmin() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="user_church">Igreja</Label>
+                    <Label htmlFor="user_telefone">Telefone</Label>
+                    <Input
+                      id="user_telefone"
+                      value={userFormData.telefone}
+                      onChange={(e) => setUserFormData({ ...userFormData, telefone: e.target.value })}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Select 
                       value={userFormData.church_id} 
                       onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value })}
