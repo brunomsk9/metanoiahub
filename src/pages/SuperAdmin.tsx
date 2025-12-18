@@ -89,6 +89,7 @@ export default function SuperAdmin() {
     is_active: true,
   });
   const [userFormData, setUserFormData] = useState({
+    nome: '',
     church_id: '',
     role: '',
   });
@@ -248,6 +249,7 @@ export default function SuperAdmin() {
   const handleOpenUserDialog = (user: UserData) => {
     setSelectedUser(user);
     setUserFormData({
+      nome: user.nome,
       church_id: user.church_id || '',
       role: user.roles.includes('church_admin') ? 'church_admin' : 
             user.roles.includes('admin') ? 'admin' : 
@@ -317,17 +319,20 @@ export default function SuperAdmin() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    // Update church_id in profile
+    // Update profile data (nome and church_id)
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ church_id: userFormData.church_id || null })
+      .update({ 
+        nome: userFormData.nome,
+        church_id: userFormData.church_id || null 
+      })
       .eq('id', selectedUser.id);
 
     if (profileError) {
       toast({
         variant: 'destructive',
         title: 'Erro',
-        description: 'Erro ao atualizar igreja do usuário.',
+        description: 'Erro ao atualizar dados do usuário.',
       });
       return;
     }
@@ -821,10 +826,20 @@ export default function SuperAdmin() {
               {selectedUser && (
                 <form onSubmit={handleSubmitUser} className="space-y-4">
                   <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="font-medium text-foreground">{selectedUser.nome}</p>
                     <p className="text-sm text-muted-foreground">
                       Papéis atuais: {selectedUser.roles.join(', ')}
                     </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="user_nome">Nome</Label>
+                    <Input
+                      id="user_nome"
+                      value={userFormData.nome}
+                      onChange={(e) => setUserFormData({ ...userFormData, nome: e.target.value })}
+                      placeholder="Nome do usuário"
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
