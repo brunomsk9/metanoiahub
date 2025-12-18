@@ -12,8 +12,9 @@ import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AdminWeeklyChecklist } from '@/components/admin/AdminWeeklyChecklist';
 import { AdminChecklistCompliance } from '@/components/admin/AdminChecklistCompliance';
 import { AdminAISettings } from '@/components/admin/AdminAISettings';
+import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,7 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
@@ -35,6 +36,7 @@ const contentSections = [
   { id: 'weekly-checklist' as const, label: 'Checklist Semanal', icon: ClipboardList },
   { id: 'checklist-compliance' as const, label: 'Relatório Compliance', icon: BarChart3 },
   { id: 'ai-settings' as const, label: 'Configurações IA', icon: Bot },
+  { id: 'presentation' as const, label: 'Apresentação', icon: Presentation },
 ];
 
 export default function Admin() {
@@ -136,6 +138,7 @@ export default function Admin() {
       case 'weekly-checklist': return <AdminWeeklyChecklist />;
       case 'checklist-compliance': return <AdminChecklistCompliance />;
       case 'ai-settings': return <AdminAISettings />;
+      case 'presentation': return <PresentationPdfGenerator />;
       default: return null;
     }
   };
