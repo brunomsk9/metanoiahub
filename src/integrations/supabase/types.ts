@@ -43,6 +43,7 @@ export type Database = {
       }
       ai_settings: {
         Row: {
+          church_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -51,6 +52,7 @@ export type Database = {
           value: string
         }
         Insert: {
+          church_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -59,6 +61,7 @@ export type Database = {
           value: string
         }
         Update: {
+          church_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -66,10 +69,58 @@ export type Database = {
           updated_at?: string
           value?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "ai_settings_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      churches: {
+        Row: {
+          configuracoes: Json | null
+          cor_primaria: string | null
+          cor_secundaria: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          nome: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          configuracoes?: Json | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          nome: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          configuracoes?: Json | null
+          cor_primaria?: string | null
+          cor_secundaria?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          nome?: string
+          slug?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       courses: {
         Row: {
+          church_id: string | null
           created_at: string
           descricao: string | null
           duracao_minutos: number | null
@@ -81,6 +132,7 @@ export type Database = {
           track_id: string
         }
         Insert: {
+          church_id?: string | null
           created_at?: string
           descricao?: string | null
           duracao_minutos?: number | null
@@ -92,6 +144,7 @@ export type Database = {
           track_id: string
         }
         Update: {
+          church_id?: string | null
           created_at?: string
           descricao?: string | null
           duracao_minutos?: number | null
@@ -103,6 +156,13 @@ export type Database = {
           track_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "courses_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "courses_track_id_fkey"
             columns: ["track_id"]
@@ -179,6 +239,7 @@ export type Database = {
           academia_nivel_4: boolean | null
           alicerce_completed_at: string | null
           alicerce_completed_presencial: boolean | null
+          church_id: string | null
           completed_at: string | null
           conexao_inicial_1: boolean | null
           conexao_inicial_2: boolean | null
@@ -197,6 +258,7 @@ export type Database = {
           academia_nivel_4?: boolean | null
           alicerce_completed_at?: string | null
           alicerce_completed_presencial?: boolean | null
+          church_id?: string | null
           completed_at?: string | null
           conexao_inicial_1?: boolean | null
           conexao_inicial_2?: boolean | null
@@ -215,6 +277,7 @@ export type Database = {
           academia_nivel_4?: boolean | null
           alicerce_completed_at?: string | null
           alicerce_completed_presencial?: boolean | null
+          church_id?: string | null
           completed_at?: string | null
           conexao_inicial_1?: boolean | null
           conexao_inicial_2?: boolean | null
@@ -226,7 +289,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "discipleship_relationships_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       habit_achievements: {
         Row: {
@@ -254,6 +325,7 @@ export type Database = {
       }
       habit_definitions: {
         Row: {
+          church_id: string | null
           color: string
           created_at: string
           icon: string
@@ -263,6 +335,7 @@ export type Database = {
           ordem: number
         }
         Insert: {
+          church_id?: string | null
           color?: string
           created_at?: string
           icon?: string
@@ -272,6 +345,7 @@ export type Database = {
           ordem?: number
         }
         Update: {
+          church_id?: string | null
           color?: string
           created_at?: string
           icon?: string
@@ -280,7 +354,15 @@ export type Database = {
           name?: string
           ordem?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habit_definitions_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       habit_streaks: {
         Row: {
@@ -312,6 +394,7 @@ export type Database = {
       lessons: {
         Row: {
           checklist_items: Json | null
+          church_id: string | null
           course_id: string
           created_at: string
           duracao_minutos: number | null
@@ -327,6 +410,7 @@ export type Database = {
         }
         Insert: {
           checklist_items?: Json | null
+          church_id?: string | null
           course_id: string
           created_at?: string
           duracao_minutos?: number | null
@@ -342,6 +426,7 @@ export type Database = {
         }
         Update: {
           checklist_items?: Json | null
+          church_id?: string | null
           course_id?: string
           created_at?: string
           duracao_minutos?: number | null
@@ -356,6 +441,13 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lessons_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lessons_course_id_fkey"
             columns: ["course_id"]
@@ -399,6 +491,7 @@ export type Database = {
       }
       meetings: {
         Row: {
+          church_id: string | null
           created_at: string
           data_encontro: string
           discipulador_id: string
@@ -409,6 +502,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["meeting_type"]
         }
         Insert: {
+          church_id?: string | null
           created_at?: string
           data_encontro?: string
           discipulador_id: string
@@ -419,6 +513,7 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["meeting_type"]
         }
         Update: {
+          church_id?: string | null
           created_at?: string
           data_encontro?: string
           discipulador_id?: string
@@ -428,11 +523,20 @@ export type Database = {
           notas?: string | null
           tipo?: Database["public"]["Enums"]["meeting_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "meetings_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
+          church_id: string | null
           created_at: string
           current_streak: number
           id: string
@@ -445,6 +549,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          church_id?: string | null
           created_at?: string
           current_streak?: number
           id: string
@@ -457,6 +562,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          church_id?: string | null
           created_at?: string
           current_streak?: number
           id?: string
@@ -467,10 +573,19 @@ export type Database = {
           updated_at?: string
           xp_points?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reading_plan_days: {
         Row: {
+          church_id: string | null
           conteudo: string | null
           created_at: string
           dia: number
@@ -480,6 +595,7 @@ export type Database = {
           versiculo_referencia: string | null
         }
         Insert: {
+          church_id?: string | null
           conteudo?: string | null
           created_at?: string
           dia: number
@@ -489,6 +605,7 @@ export type Database = {
           versiculo_referencia?: string | null
         }
         Update: {
+          church_id?: string | null
           conteudo?: string | null
           created_at?: string
           dia?: number
@@ -498,6 +615,13 @@ export type Database = {
           versiculo_referencia?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reading_plan_days_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reading_plan_days_plan_id_fkey"
             columns: ["plan_id"]
@@ -510,6 +634,7 @@ export type Database = {
       reading_plans: {
         Row: {
           categoria: string
+          church_id: string | null
           cover_image: string | null
           created_at: string
           descricao: string | null
@@ -519,6 +644,7 @@ export type Database = {
         }
         Insert: {
           categoria?: string
+          church_id?: string | null
           cover_image?: string | null
           created_at?: string
           descricao?: string | null
@@ -528,6 +654,7 @@ export type Database = {
         }
         Update: {
           categoria?: string
+          church_id?: string | null
           cover_image?: string | null
           created_at?: string
           descricao?: string | null
@@ -535,7 +662,15 @@ export type Database = {
           id?: string
           titulo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reading_plans_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resource_embeddings: {
         Row: {
@@ -576,6 +711,7 @@ export type Database = {
         Row: {
           autor: string | null
           categoria: Database["public"]["Enums"]["resource_category"]
+          church_id: string | null
           created_at: string
           descricao: string | null
           id: string
@@ -589,6 +725,7 @@ export type Database = {
         Insert: {
           autor?: string | null
           categoria?: Database["public"]["Enums"]["resource_category"]
+          church_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -602,6 +739,7 @@ export type Database = {
         Update: {
           autor?: string | null
           categoria?: Database["public"]["Enums"]["resource_category"]
+          church_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -612,11 +750,20 @@ export type Database = {
           url_pdf?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "resources_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tracks: {
         Row: {
           categoria: string
+          church_id: string | null
           cover_image: string | null
           created_at: string
           descricao: string | null
@@ -628,6 +775,7 @@ export type Database = {
         }
         Insert: {
           categoria: string
+          church_id?: string | null
           cover_image?: string | null
           created_at?: string
           descricao?: string | null
@@ -639,6 +787,7 @@ export type Database = {
         }
         Update: {
           categoria?: string
+          church_id?: string | null
           cover_image?: string | null
           created_at?: string
           descricao?: string | null
@@ -648,7 +797,15 @@ export type Database = {
           publico_alvo?: Database["public"]["Enums"]["app_role"][]
           titulo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tracks_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_progress: {
         Row: {
@@ -756,6 +913,7 @@ export type Database = {
       weekly_checklist_items: {
         Row: {
           ativo: boolean
+          church_id: string | null
           created_at: string
           descricao: string | null
           id: string
@@ -764,6 +922,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          church_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
@@ -772,13 +931,22 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          church_id?: string | null
           created_at?: string
           descricao?: string | null
           id?: string
           ordem?: number
           titulo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_checklist_items_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_checklist_responses: {
         Row: {
@@ -812,6 +980,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_church_id: { Args: { _user_id: string }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -824,10 +993,15 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_church_admin: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_discipulador_of: {
         Args: { _discipulador_id: string; _discipulo_id: string }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       match_resources: {
         Args: {
           match_count?: number
@@ -839,6 +1013,10 @@ export type Database = {
           resource_id: string
           similarity: number
         }[]
+      }
+      user_belongs_to_church: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
       }
       user_can_access_content: {
         Args: {
