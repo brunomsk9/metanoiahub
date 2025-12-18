@@ -14,6 +14,42 @@ interface Message {
 
 export function MentorChatButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const [canAccess, setCanAccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setCanAccess(false);
+          setLoading(false);
+          return;
+        }
+
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id);
+
+        const userRoles = roles?.map(r => r.role) || [];
+        const hasAccess = userRoles.includes('discipulador') || userRoles.includes('admin');
+        setCanAccess(hasAccess);
+      } catch (error) {
+        console.error('Error checking mentor access:', error);
+        setCanAccess(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAccess();
+  }, []);
+
+  // Don't render anything if user can't access or still loading
+  if (loading || !canAccess) {
+    return null;
+  }
 
   return (
     <>
@@ -26,7 +62,7 @@ export function MentorChatButton() {
           "hover:scale-105 transition-transform duration-200",
           isOpen && "scale-0 opacity-0"
         )}
-        aria-label="Abrir Assistente"
+        aria-label="Abrir Mentor IA"
       >
         <MessageCircle className="w-5 h-5" />
       </button>
@@ -46,7 +82,7 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
     {
       id: '1',
       role: 'assistant',
-      content: 'Olá! Sou o assistente do Metanoia Hub. Como posso ajudá-lo hoje?',
+      content: 'Olá! Sou o Mentor IA do S.O.S. Como posso ajudá-lo no discipulado hoje?',
       timestamp: new Date(),
     }
   ]);
@@ -127,8 +163,8 @@ function MentorChatPanel({ onClose }: MentorChatPanelProps) {
               <Bot className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-foreground">Assistente</h3>
-              <p className="text-[10px] text-muted-foreground">Online</p>
+              <h3 className="text-sm font-medium text-foreground">Mentor IA</h3>
+              <p className="text-[10px] text-muted-foreground">S.O.S. do Discipulador</p>
             </div>
           </div>
           <button
