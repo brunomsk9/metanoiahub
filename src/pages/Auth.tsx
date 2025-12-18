@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Loader2, Eye, EyeOff, Church } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChurch } from "@/contexts/ChurchContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
 export default function Auth() {
@@ -12,10 +20,23 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
+  const [selectedChurchId, setSelectedChurchId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { churches, loadChurches, setChurchId } = useChurch();
+
+  useEffect(() => {
+    loadChurches();
+  }, []);
+
+  // Auto-select first church if only one exists
+  useEffect(() => {
+    if (!isLogin && churches.length === 1 && !selectedChurchId) {
+      setSelectedChurchId(churches[0].id);
+    }
+  }, [churches, isLogin, selectedChurchId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +68,29 @@ export default function Auth() {
         toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
         navigate("/dashboard");
       } else {
+        // Validate church selection for signup
+        if (!selectedChurchId) {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Selecione uma igreja para continuar.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Store selected church for the context
+        setChurchId(selectedChurchId);
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { nome },
+            data: { 
+              nome,
+              church_id: selectedChurchId,
+            },
           },
         });
         if (error) throw error;
@@ -94,20 +132,41 @@ export default function Auth() {
           <div className="card-elevated p-5">
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Nome</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={nome}
-                      onChange={(e) => setNome(e.target.value)}
-                      placeholder="Seu nome"
-                      className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                      required={!isLogin}
-                    />
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Igreja</label>
+                    <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
+                      <SelectTrigger className="w-full h-10 bg-secondary border-border">
+                        <div className="flex items-center gap-2">
+                          <Church className="w-4 h-4 text-muted-foreground" />
+                          <SelectValue placeholder="Selecione sua igreja" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {churches.map((church) => (
+                          <SelectItem key={church.id} value={church.id}>
+                            {church.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">Nome</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        placeholder="Seu nome"
+                        className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                        required={!isLogin}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="space-y-1.5">
