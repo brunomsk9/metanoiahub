@@ -228,6 +228,42 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_definitions: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          ordem: number
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          ordem?: number
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          ordem?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           checklist_items: Json | null
