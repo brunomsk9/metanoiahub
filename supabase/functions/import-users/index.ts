@@ -49,24 +49,55 @@ serve(async (req) => {
       throw new Error('Invalid token');
     }
 
-    // Check if user is admin
+    // Check if user is admin or super_admin
     const { data: roles } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin');
+      .eq('user_id', user.id);
 
-    if (!roles || roles.length === 0) {
+    const userRoles = roles?.map(r => r.role) || [];
+    const isAdmin = userRoles.includes('admin') || userRoles.includes('super_admin');
+
+    if (!isAdmin) {
       throw new Error('User is not an admin');
     }
 
-    const { users } = await req.json() as { users: UserImport[] };
+    const { users, church_id } = await req.json() as { users: UserImport[]; church_id: string };
     
     if (!users || !Array.isArray(users)) {
       throw new Error('Invalid users data');
     }
 
-    console.log(`Starting import of ${users.length} users`);
+    if (!church_id) {
+      throw new Error('church_id is required');
+    }
+
+    // Validate church exists
+    const { data: churchData, error: churchError } = await supabaseAdmin
+      .from('churches')
+      .select('id, nome')
+      .eq('id', church_id)
+      .single();
+
+    if (churchError || !churchData) {
+      throw new Error('Invalid church_id');
+    }
+
+    // For non-super_admin, verify they belong to the church
+    const isSuperAdmin = userRoles.includes('super_admin');
+    if (!isSuperAdmin) {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('church_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.church_id !== church_id) {
+        throw new Error('You can only import users to your own church');
+      }
+    }
+
+    console.log(`Starting import of ${users.length} users to church: ${churchData.nome} (${church_id})`);
 
     const results: ImportResult[] = [];
 
@@ -85,13 +116,14 @@ serve(async (req) => {
         // Default password for imported users
         const defaultPassword = 'mudar123';
 
-        // Create user in auth
+        // Create user in auth with church_id in metadata
         const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email: userData.email,
           password: defaultPassword,
           email_confirm: true, // Auto-confirm email
           user_metadata: {
-            nome: userData.nome
+            nome: userData.nome,
+            church_id: church_id
           }
         });
 
@@ -107,10 +139,14 @@ serve(async (req) => {
 
         const userId = authData.user.id;
 
-        // Update profile with nome and set needs_password_change flag
+        // Update profile with nome, church_id and set needs_password_change flag
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
-          .update({ nome: userData.nome, needs_password_change: true })
+          .update({ 
+            nome: userData.nome, 
+            needs_password_change: true,
+            church_id: church_id
+          })
           .eq('id', userId);
 
         if (profileError) {
@@ -134,7 +170,7 @@ serve(async (req) => {
           }
         }
 
-        console.log(`Successfully imported user: ${userData.email}`);
+        console.log(`Successfully imported user: ${userData.email} to church ${churchData.nome}`);
         results.push({
           email: userData.email,
           success: true
@@ -160,7 +196,8 @@ serve(async (req) => {
       summary: {
         total: users.length,
         success: successCount,
-        failed: failCount
+        failed: failCount,
+        church: churchData.nome
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

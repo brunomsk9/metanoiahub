@@ -1,10 +1,19 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Upload, FileText, CheckCircle, XCircle, Download, Loader2, Mail } from "lucide-react";
+import { Upload, FileText, CheckCircle, XCircle, Download, Loader2, Mail, Church, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useChurch } from "@/contexts/ChurchContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UserRow {
   email: string;
@@ -18,6 +27,11 @@ interface ImportResult {
   error?: string;
 }
 
+interface ChurchOption {
+  id: string;
+  nome: string;
+}
+
 export function AdminUserImport() {
   const [parsedUsers, setParsedUsers] = useState<UserRow[]>([]);
   const [importing, setImporting] = useState(false);
@@ -25,7 +39,52 @@ export function AdminUserImport() {
   const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
   const [results, setResults] = useState<ImportResult[] | null>(null);
   const [emailResults, setEmailResults] = useState<{ sent: number; failed: number } | null>(null);
+  const [selectedChurchId, setSelectedChurchId] = useState<string>("");
+  const [churches, setChurches] = useState<ChurchOption[]>([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [loadingChurches, setLoadingChurches] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { church } = useChurch();
+
+  useEffect(() => {
+    loadChurchesAndCheckRole();
+  }, []);
+
+  const loadChurchesAndCheckRole = async () => {
+    setLoadingChurches(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Check if user is super_admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+
+      const superAdmin = roles?.some(r => r.role === 'super_admin');
+      setIsSuperAdmin(superAdmin || false);
+
+      if (superAdmin) {
+        // Super admin can see all churches
+        const { data: churchesData } = await supabase
+          .from('churches')
+          .select('id, nome')
+          .eq('is_active', true)
+          .order('nome');
+
+        setChurches(churchesData || []);
+      } else if (church) {
+        // Regular admin can only import to their own church
+        setChurches([{ id: church.id, nome: church.nome }]);
+        setSelectedChurchId(church.id);
+      }
+    } catch (error) {
+      console.error('Error loading churches:', error);
+    } finally {
+      setLoadingChurches(false);
+    }
+  };
 
   const parseCSV = (content: string): UserRow[] => {
     const lines = content.split('\n').filter(line => line.trim());
@@ -77,6 +136,11 @@ export function AdminUserImport() {
   const handleImport = async () => {
     if (parsedUsers.length === 0) return;
 
+    if (!selectedChurchId) {
+      toast.error("Selecione uma igreja para importar os usuários");
+      return;
+    }
+
     setImporting(true);
     setResults(null);
     setEmailResults(null);
@@ -89,7 +153,10 @@ export function AdminUserImport() {
       }
 
       const { data, error } = await supabase.functions.invoke('import-users', {
-        body: { users: parsedUsers }
+        body: { 
+          users: parsedUsers,
+          church_id: selectedChurchId
+        }
       });
 
       if (error) throw error;
@@ -168,6 +235,8 @@ export function AdminUserImport() {
     }
   };
 
+  const selectedChurch = churches.find(c => c.id === selectedChurchId);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -182,6 +251,50 @@ export function AdminUserImport() {
           <Download className="w-4 h-4 mr-2" />
           Baixar Template
         </Button>
+      </div>
+
+      {/* Church Selection */}
+      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-3">
+        <div className="flex items-center gap-2">
+          <Church className="w-5 h-5 text-primary" />
+          <h4 className="font-medium text-foreground">Igreja de Destino</h4>
+        </div>
+        
+        {loadingChurches ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Carregando igrejas...</span>
+          </div>
+        ) : isSuperAdmin ? (
+          <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
+            <SelectTrigger className="w-full bg-background">
+              <SelectValue placeholder="Selecione a igreja para importar os usuários" />
+            </SelectTrigger>
+            <SelectContent>
+              {churches.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
+            <Church className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              {selectedChurch?.nome || 'Igreja não encontrada'}
+            </span>
+          </div>
+        )}
+
+        {selectedChurchId && (
+          <Alert className="bg-primary/10 border-primary/30">
+            <AlertCircle className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-primary text-sm">
+              Todos os usuários importados serão vinculados à igreja <strong>{selectedChurch?.nome}</strong>
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       {/* Upload Area */}
@@ -279,7 +392,11 @@ export function AdminUserImport() {
 
           {/* Import Button */}
           {!results && (
-            <Button onClick={handleImport} disabled={importing || sendingEmails} className="w-full">
+            <Button 
+              onClick={handleImport} 
+              disabled={importing || sendingEmails || !selectedChurchId} 
+              className="w-full"
+            >
               {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -293,7 +410,7 @@ export function AdminUserImport() {
               ) : (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
-                  Importar {parsedUsers.length} Usuários
+                  Importar {parsedUsers.length} Usuários para {selectedChurch?.nome || 'igreja selecionada'}
                 </>
               )}
             </Button>
