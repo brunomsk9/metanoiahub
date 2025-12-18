@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video, ExternalLink, FileText, Play, Brain, RefreshCw } from 'lucide-react';
 import { FileUpload } from './FileUpload';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 
 type ResourceCategory = 'sos' | 'apoio' | 'devocional' | 'estudo' | 'livro' | 'musica' | 'pregacao';
 
@@ -56,6 +57,7 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
   const [editing, setEditing] = useState<Resource | null>(null);
   const [saving, setSaving] = useState(false);
   const [generatingEmbeddings, setGeneratingEmbeddings] = useState(false);
+  const { churchId } = useUserChurchId();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -141,6 +143,11 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
       return;
     }
 
+    if (!churchId) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     setSaving(true);
 
     const tagsArray = form.tags
@@ -157,7 +164,8 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
       tags: tagsArray,
       autor: form.autor || null,
       link_externo: form.link_externo || null,
-      imagem_capa: form.imagem_capa || null
+      imagem_capa: form.imagem_capa || null,
+      church_id: churchId
     };
 
     if (editing) {

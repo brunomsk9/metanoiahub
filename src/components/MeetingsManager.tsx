@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +41,7 @@ export function MeetingsManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { churchId } = useUserChurchId();
 
   // Form state
   const [tipo, setTipo] = useState<'individual' | 'celula'>('individual');
@@ -143,6 +145,11 @@ export function MeetingsManager() {
       return;
     }
 
+    if (!churchId) {
+      toast({ title: "Erro", description: "Usuário não está associado a uma igreja", variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -154,7 +161,8 @@ export function MeetingsManager() {
           discipulo_id: tipo === 'individual' ? selectedDisciple : null,
           data_encontro: dataEncontro,
           notas: notas || null,
-          local: local || null
+          local: local || null,
+          church_id: churchId
         })
         .select()
         .single();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -56,6 +57,7 @@ export function AdminReadingPlanDays() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const { churchId } = useUserChurchId();
 
   const [formData, setFormData] = useState({
     dia: 1,
@@ -167,6 +169,11 @@ export function AdminReadingPlanDays() {
     e.preventDefault();
     if (!selectedPlanId) return;
 
+    if (!churchId && !editingDay) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     setSaving(true);
 
     const payload = {
@@ -175,6 +182,7 @@ export function AdminReadingPlanDays() {
       titulo: formData.titulo,
       versiculo_referencia: formData.versiculo_referencia || null,
       conteudo: formData.conteudo || null,
+      ...(editingDay ? {} : { church_id: churchId })
     };
 
     let error;

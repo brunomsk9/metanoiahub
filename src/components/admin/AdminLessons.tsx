@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -55,6 +56,7 @@ export function AdminLessons() {
   const [uploading, setUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
+  const { churchId } = useUserChurchId();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -231,6 +233,11 @@ export function AdminLessons() {
       return;
     }
 
+    if (!churchId) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     let checklistParsed;
     try {
       checklistParsed = JSON.parse(form.checklist_items);
@@ -252,7 +259,8 @@ export function AdminLessons() {
       ordem: form.ordem,
       materiais: form.materiais,
       url_pdf: form.url_pdf || null,
-      tipo_material: form.tipo_material
+      tipo_material: form.tipo_material,
+      church_id: churchId
     };
 
     if (editing) {

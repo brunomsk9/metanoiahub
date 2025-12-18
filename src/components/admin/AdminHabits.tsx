@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ export function AdminHabits() {
   const [newHabitIcon, setNewHabitIcon] = useState('star');
   const [newHabitColor, setNewHabitColor] = useState('primary');
   const { toast } = useToast();
+  const { churchId } = useUserChurchId();
 
   useEffect(() => {
     fetchHabits();
@@ -91,11 +93,21 @@ export function AdminHabits() {
   const addHabit = async () => {
     if (!newHabitName.trim()) return;
 
+    if (!churchId) {
+      toast({
+        title: "Erro",
+        description: "Usuário não está associado a uma igreja.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase.from('habit_definitions').insert({
       name: newHabitName,
       icon: newHabitIcon,
       color: newHabitColor,
       ordem: habits.length,
+      church_id: churchId
     });
 
     if (!error) {
