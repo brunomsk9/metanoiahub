@@ -159,8 +159,8 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Recursos (Admin only) */}
-            {isAdmin && (
+            {/* Recursos (Admin and Discipulador) */}
+            {(isAdmin || isDiscipulador) && (
               <NavLink
                 to="/admin?section=recursos"
                 className={cn(
@@ -175,7 +175,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               </NavLink>
             )}
             
-            {/* Admin/Discipulado */}
+            {/* Admin */}
             {isAdmin && (
               <NavLink
                 to="/admin"
@@ -329,33 +329,35 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                   <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Gestão
                   </p>
+                  {/* Recursos for both admin and discipulador */}
+                  {(isAdmin || isDiscipulador) && (
+                    <NavLink
+                      to="/admin?section=recursos"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                        location.pathname === '/admin' && location.search.includes('recursos')
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <FolderOpen className="w-5 h-5" />
+                      <span>Recursos</span>
+                    </NavLink>
+                  )}
+                  
                   {isAdmin && (
-                    <>
-                      <NavLink
-                        to="/admin?section=recursos"
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                          location.pathname === '/admin' && location.search.includes('recursos')
-                            ? "bg-primary/10 text-primary" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <FolderOpen className="w-5 h-5" />
-                        <span>Recursos</span>
-                      </NavLink>
-                      <NavLink
-                        to="/admin"
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                          location.pathname === '/admin' && !location.search.includes('recursos')
-                            ? "bg-primary/10 text-primary" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <Settings className="w-5 h-5" />
-                        <span>Painel Admin</span>
-                      </NavLink>
-                    </>
+                    <NavLink
+                      to="/admin"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                        location.pathname === '/admin' && !location.search.includes('recursos')
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Settings className="w-5 h-5" />
+                      <span>Painel Admin</span>
+                    </NavLink>
                   )}
                   
                   {isDiscipulador && !isAdmin && (
