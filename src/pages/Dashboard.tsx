@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DailyHabits } from "@/components/StreakDisplay";
 import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
 import { PageTransition } from "@/components/PageTransition";
@@ -12,6 +11,7 @@ import { DiscipuladorDashboardCards } from "@/components/DiscipuladorDashboardCa
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { MeetingsManager } from "@/components/MeetingsManager";
 import { WeeklyChecklist } from "@/components/WeeklyChecklist";
+import { DailyHabitsCard } from "@/components/DailyHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,10 +60,8 @@ export default function Dashboard() {
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<ReadingPlanWithProgress | null>(null);
   const [showStartModal, setShowStartModal] = useState(false);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
-  const [habits, setHabits] = useState([
-    { id: 'leitura', name: 'Leitura Bíblica', completed: false, icon: 'book' as const },
-    { id: 'oracao', name: 'Oração', completed: false, icon: 'heart' as const },
-  ]);
+  const [completedHabits, setCompletedHabits] = useState(0);
+  const [totalHabits, setTotalHabits] = useState(2);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -75,9 +73,8 @@ export default function Dashboard() {
         return;
       }
       
-      const [profileRes, habitsRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes, rolesRes] = await Promise.all([
+      const [profileRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes, rolesRes] = await Promise.all([
         supabase.from('profiles').select('nome, current_streak, xp_points, onboarding_completed').eq('id', session.user.id).maybeSingle(),
-        supabase.from('daily_habits').select('habit_type').eq('user_id', session.user.id).eq('completed_date', new Date().toISOString().split('T')[0]),
         supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
         supabase.from('reading_plans').select('*').order('duracao_dias', { ascending: false }),
         supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id),
@@ -103,12 +100,6 @@ export default function Dashboard() {
         setXpPoints(profileRes.data.xp_points || 0);
       }
 
-      if (habitsRes.data) {
-        setHabits(prev => prev.map(h => ({
-          ...h,
-          completed: habitsRes.data.some(th => th.habit_type === h.id)
-        })));
-      }
 
       if (tracksRes.data) {
         const formattedTracks = tracksRes.data.map(track => ({
@@ -179,51 +170,10 @@ export default function Dashboard() {
     navigate('/auth');
   }, [navigate]);
 
-  const handleHabitToggle = useCallback(async (id: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const habit = habits.find(h => h.id === id);
-    if (!habit) return;
-
-    const today = new Date().toISOString().split('T')[0];
-
-    if (!habit.completed) {
-      const { error } = await supabase
-        .from('daily_habits')
-        .insert({
-          user_id: session.user.id,
-          habit_type: id,
-          completed_date: today,
-        });
-
-      if (!error) {
-        setHabits(prev => prev.map(h => 
-          h.id === id ? { ...h, completed: true } : h
-        ));
-        toast({
-          title: "Hábito registrado!",
-          description: `${habit.name} concluído.`,
-        });
-      }
-    } else {
-      const { error } = await supabase
-        .from('daily_habits')
-        .delete()
-        .eq('user_id', session.user.id)
-        .eq('habit_type', id)
-        .eq('completed_date', today);
-
-      if (!error) {
-        setHabits(prev => prev.map(h => 
-          h.id === id ? { ...h, completed: false } : h
-        ));
-      }
-    }
-  }, [habits, toast]);
-
-  const completedHabits = useMemo(() => habits.filter(h => h.completed).length, [habits]);
-  const totalHabits = habits.length;
+  const handleHabitsChange = useCallback((completed: number, total: number) => {
+    setCompletedHabits(completed);
+    setTotalHabits(total);
+  }, []);
 
   const annualPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias >= 365), [readingPlans]);
   const semesterPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias >= 180 && p.duracao_dias < 365), [readingPlans]);
@@ -288,18 +238,22 @@ export default function Dashboard() {
               </div>
 
               {/* Hábitos de Hoje */}
-              <div className="p-4 rounded-lg border border-border/50 bg-card">
-                <div className="flex justify-between items-center mb-3">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
                   <h3 className="text-sm font-medium text-foreground">Hábitos de hoje</h3>
                   <span className="text-xs text-muted-foreground">{completedHabits}/{totalHabits}</span>
                 </div>
-                <DailyHabits habits={habits} onToggle={handleHabitToggle} />
-                <div className="mt-3 progress-bar">
-                  <div 
-                    className="progress-bar-fill"
-                    style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
-                  />
-                </div>
+                {userId && (
+                  <DailyHabitsCard userId={userId} onHabitsChange={handleHabitsChange} />
+                )}
+                {totalHabits > 0 && (
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-bar-fill"
+                      style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Alicerce Progress */}
