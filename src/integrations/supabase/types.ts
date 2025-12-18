@@ -402,6 +402,41 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_embeddings: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          resource_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          resource_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          resource_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_embeddings_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: true
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resources: {
         Row: {
           autor: string | null
@@ -657,6 +692,18 @@ export type Database = {
       is_discipulador_of: {
         Args: { _discipulador_id: string; _discipulo_id: string }
         Returns: boolean
+      }
+      match_resources: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          resource_id: string
+          similarity: number
+        }[]
       }
       user_can_access_content: {
         Args: {
