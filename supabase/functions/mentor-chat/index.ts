@@ -11,7 +11,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BASE_SYSTEM_PROMPT = `Você é o Mentor IA do S.O.S. do Discipulador, um assistente cristão especializado em discipulado e mentoria espiritual no METANOIA HUB.
+const DEFAULT_SYSTEM_PROMPT = `Você é o Mentor IA do S.O.S. do Discipulador, um assistente cristão especializado em discipulado e mentoria espiritual no METANOIA HUB.
 
 ## Sua Identidade
 - Você é um mentor experiente, sábio e acolhedor
@@ -50,6 +50,28 @@ Seja direto e prático. Se for relevante, inclua:
 - Uma orientação prática
 - Recomendação de recurso S.O.S. (se disponível)
 - Uma palavra de encorajamento`;
+
+// Fetch custom prompt from database
+async function fetchCustomPrompt(supabase: any): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from('ai_settings')
+      .select('value')
+      .eq('key', 'mentor_system_prompt')
+      .single();
+
+    if (error || !data?.value) {
+      console.log('Using default system prompt');
+      return DEFAULT_SYSTEM_PROMPT;
+    }
+
+    console.log('Using custom system prompt from database');
+    return data.value;
+  } catch (error) {
+    console.error('Error fetching custom prompt:', error);
+    return DEFAULT_SYSTEM_PROMPT;
+  }
+}
 
 // Generate embedding for a query using OpenAI
 async function generateQueryEmbedding(query: string): Promise<number[] | null> {
@@ -182,10 +204,11 @@ async function fetchDiscipuladorCourses(supabase: any) {
 }
 
 function buildSystemPrompt(
+  basePrompt: string,
   resourceData: { resources: any[]; isSemanticSearch: boolean } | null,
   lessons: Array<{ titulo: string; courseName: string }>
 ) {
-  let prompt = BASE_SYSTEM_PROMPT;
+  let prompt = basePrompt;
 
   if (resourceData?.resources && resourceData.resources.length > 0) {
     const searchType = resourceData.isSemanticSearch 
@@ -239,6 +262,9 @@ serve(async (req) => {
 
     console.log('Searching for relevant resources based on:', lastUserMessage.substring(0, 100));
 
+    // Fetch custom prompt from database
+    const customPrompt = await fetchCustomPrompt(supabase);
+    
     // Search for relevant S.O.S. resources using semantic search
     const resourceData = await searchRelevantResources(supabase, lastUserMessage);
     
@@ -246,7 +272,7 @@ serve(async (req) => {
     const lessons = await fetchDiscipuladorCourses(supabase);
     
     // Build system prompt with relevant context
-    const systemPrompt = buildSystemPrompt(resourceData, lessons);
+    const systemPrompt = buildSystemPrompt(customPrompt, resourceData, lessons);
     
     console.log(
       'System prompt built:',
