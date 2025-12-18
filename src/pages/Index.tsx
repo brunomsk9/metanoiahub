@@ -7,7 +7,9 @@ import {
   MessageCircle, 
   Flame,
   Users,
-  Compass
+  Compass,
+  Heart,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
@@ -214,6 +216,48 @@ export default function Index() {
           </div>
         </section>
 
+        {/* Sobre a Comunidade */}
+        <section className="py-20 px-4 bg-muted/30">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <Globe className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                Comunidade das Nações de Goiânia
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Uma comunidade de fé comprometida com o discipulado relacional e a formação de vidas segundo o caráter de Cristo
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-background border border-border rounded-xl p-6 text-center">
+                <Heart className="w-8 h-8 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold text-foreground mb-2">Nossa Missão</h3>
+                <p className="text-sm text-muted-foreground">
+                  Fazer discípulos que fazem discípulos, formando o caráter de Cristo através de relacionamentos intencionais
+                </p>
+              </div>
+              
+              <div className="bg-background border border-border rounded-xl p-6 text-center">
+                <Users className="w-8 h-8 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold text-foreground mb-2">Nossos Valores</h3>
+                <p className="text-sm text-muted-foreground">
+                  Comunhão autêntica, discipulado relacional, vida em células e multiplicação de líderes servos
+                </p>
+              </div>
+              
+              <div className="bg-background border border-border rounded-xl p-6 text-center">
+                <Compass className="w-8 h-8 text-primary mx-auto mb-4" />
+                <h3 className="font-semibold text-foreground mb-2">Nossa Visão</h3>
+                <p className="text-sm text-muted-foreground">
+                  Alcançar todas as nações através de comunidades de fé saudáveis que transformam vidas e cidades
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Footer */}
         <footer className="py-8 px-4 border-t border-border">
