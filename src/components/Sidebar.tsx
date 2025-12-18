@@ -14,12 +14,14 @@ import {
   UserCircle,
   Compass,
   FolderOpen,
-  ShieldAlert
+  ShieldAlert,
+  Church
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useChurch } from "@/contexts/ChurchContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +37,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface SidebarProps {
   onLogout: () => void;
@@ -61,6 +64,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
   const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { church } = useChurch();
 
   useEffect(() => {
     checkRoles();
@@ -111,12 +115,20 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
       {/* Desktop Header */}
       <header className="hidden lg:flex fixed top-0 left-0 right-0 z-40 h-14 bg-background/80 backdrop-blur-sm border-b border-border/50">
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
-            <span className="font-display font-semibold text-foreground text-sm tracking-tight">
-              Metanoia Hub
-            </span>
+          {/* Logo + Church Tag */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+              <span className="font-display font-semibold text-foreground text-sm tracking-tight">
+                Metanoia Hub
+              </span>
+            </div>
+            {church && (
+              <Badge variant="secondary" className="flex items-center gap-1.5 text-xs font-medium">
+                <Church className="w-3 h-3" />
+                {church.nome}
+              </Badge>
+            )}
           </div>
 
           {/* Desktop Navigation */}
@@ -300,21 +312,30 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
 
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 h-12 bg-background/80 backdrop-blur-sm border-b border-border/50 flex items-center justify-between px-3">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
-              <Menu className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <SheetHeader className="p-4 border-b border-border/50">
-              <div className="flex items-center gap-2.5">
-                <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
-                <SheetTitle className="text-left text-sm font-semibold">
-                  Metanoia Hub
-                </SheetTitle>
-              </div>
-            </SheetHeader>
+        <div className="flex items-center gap-2">
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <SheetHeader className="p-4 border-b border-border/50">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+                    <SheetTitle className="text-left text-sm font-semibold">
+                      Metanoia Hub
+                    </SheetTitle>
+                  </div>
+                  {church && (
+                    <Badge variant="secondary" className="flex items-center gap-1.5 text-xs font-medium w-fit">
+                      <Church className="w-3 h-3" />
+                      {church.nome}
+                    </Badge>
+                  )}
+                </div>
+              </SheetHeader>
             
             <nav className="p-3 space-y-1">
               {/* Início */}
@@ -435,11 +456,18 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
             </nav>
           </SheetContent>
         </Sheet>
+      </div>
 
-        {/* Logo */}
+        {/* Logo + Church Tag */}
         <div className="flex items-center gap-2">
           <img src={metanoiaLogo} alt="Metanoia Hub" className="w-7 h-7 object-contain" />
           <span className="font-display font-semibold text-foreground text-sm">Metanoia</span>
+          {church && (
+            <Badge variant="secondary" className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5">
+              <Church className="w-2.5 h-2.5" />
+              {church.nome}
+            </Badge>
+          )}
         </div>
 
         {/* Theme Toggle + User Menu */}
