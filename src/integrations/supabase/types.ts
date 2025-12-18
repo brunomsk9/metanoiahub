@@ -980,6 +980,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_church_content: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_church_id: { Args: { _user_id: string }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
@@ -993,6 +997,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_of_own_church: { Args: { _user_id: string }; Returns: boolean }
       is_church_admin: {
         Args: { _church_id: string; _user_id: string }
         Returns: boolean
