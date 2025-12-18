@@ -205,10 +205,7 @@ export function AdminUsers() {
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
                             {user.nome.charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">{user.nome}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{user.id.slice(0, 8)}...</p>
-                          </div>
+                          <p className="font-medium text-foreground">{user.nome}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">
