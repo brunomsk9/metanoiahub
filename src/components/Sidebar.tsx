@@ -124,10 +124,10 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               </span>
             </div>
             {church && (
-              <Badge variant="secondary" className="flex items-center gap-1.5 text-xs font-medium">
-                <Church className="w-3 h-3" />
-                {church.nome}
-              </Badge>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30">
+                <Church className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary">{church.nome}</span>
+              </div>
             )}
           </div>
 
@@ -329,10 +329,10 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                     </SheetTitle>
                   </div>
                   {church && (
-                    <Badge variant="secondary" className="flex items-center gap-1.5 text-xs font-medium w-fit">
-                      <Church className="w-3 h-3" />
-                      {church.nome}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 w-fit">
+                      <Church className="w-3 h-3 text-primary" />
+                      <span className="text-xs font-semibold text-primary">{church.nome}</span>
+                    </div>
                   )}
                 </div>
               </SheetHeader>
@@ -461,12 +461,11 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
         {/* Logo + Church Tag */}
         <div className="flex items-center gap-2">
           <img src={metanoiaLogo} alt="Metanoia Hub" className="w-7 h-7 object-contain" />
-          <span className="font-display font-semibold text-foreground text-sm">Metanoia</span>
           {church && (
-            <Badge variant="secondary" className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5">
-              <Church className="w-2.5 h-2.5" />
-              {church.nome}
-            </Badge>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30">
+              <Church className="w-2.5 h-2.5 text-primary" />
+              <span className="text-[10px] font-semibold text-primary">{church.nome}</span>
+            </div>
           )}
         </div>
 
