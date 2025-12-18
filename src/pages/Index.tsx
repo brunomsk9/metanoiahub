@@ -256,6 +256,14 @@ export default function Index() {
                 </p>
               </div>
             </div>
+
+            {/* Versículo tema */}
+            <blockquote className="mt-12 border-l-4 border-primary pl-6 py-4 text-left max-w-2xl mx-auto bg-primary/5 rounded-r-lg">
+              <p className="text-lg sm:text-xl text-foreground/90 font-serif italic leading-relaxed">
+                "Portanto, vão e façam discípulos de todas as nações, batizando-os em nome do Pai, do Filho e do Espírito Santo, ensinando-os a obedecer a tudo o que eu ordenei a vocês."
+              </p>
+              <footer className="text-sm text-muted-foreground mt-3 font-medium">— Mateus 28:19-20</footer>
+            </blockquote>
           </div>
         </section>
 
