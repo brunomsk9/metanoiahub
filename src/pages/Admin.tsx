@@ -10,8 +10,9 @@ import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AdminWeeklyChecklist } from '@/components/admin/AdminWeeklyChecklist';
+import { AdminChecklistCompliance } from '@/components/admin/AdminChecklistCompliance';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,7 +23,7 @@ import {
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
@@ -31,6 +32,7 @@ const contentSections = [
   { id: 'resources' as const, label: 'Recursos', icon: LifeBuoy },
   { id: 'reading-plans' as const, label: 'Planos de Leitura', icon: CalendarDays },
   { id: 'weekly-checklist' as const, label: 'Checklist Semanal', icon: ClipboardList },
+  { id: 'checklist-compliance' as const, label: 'Relatório Compliance', icon: BarChart3 },
 ];
 
 export default function Admin() {
@@ -130,6 +132,7 @@ export default function Admin() {
       case 'reading-plans': return <AdminReadingPlanDays />;
       case 'discipleship': return <AdminDiscipleship />;
       case 'weekly-checklist': return <AdminWeeklyChecklist />;
+      case 'checklist-compliance': return <AdminChecklistCompliance />;
       default: return null;
     }
   };
