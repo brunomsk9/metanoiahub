@@ -2,16 +2,24 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, CheckCircle2 } from 'lucide-react';
+import { Loader2, Calendar, CheckCircle2, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
-import { startOfWeek, format } from 'date-fns';
+import { startOfWeek, format, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ChecklistItem {
   id: string;
   titulo: string;
   descricao: string | null;
   ordem: number;
+}
+
+interface WeeklyResponse {
+  id: string;
+  week_start: string;
+  responses: Record<string, boolean>;
 }
 
 interface WeeklyChecklistProps {
@@ -24,6 +32,9 @@ export function WeeklyChecklist({ userId }: WeeklyChecklistProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [responseId, setResponseId] = useState<string | null>(null);
+  const [history, setHistory] = useState<WeeklyResponse[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Get the start of the current week (Monday)
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -71,6 +82,32 @@ export function WeeklyChecklist({ userId }: WeeklyChecklistProps) {
     }
   };
 
+  const fetchHistory = async () => {
+    if (history.length > 0) return; // Already loaded
+    
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('weekly_checklist_responses')
+        .select('*')
+        .eq('discipulador_id', userId)
+        .neq('week_start', weekStartStr)
+        .order('week_start', { ascending: false })
+        .limit(8);
+
+      if (error) throw error;
+      setHistory((data || []).map(d => ({
+        ...d,
+        responses: d.responses as Record<string, boolean>
+      })));
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      toast.error('Erro ao carregar histórico');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   const handleToggle = async (itemId: string, checked: boolean) => {
     const newResponses = { ...responses, [itemId]: checked };
     setResponses(newResponses);
@@ -108,6 +145,18 @@ export function WeeklyChecklist({ userId }: WeeklyChecklistProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleToggleHistory = () => {
+    if (!showHistory) {
+      fetchHistory();
+    }
+    setShowHistory(!showHistory);
+  };
+
+  const getWeekLabel = (weekStartDate: string) => {
+    const date = new Date(weekStartDate + 'T00:00:00');
+    return format(date, "dd 'de' MMMM", { locale: ptBR });
   };
 
   const completedCount = items.filter(item => responses[item.id]).length;
@@ -174,6 +223,65 @@ export function WeeklyChecklist({ userId }: WeeklyChecklistProps) {
         {saving && (
           <p className="text-xs text-muted-foreground text-center">Salvando...</p>
         )}
+
+        {/* History Section */}
+        <Collapsible open={showHistory} onOpenChange={handleToggleHistory}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full mt-2 text-muted-foreground hover:text-foreground">
+              <History className="h-4 w-4 mr-2" />
+              Histórico
+              {showHistory ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3 space-y-3">
+            {loadingHistory ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : history.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Nenhum histórico disponível
+              </p>
+            ) : (
+              history.map((weekResponse) => {
+                const weekCompleted = items.filter(item => weekResponse.responses[item.id]).length;
+                const isAllCompleted = weekCompleted === items.length;
+                
+                return (
+                  <div
+                    key={weekResponse.id}
+                    className={`p-3 rounded-lg border ${isAllCompleted ? 'border-primary/20 bg-primary/5' : 'border-border bg-muted/20'}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {getWeekLabel(weekResponse.week_start)}
+                      </span>
+                      <span className={`text-xs font-medium ${isAllCompleted ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {weekCompleted}/{items.length}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {items.map((item) => (
+                        <span
+                          key={item.id}
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            weekResponse.responses[item.id]
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                          title={item.titulo}
+                        >
+                          {weekResponse.responses[item.id] ? '✓' : '○'} {item.titulo.substring(0, 15)}
+                          {item.titulo.length > 15 ? '...' : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );
