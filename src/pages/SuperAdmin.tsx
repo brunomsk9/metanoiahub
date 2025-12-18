@@ -218,6 +218,10 @@ export default function SuperAdmin() {
       .from('churches')
       .select('id, nome');
 
+    // Get user emails using the RPC function
+    const { data: userEmails } = await supabase.rpc('get_user_emails');
+    const emailMap = new Map(userEmails?.map((u: { id: string; email: string }) => [u.id, u.email]) || []);
+
     const churchMap = new Map(churchesData?.map(c => [c.id, c.nome]) || []);
     const rolesMap = new Map<string, string[]>();
     
@@ -232,7 +236,7 @@ export default function SuperAdmin() {
       id: profile.id,
       nome: profile.nome || 'Sem nome',
       telefone: profile.telefone,
-      email: '',
+      email: emailMap.get(profile.id) || '',
       church_id: profile.church_id,
       church_name: profile.church_id ? churchMap.get(profile.church_id) || 'Igreja desconhecida' : 'Sem igreja',
       roles: rolesMap.get(profile.id) || ['discipulo'],

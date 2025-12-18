@@ -988,6 +988,13 @@ export type Database = {
         Returns: boolean
       }
       get_user_church_id: { Args: { _user_id: string }; Returns: string }
+      get_user_emails: {
+        Args: never
+        Returns: {
+          email: string
+          id: string
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
