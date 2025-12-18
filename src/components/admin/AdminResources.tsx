@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video, ExternalLink, FileText, Play } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video, ExternalLink, FileText, Play, Brain, RefreshCw } from 'lucide-react';
 import { FileUpload } from './FileUpload';
 
 type ResourceCategory = 'sos' | 'apoio' | 'devocional' | 'estudo' | 'livro' | 'musica' | 'pregacao';
@@ -55,6 +55,7 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Resource | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingEmbeddings, setGeneratingEmbeddings] = useState(false);
   
   const [form, setForm] = useState({
     titulo: '',
@@ -67,6 +68,35 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
     link_externo: '',
     imagem_capa: ''
   });
+
+  const handleGenerateEmbeddings = async () => {
+    setGeneratingEmbeddings(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-embeddings');
+      
+      if (error) {
+        console.error('Error generating embeddings:', error);
+        toast.error('Erro ao gerar embeddings');
+        return;
+      }
+      
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      
+      toast.success(`Embeddings gerados: ${data.processed}/${data.total} recursos processados`);
+      
+      if (data.errors && data.errors.length > 0) {
+        console.warn('Some resources had errors:', data.errors);
+      }
+    } catch (err) {
+      console.error('Failed to generate embeddings:', err);
+      toast.error('Falha ao gerar embeddings');
+    } finally {
+      setGeneratingEmbeddings(false);
+    }
+  };
 
   useEffect(() => {
     fetchResources();
@@ -172,8 +202,27 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <p className="text-gray-500">{resources.length} recurso(s) cadastrado(s)</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex items-center gap-3">
+          <p className="text-gray-500">{resources.length} recurso(s) cadastrado(s)</p>
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleGenerateEmbeddings}
+              disabled={generatingEmbeddings}
+              className="text-primary border-primary/30 hover:bg-primary/10"
+              title="Gera embeddings para busca semântica no Mentor IA"
+            >
+              {generatingEmbeddings ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Brain className="h-4 w-4 mr-2" />
+              )}
+              {generatingEmbeddings ? 'Gerando...' : 'Atualizar IA'}
+            </Button>
+          )}
+        </div>
         {isAdmin && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
