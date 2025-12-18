@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, UserPlus, Search } from 'lucide-react';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
 interface ChurchData {
@@ -47,10 +56,14 @@ interface ChurchData {
   created_at: string;
 }
 
-interface ChurchAdmin {
+interface UserData {
   id: string;
   nome: string;
+  email: string;
   church_id: string | null;
+  church_name?: string;
+  roles: string[];
+  created_at: string;
 }
 
 export default function SuperAdmin() {
@@ -59,9 +72,14 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [churches, setChurches] = useState<ChurchData[]>([]);
-  const [churchAdmins, setChurchAdmins] = useState<Record<string, ChurchAdmin[]>>({});
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterChurch, setFilterChurch] = useState<string>('all');
+  const [isChurchDialogOpen, setIsChurchDialogOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
   const [editingChurch, setEditingChurch] = useState<ChurchData | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     slug: '',
@@ -70,10 +88,18 @@ export default function SuperAdmin() {
     cor_secundaria: '#D946EF',
     is_active: true,
   });
+  const [userFormData, setUserFormData] = useState({
+    church_id: '',
+    role: '',
+  });
 
   useEffect(() => {
     checkSuperAdminAccess();
   }, []);
+
+  useEffect(() => {
+    filterUsers();
+  }, [searchTerm, filterChurch, users]);
 
   const checkSuperAdminAccess = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -94,7 +120,7 @@ export default function SuperAdmin() {
     setIsSuperAdmin(userIsSuperAdmin);
     
     if (userIsSuperAdmin) {
-      await loadChurches();
+      await Promise.all([loadChurches(), loadUsers()]);
     }
     
     setLoading(false);
@@ -116,24 +142,77 @@ export default function SuperAdmin() {
     }
 
     setChurches(data || []);
-    
-    // Load church admins for each church
-    const adminsByChurch: Record<string, ChurchAdmin[]> = {};
-    for (const church of data || []) {
-      const { data: admins } = await supabase
-        .from('profiles')
-        .select('id, nome, church_id')
-        .eq('church_id', church.id)
-        .in('id', 
-          (await supabase
-            .from('user_roles')
-            .select('user_id')
-            .eq('role', 'church_admin')
-          ).data?.map(r => r.user_id) || []
-        );
-      adminsByChurch[church.id] = admins || [];
+  };
+
+  const loadUsers = async () => {
+    // Fetch all profiles with their church info
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, nome, church_id, created_at')
+      .order('nome');
+
+    if (profilesError) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Erro ao carregar usuários.',
+      });
+      return;
     }
-    setChurchAdmins(adminsByChurch);
+
+    // Fetch all user roles
+    const { data: allRoles } = await supabase
+      .from('user_roles')
+      .select('user_id, role');
+
+    // Fetch all churches for name mapping
+    const { data: churchesData } = await supabase
+      .from('churches')
+      .select('id, nome');
+
+    const churchMap = new Map(churchesData?.map(c => [c.id, c.nome]) || []);
+    const rolesMap = new Map<string, string[]>();
+    
+    allRoles?.forEach(r => {
+      if (!rolesMap.has(r.user_id)) {
+        rolesMap.set(r.user_id, []);
+      }
+      rolesMap.get(r.user_id)!.push(r.role);
+    });
+
+    // Fetch emails from auth (we'll use user ids)
+    const usersWithData: UserData[] = (profiles || []).map(profile => ({
+      id: profile.id,
+      nome: profile.nome || 'Sem nome',
+      email: '', // Will be filled if we can get it
+      church_id: profile.church_id,
+      church_name: profile.church_id ? churchMap.get(profile.church_id) || 'Igreja desconhecida' : 'Sem igreja',
+      roles: rolesMap.get(profile.id) || ['discipulo'],
+      created_at: profile.created_at,
+    }));
+
+    setUsers(usersWithData);
+    setFilteredUsers(usersWithData);
+  };
+
+  const filterUsers = () => {
+    let filtered = [...users];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.nome.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (filterChurch !== 'all') {
+      if (filterChurch === 'none') {
+        filtered = filtered.filter(user => !user.church_id);
+      } else {
+        filtered = filtered.filter(user => user.church_id === filterChurch);
+      }
+    }
+    
+    setFilteredUsers(filtered);
   };
 
   const handleLogout = async () => {
@@ -141,7 +220,7 @@ export default function SuperAdmin() {
     navigate('/auth');
   };
 
-  const handleOpenDialog = (church?: ChurchData) => {
+  const handleOpenChurchDialog = (church?: ChurchData) => {
     if (church) {
       setEditingChurch(church);
       setFormData({
@@ -163,13 +242,23 @@ export default function SuperAdmin() {
         is_active: true,
       });
     }
-    setIsDialogOpen(true);
+    setIsChurchDialogOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleOpenUserDialog = (user: UserData) => {
+    setSelectedUser(user);
+    setUserFormData({
+      church_id: user.church_id || '',
+      role: user.roles.includes('church_admin') ? 'church_admin' : 
+            user.roles.includes('admin') ? 'admin' : 
+            user.roles.includes('discipulador') ? 'discipulador' : 'discipulo',
+    });
+    setIsUserDialogOpen(true);
+  };
+
+  const handleSubmitChurch = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Generate slug from name if empty
     const slug = formData.slug || formData.nome.toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -220,8 +309,61 @@ export default function SuperAdmin() {
       toast({ title: 'Sucesso', description: 'Igreja criada com sucesso.' });
     }
 
-    setIsDialogOpen(false);
+    setIsChurchDialogOpen(false);
     loadChurches();
+  };
+
+  const handleSubmitUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    // Update church_id in profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ church_id: userFormData.church_id || null })
+      .eq('id', selectedUser.id);
+
+    if (profileError) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Erro ao atualizar igreja do usuário.',
+      });
+      return;
+    }
+
+    // Update role - remove old admin roles and add new one
+    const adminRoles: ('admin' | 'church_admin')[] = ['admin', 'church_admin'];
+    
+    // Remove existing admin roles
+    await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', selectedUser.id)
+      .in('role', adminRoles);
+
+    // Add new role if it's an admin role
+    if (userFormData.role === 'admin' || userFormData.role === 'church_admin') {
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: selectedUser.id,
+          role: userFormData.role as 'admin' | 'church_admin',
+        });
+
+      if (roleError) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Erro ao atualizar papel do usuário.',
+        });
+        return;
+      }
+    }
+
+    toast({ title: 'Sucesso', description: 'Usuário atualizado com sucesso.' });
+    setIsUserDialogOpen(false);
+    loadUsers();
   };
 
   const handleDeleteChurch = async (churchId: string) => {
@@ -263,6 +405,14 @@ export default function SuperAdmin() {
       description: `Igreja ${!church.is_active ? 'ativada' : 'desativada'} com sucesso.` 
     });
     loadChurches();
+  };
+
+  const getRoleBadge = (roles: string[]) => {
+    if (roles.includes('super_admin')) return <Badge variant="destructive">Super Admin</Badge>;
+    if (roles.includes('church_admin')) return <Badge className="bg-purple-500">Admin Igreja</Badge>;
+    if (roles.includes('admin')) return <Badge className="bg-blue-500">Admin</Badge>;
+    if (roles.includes('discipulador')) return <Badge className="bg-green-500">Discipulador</Badge>;
+    return <Badge variant="secondary">Discípulo</Badge>;
   };
 
   if (loading) {
@@ -321,248 +471,414 @@ export default function SuperAdmin() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Gerenciar Igrejas</h1>
-              <p className="text-muted-foreground mt-1">
-                Crie e gerencie as igrejas da plataforma
-              </p>
-            </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleOpenDialog()}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Igreja
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingChurch ? 'Editar Igreja' : 'Nova Igreja'}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome da Igreja</Label>
+          <Tabs defaultValue="churches" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="churches" className="flex items-center gap-2">
+                <Church className="h-4 w-4" />
+                Igrejas
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Usuários
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Churches Tab */}
+            <TabsContent value="churches" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Gerenciar Igrejas</h1>
+                  <p className="text-muted-foreground mt-1">
+                    Crie e gerencie as igrejas da plataforma
+                  </p>
+                </div>
+                <Dialog open={isChurchDialogOpen} onOpenChange={setIsChurchDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => handleOpenChurchDialog()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Igreja
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingChurch ? 'Editar Igreja' : 'Nova Igreja'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmitChurch} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="nome">Nome da Igreja</Label>
+                        <Input
+                          id="nome"
+                          value={formData.nome}
+                          onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                          placeholder="Igreja Exemplo"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="slug">Slug (URL)</Label>
+                        <Input
+                          id="slug"
+                          value={formData.slug}
+                          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                          placeholder="igreja-exemplo"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Deixe em branco para gerar automaticamente
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="logo_url">URL do Logo</Label>
+                        <Input
+                          id="logo_url"
+                          value={formData.logo_url}
+                          onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                          placeholder="https://exemplo.com/logo.png"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="cor_primaria">Cor Primária</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="cor_primaria"
+                              type="color"
+                              value={formData.cor_primaria}
+                              onChange={(e) => setFormData({ ...formData, cor_primaria: e.target.value })}
+                              className="w-12 h-10 p-1 cursor-pointer"
+                            />
+                            <Input
+                              value={formData.cor_primaria}
+                              onChange={(e) => setFormData({ ...formData, cor_primaria: e.target.value })}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cor_secundaria">Cor Secundária</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="cor_secundaria"
+                              type="color"
+                              value={formData.cor_secundaria}
+                              onChange={(e) => setFormData({ ...formData, cor_secundaria: e.target.value })}
+                              className="w-12 h-10 p-1 cursor-pointer"
+                            />
+                            <Input
+                              value={formData.cor_secundaria}
+                              onChange={(e) => setFormData({ ...formData, cor_secundaria: e.target.value })}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="is_active">Igreja Ativa</Label>
+                        <Switch
+                          id="is_active"
+                          checked={formData.is_active}
+                          onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setIsChurchDialogOpen(false)} className="flex-1">
+                          Cancelar
+                        </Button>
+                        <Button type="submit" className="flex-1">
+                          {editingChurch ? 'Salvar' : 'Criar'}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Churches Table */}
+              <div className="rounded-lg border border-border bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Igreja</TableHead>
+                      <TableHead>Slug</TableHead>
+                      <TableHead>Cores</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {churches.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <Church className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>Nenhuma igreja cadastrada</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      churches.map((church) => (
+                        <TableRow key={church.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              {church.logo_url ? (
+                                <img 
+                                  src={church.logo_url} 
+                                  alt={church.nome} 
+                                  className="w-8 h-8 rounded object-cover"
+                                />
+                              ) : (
+                                <div 
+                                  className="w-8 h-8 rounded flex items-center justify-center"
+                                  style={{ backgroundColor: church.cor_primaria || '#8B5CF6' }}
+                                >
+                                  <Church className="h-4 w-4 text-white" />
+                                </div>
+                              )}
+                              <span className="font-medium">{church.nome}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {church.slug}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <div 
+                                className="w-6 h-6 rounded border border-border" 
+                                style={{ backgroundColor: church.cor_primaria || '#8B5CF6' }}
+                                title="Primária"
+                              />
+                              <div 
+                                className="w-6 h-6 rounded border border-border" 
+                                style={{ backgroundColor: church.cor_secundaria || '#D946EF' }}
+                                title="Secundária"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              church.is_active 
+                                ? 'bg-green-500/10 text-green-500' 
+                                : 'bg-red-500/10 text-red-500'
+                            }`}>
+                              {church.is_active ? 'Ativa' : 'Inativa'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleChurchStatus(church)}
+                                title={church.is_active ? 'Desativar' : 'Ativar'}
+                              >
+                                <Switch 
+                                  checked={church.is_active} 
+                                  className="pointer-events-none"
+                                />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenChurchDialog(church)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir Igreja</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir a igreja "{church.nome}"? 
+                                      Esta ação não pode ser desfeita e todos os dados vinculados serão perdidos.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteChurch(church.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+
+            {/* Users Tab */}
+            <TabsContent value="users" className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Gerenciar Usuários</h1>
+                  <p className="text-muted-foreground mt-1">
+                    {filteredUsers.length} usuário(s) encontrado(s)
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="nome"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                      placeholder="Igreja Exemplo"
-                      required
+                      placeholder="Buscar por nome..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9"
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="slug">Slug (URL)</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                      placeholder="igreja-exemplo"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Deixe em branco para gerar automaticamente
+                  <Select value={filterChurch} onValueChange={setFilterChurch}>
+                    <SelectTrigger className="w-full sm:w-48">
+                      <SelectValue placeholder="Filtrar por igreja" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as igrejas</SelectItem>
+                      <SelectItem value="none">Sem igreja</SelectItem>
+                      {churches.map((church) => (
+                        <SelectItem key={church.id} value={church.id}>
+                          {church.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Users Table */}
+              <div className="rounded-lg border border-border bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Igreja</TableHead>
+                      <TableHead>Papel</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>Nenhum usuário encontrado</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm">
+                                {user.nome.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="font-medium">{user.nome}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {user.church_name}
+                          </TableCell>
+                          <TableCell>
+                            {getRoleBadge(user.roles)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenUserDialog(user)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* User Edit Dialog */}
+          <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Editar Usuário</DialogTitle>
+              </DialogHeader>
+              {selectedUser && (
+                <form onSubmit={handleSubmitUser} className="space-y-4">
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="font-medium text-foreground">{selectedUser.nome}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Papéis atuais: {selectedUser.roles.join(', ')}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="logo_url">URL do Logo</Label>
-                    <Input
-                      id="logo_url"
-                      value={formData.logo_url}
-                      onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                      placeholder="https://exemplo.com/logo.png"
-                    />
+                    <Label htmlFor="user_church">Igreja</Label>
+                    <Select 
+                      value={userFormData.church_id} 
+                      onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma igreja" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {churches.map((church) => (
+                          <SelectItem key={church.id} value={church.id}>
+                            {church.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cor_primaria">Cor Primária</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="cor_primaria"
-                          type="color"
-                          value={formData.cor_primaria}
-                          onChange={(e) => setFormData({ ...formData, cor_primaria: e.target.value })}
-                          className="w-12 h-10 p-1 cursor-pointer"
-                        />
-                        <Input
-                          value={formData.cor_primaria}
-                          onChange={(e) => setFormData({ ...formData, cor_primaria: e.target.value })}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cor_secundaria">Cor Secundária</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="cor_secundaria"
-                          type="color"
-                          value={formData.cor_secundaria}
-                          onChange={(e) => setFormData({ ...formData, cor_secundaria: e.target.value })}
-                          className="w-12 h-10 p-1 cursor-pointer"
-                        />
-                        <Input
-                          value={formData.cor_secundaria}
-                          onChange={(e) => setFormData({ ...formData, cor_secundaria: e.target.value })}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="is_active">Igreja Ativa</Label>
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                    />
+                  <div className="space-y-2">
+                    <Label htmlFor="user_role">Papel Administrativo</Label>
+                    <Select 
+                      value={userFormData.role} 
+                      onValueChange={(value) => setUserFormData({ ...userFormData, role: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um papel" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="discipulo">Discípulo (sem acesso admin)</SelectItem>
+                        <SelectItem value="discipulador">Discipulador</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="church_admin">Admin da Igreja</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Admin da Igreja pode gerenciar todos os dados da sua igreja
+                    </p>
                   </div>
 
                   <div className="flex gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
+                    <Button type="button" variant="outline" onClick={() => setIsUserDialogOpen(false)} className="flex-1">
                       Cancelar
                     </Button>
                     <Button type="submit" className="flex-1">
-                      {editingChurch ? 'Salvar' : 'Criar'}
+                      Salvar
                     </Button>
                   </div>
                 </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Churches Table */}
-          <div className="rounded-lg border border-border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Igreja</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Cores</TableHead>
-                  <TableHead>Admins</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {churches.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      <Church className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>Nenhuma igreja cadastrada</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  churches.map((church) => (
-                    <TableRow key={church.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {church.logo_url ? (
-                            <img 
-                              src={church.logo_url} 
-                              alt={church.nome} 
-                              className="w-8 h-8 rounded object-cover"
-                            />
-                          ) : (
-                            <div 
-                              className="w-8 h-8 rounded flex items-center justify-center"
-                              style={{ backgroundColor: church.cor_primaria || '#8B5CF6' }}
-                            >
-                              <Church className="h-4 w-4 text-white" />
-                            </div>
-                          )}
-                          <span className="font-medium">{church.nome}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {church.slug}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <div 
-                            className="w-6 h-6 rounded border border-border" 
-                            style={{ backgroundColor: church.cor_primaria || '#8B5CF6' }}
-                            title="Primária"
-                          />
-                          <div 
-                            className="w-6 h-6 rounded border border-border" 
-                            style={{ backgroundColor: church.cor_secundaria || '#D946EF' }}
-                            title="Secundária"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>{churchAdmins[church.id]?.length || 0}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          church.is_active 
-                            ? 'bg-green-500/10 text-green-500' 
-                            : 'bg-red-500/10 text-red-500'
-                        }`}>
-                          {church.is_active ? 'Ativa' : 'Inativa'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleChurchStatus(church)}
-                            title={church.is_active ? 'Desativar' : 'Ativar'}
-                          >
-                            <Switch 
-                              checked={church.is_active} 
-                              className="pointer-events-none"
-                            />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenDialog(church)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir Igreja</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir a igreja "{church.nome}"? 
-                                  Esta ação não pode ser desfeita e todos os dados vinculados serão perdidos.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteChurch(church.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </PageTransition>

@@ -13,7 +13,8 @@ import {
   Users,
   UserCircle,
   Compass,
-  FolderOpen
+  FolderOpen,
+  ShieldAlert
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
@@ -47,15 +48,17 @@ const learningItems = [
 ];
 
 // Cache for user roles to avoid repeated fetches
-let cachedRoles: { isAdmin: boolean; isDiscipulador: boolean; userId: string | null } = {
+let cachedRoles: { isAdmin: boolean; isDiscipulador: boolean; isSuperAdmin: boolean; userId: string | null } = {
   isAdmin: false,
   isDiscipulador: false,
+  isSuperAdmin: false,
   userId: null
 };
 
 export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProps) {
   const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
   const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -74,6 +77,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
       if (cachedRoles.userId === session.user.id) {
         setIsAdmin(cachedRoles.isAdmin);
         setIsDiscipulador(cachedRoles.isDiscipulador);
+        setIsSuperAdmin(cachedRoles.isSuperAdmin);
         return;
       }
 
@@ -85,12 +89,14 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
       const userRoles = roles?.map(r => r.role) || [];
       const admin = userRoles.includes('admin');
       const discipulador = userRoles.includes('discipulador');
+      const superAdmin = userRoles.includes('super_admin');
       
       // Cache the roles
-      cachedRoles = { isAdmin: admin, isDiscipulador: discipulador, userId: session.user.id };
+      cachedRoles = { isAdmin: admin, isDiscipulador: discipulador, isSuperAdmin: superAdmin, userId: session.user.id };
       
       setIsAdmin(admin);
       setIsDiscipulador(discipulador);
+      setIsSuperAdmin(superAdmin);
     }
   }, []);
 
@@ -190,6 +196,22 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                 <span>Admin</span>
               </NavLink>
             )}
+
+            {/* Super Admin */}
+            {isSuperAdmin && (
+              <NavLink
+                to="/super-admin"
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  location.pathname === '/super-admin'
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>Super Admin</span>
+              </NavLink>
+            )}
             
             {isDiscipulador && !isAdmin && (
               <NavLink
@@ -243,6 +265,14 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                     <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
                       <Settings className="w-4 h-4" />
                       Painel Admin
+                    </NavLink>
+                  </DropdownMenuItem>
+                )}
+                {isSuperAdmin && (
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/super-admin" className="flex items-center gap-2 cursor-pointer">
+                      <ShieldAlert className="w-4 h-4" />
+                      Super Admin
                     </NavLink>
                   </DropdownMenuItem>
                 )}
@@ -359,6 +389,21 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                       <span>Painel Admin</span>
                     </NavLink>
                   )}
+
+                  {isSuperAdmin && (
+                    <NavLink
+                      to="/super-admin"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                        location.pathname === '/super-admin'
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <ShieldAlert className="w-5 h-5" />
+                      <span>Super Admin</span>
+                    </NavLink>
+                  )}
                   
                   {isDiscipulador && !isAdmin && (
                     <NavLink
@@ -410,7 +455,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               <div className="px-3 py-2 border-b border-border">
                 <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
                 <p className="text-xs text-muted-foreground">
-                  {isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
+                  {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
                 </p>
               </div>
               <DropdownMenuItem asChild>
@@ -424,6 +469,14 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                   <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
                     <Settings className="w-4 h-4" />
                     Painel Admin
+                  </NavLink>
+                </DropdownMenuItem>
+              )}
+              {isSuperAdmin && (
+                <DropdownMenuItem asChild>
+                  <NavLink to="/super-admin" className="flex items-center gap-2 cursor-pointer">
+                    <ShieldAlert className="w-4 h-4" />
+                    Super Admin
                   </NavLink>
                 </DropdownMenuItem>
               )}
