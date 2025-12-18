@@ -228,6 +228,30 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_achievements: {
+        Row: {
+          achieved_at: string
+          achievement_type: string
+          id: string
+          streak_days: number
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          achievement_type: string
+          id?: string
+          streak_days: number
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          achievement_type?: string
+          id?: string
+          streak_days?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_definitions: {
         Row: {
           color: string
@@ -235,10 +259,8 @@ export type Database = {
           icon: string
           id: string
           is_active: boolean
-          is_default: boolean
           name: string
           ordem: number
-          user_id: string
         }
         Insert: {
           color?: string
@@ -246,10 +268,8 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
-          is_default?: boolean
           name: string
           ordem?: number
-          user_id: string
         }
         Update: {
           color?: string
@@ -257,9 +277,34 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
-          is_default?: boolean
           name?: string
           ordem?: number
+        }
+        Relationships: []
+      }
+      habit_streaks: {
+        Row: {
+          best_streak: number
+          current_streak: number
+          id: string
+          last_completed_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number
+          current_streak?: number
+          id?: string
+          last_completed_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_streak?: number
+          current_streak?: number
+          id?: string
+          last_completed_date?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
