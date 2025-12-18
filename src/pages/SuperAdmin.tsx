@@ -957,92 +957,148 @@ export default function SuperAdmin() {
 
           {/* User Edit Dialog */}
           <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Editar Usuário</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Editar Usuário
+                </DialogTitle>
               </DialogHeader>
               {selectedUser && (
-                <form onSubmit={handleSubmitUser} className="space-y-4">
-                  <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">
-                      Papéis atuais: {selectedUser.roles.join(', ')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="user_nome">Nome</Label>
-                    <Input
-                      id="user_nome"
-                      value={userFormData.nome}
-                      onChange={(e) => setUserFormData({ ...userFormData, nome: e.target.value })}
-                      placeholder="Nome do usuário"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="user_telefone">Telefone</Label>
-                    <Input
-                      id="user_telefone"
-                      value={userFormData.telefone}
-                      onChange={(e) => setUserFormData({ ...userFormData, telefone: e.target.value })}
-                      placeholder="(00) 00000-0000"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Igreja</Label>
-                    <Select 
-                      value={userFormData.church_id || "none"} 
-                      onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value === "none" ? "" : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma igreja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sem igreja</SelectItem>
-                        {churches.map((church) => (
-                          <SelectItem key={church.id} value={church.id}>
-                            {church.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>Papéis do Usuário</Label>
-                    <div className="space-y-2">
-                      {[
-                        { id: 'discipulo', label: 'Discípulo', description: 'Acesso às trilhas e cursos para discípulos' },
-                        { id: 'discipulador', label: 'Discipulador', description: 'Acesso às trilhas e cursos para discipuladores' },
-                        { id: 'admin', label: 'Admin', description: 'Acesso total ao painel administrativo' },
-                        { id: 'church_admin', label: 'Admin Igreja', description: 'Gerencia conteúdo da sua igreja' },
-                        { id: 'super_admin', label: 'Super Admin', description: 'Gerencia todas as igrejas e usuários' },
-                      ].map((role) => (
-                        <div key={role.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50">
-                          <Checkbox
-                            id={`role-${role.id}`}
-                            checked={userFormData.roles.includes(role.id)}
-                            onCheckedChange={() => toggleUserRole(role.id)}
-                          />
-                          <div className="flex-1">
-                            <label htmlFor={`role-${role.id}`} className="text-sm font-medium cursor-pointer">
-                              {role.label}
-                            </label>
-                            <p className="text-xs text-muted-foreground">{role.description}</p>
-                          </div>
-                        </div>
-                      ))}
+                <form onSubmit={handleSubmitUser} className="space-y-6">
+                  {/* User Info Header */}
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-lg font-semibold text-primary">
+                        {selectedUser.nome.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground truncate">{selectedUser.nome}</h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {selectedUser.church_name || 'Sem igreja'}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsUserDialogOpen(false)} className="flex-1">
+                  {/* Form Fields */}
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="user_nome" className="text-sm font-medium">Nome</Label>
+                        <Input
+                          id="user_nome"
+                          value={userFormData.nome}
+                          onChange={(e) => setUserFormData({ ...userFormData, nome: e.target.value })}
+                          placeholder="Nome do usuário"
+                          className="h-10"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="user_telefone" className="text-sm font-medium">Telefone</Label>
+                        <Input
+                          id="user_telefone"
+                          value={userFormData.telefone}
+                          onChange={(e) => setUserFormData({ ...userFormData, telefone: e.target.value })}
+                          placeholder="(00) 00000-0000"
+                          className="h-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Church className="h-4 w-4" />
+                        Igreja
+                      </Label>
+                      <Select 
+                        value={userFormData.church_id || "none"} 
+                        onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value === "none" ? "" : value })}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="Selecione uma igreja" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sem igreja</SelectItem>
+                          {churches.map((church) => (
+                            <SelectItem key={church.id} value={church.id}>
+                              {church.nome}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Roles Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4" />
+                      Papéis do Usuário
+                    </Label>
+                    <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                      {[
+                        { id: 'discipulo', label: 'Discípulo', description: 'Acesso às trilhas e cursos para discípulos', color: 'bg-blue-500' },
+                        { id: 'discipulador', label: 'Discipulador', description: 'Acesso às trilhas e cursos para discipuladores', color: 'bg-green-500' },
+                        { id: 'admin', label: 'Admin', description: 'Acesso total ao painel administrativo', color: 'bg-amber-500' },
+                        { id: 'church_admin', label: 'Admin Igreja', description: 'Gerencia conteúdo da sua igreja', color: 'bg-purple-500' },
+                        { id: 'super_admin', label: 'Super Admin', description: 'Gerencia todas as igrejas e usuários', color: 'bg-red-500' },
+                      ].map((role) => {
+                        const isChecked = userFormData.roles.includes(role.id);
+                        return (
+                          <div 
+                            key={role.id} 
+                            onClick={() => toggleUserRole(role.id)}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                              isChecked 
+                                ? "bg-primary/5 border-primary/30 shadow-sm" 
+                                : "bg-background border-border hover:bg-muted/50 hover:border-muted-foreground/20"
+                            )}
+                          >
+                            <div className={cn("h-2 w-2 rounded-full", role.color)} />
+                            <Checkbox
+                              id={`role-${role.id}`}
+                              checked={isChecked}
+                              onCheckedChange={() => toggleUserRole(role.id)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <label htmlFor={`role-${role.id}`} className="text-sm font-medium cursor-pointer block">
+                                {role.label}
+                              </label>
+                              <p className="text-xs text-muted-foreground truncate">{role.description}</p>
+                            </div>
+                            {isChecked && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Ativo</Badge>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-2 border-t">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsUserDialogOpen(false)} 
+                      className="flex-1"
+                      disabled={savingRole}
+                    >
                       Cancelar
                     </Button>
-                    <Button type="submit" className="flex-1">
-                      Salvar
+                    <Button type="submit" className="flex-1" disabled={savingRole}>
+                      {savingRole ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : (
+                        'Salvar Alterações'
+                      )}
                     </Button>
                   </div>
                 </form>
