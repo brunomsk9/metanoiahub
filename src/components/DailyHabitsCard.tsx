@@ -1,32 +1,48 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen, Heart, Star, Sun, Moon, Zap, Target, 
-  Coffee, Dumbbell, Music, Smile, Plus, X, Check,
-  Sparkles, Trash2
+  Coffee, Dumbbell, Music, Smile, Check,
+  Sparkles, Flame, Trophy, Award, Medal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import confetti from "canvas-confetti";
 
 export interface HabitDefinition {
   id: string;
   name: string;
   icon: string;
   color: string;
-  is_default: boolean;
   completed?: boolean;
 }
+
+interface HabitStreak {
+  current_streak: number;
+  best_streak: number;
+  last_completed_date: string | null;
+}
+
+interface Achievement {
+  type: string;
+  days: number;
+  title: string;
+  icon: typeof Trophy;
+  color: string;
+}
+
+const ACHIEVEMENTS: Achievement[] = [
+  { type: 'streak_3', days: 3, title: '3 Dias Seguidos', icon: Flame, color: 'text-orange-500' },
+  { type: 'streak_7', days: 7, title: '1 Semana', icon: Star, color: 'text-yellow-500' },
+  { type: 'streak_14', days: 14, title: '2 Semanas', icon: Award, color: 'text-blue-500' },
+  { type: 'streak_21', days: 21, title: '3 Semanas', icon: Medal, color: 'text-purple-500' },
+  { type: 'streak_30', days: 30, title: '1 Mês', icon: Trophy, color: 'text-amber-500' },
+  { type: 'streak_60', days: 60, title: '2 Meses', icon: Trophy, color: 'text-emerald-500' },
+  { type: 'streak_90', days: 90, title: '3 Meses', icon: Trophy, color: 'text-cyan-500' },
+  { type: 'streak_180', days: 180, title: '6 Meses', icon: Trophy, color: 'text-rose-500' },
+  { type: 'streak_365', days: 365, title: '1 Ano', icon: Trophy, color: 'text-primary' },
+];
 
 interface DailyHabitsCardProps {
   userId: string;
@@ -34,26 +50,17 @@ interface DailyHabitsCardProps {
 }
 
 const ICON_OPTIONS = [
-  { id: 'book', icon: BookOpen, label: 'Livro' },
-  { id: 'heart', icon: Heart, label: 'Coração' },
-  { id: 'star', icon: Star, label: 'Estrela' },
-  { id: 'sun', icon: Sun, label: 'Sol' },
-  { id: 'moon', icon: Moon, label: 'Lua' },
-  { id: 'zap', icon: Zap, label: 'Energia' },
-  { id: 'target', icon: Target, label: 'Alvo' },
-  { id: 'coffee', icon: Coffee, label: 'Café' },
-  { id: 'dumbbell', icon: Dumbbell, label: 'Exercício' },
-  { id: 'music', icon: Music, label: 'Música' },
-  { id: 'smile', icon: Smile, label: 'Sorriso' },
-];
-
-const COLOR_OPTIONS = [
-  { id: 'primary', class: 'bg-primary', label: 'Azul' },
-  { id: 'rose', class: 'bg-rose-500', label: 'Rosa' },
-  { id: 'orange', class: 'bg-orange-500', label: 'Laranja' },
-  { id: 'green', class: 'bg-green-500', label: 'Verde' },
-  { id: 'purple', class: 'bg-purple-500', label: 'Roxo' },
-  { id: 'yellow', class: 'bg-yellow-500', label: 'Amarelo' },
+  { id: 'book', icon: BookOpen },
+  { id: 'heart', icon: Heart },
+  { id: 'star', icon: Star },
+  { id: 'sun', icon: Sun },
+  { id: 'moon', icon: Moon },
+  { id: 'zap', icon: Zap },
+  { id: 'target', icon: Target },
+  { id: 'coffee', icon: Coffee },
+  { id: 'dumbbell', icon: Dumbbell },
+  { id: 'music', icon: Music },
+  { id: 'smile', icon: Smile },
 ];
 
 const getIconComponent = (iconId: string) => {
@@ -76,15 +83,16 @@ const getColorClass = (colorId: string) => {
 export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps) {
   const [habits, setHabits] = useState<HabitDefinition[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newHabitName, setNewHabitName] = useState('');
-  const [newHabitIcon, setNewHabitIcon] = useState('star');
-  const [newHabitColor, setNewHabitColor] = useState('primary');
   const [celebratingHabit, setCelebratingHabit] = useState<string | null>(null);
+  const [streak, setStreak] = useState<HabitStreak>({ current_streak: 0, best_streak: 0, last_completed_date: null });
+  const [earnedAchievements, setEarnedAchievements] = useState<string[]>([]);
+  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchHabits();
+    fetchStreak();
+    fetchAchievements();
   }, [userId]);
 
   useEffect(() => {
@@ -95,17 +103,15 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
   const fetchHabits = async () => {
     const today = new Date().toISOString().split('T')[0];
     
-    // Fetch habit definitions
+    // Fetch global habit definitions
     const { data: definitions } = await supabase
       .from('habit_definitions')
       .select('*')
-      .eq('user_id', userId)
       .eq('is_active', true)
       .order('ordem');
 
-    // If no habits exist, create defaults
     if (!definitions || definitions.length === 0) {
-      await createDefaultHabits();
+      setLoading(false);
       return;
     }
 
@@ -125,17 +131,121 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
     setLoading(false);
   };
 
-  const createDefaultHabits = async () => {
-    const defaults = [
-      { user_id: userId, name: 'Leitura Bíblica', icon: 'book', color: 'primary', is_default: true, ordem: 0 },
-      { user_id: userId, name: 'Oração', icon: 'heart', color: 'rose', is_default: true, ordem: 1 },
-    ];
+  const fetchStreak = async () => {
+    const { data } = await supabase
+      .from('habit_streaks')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-    const { error } = await supabase.from('habit_definitions').insert(defaults);
-    if (!error) {
-      fetchHabits();
+    if (data) {
+      setStreak(data);
     }
   };
+
+  const fetchAchievements = async () => {
+    const { data } = await supabase
+      .from('habit_achievements')
+      .select('achievement_type')
+      .eq('user_id', userId);
+
+    if (data) {
+      setEarnedAchievements(data.map(a => a.achievement_type));
+    }
+  };
+
+  const checkAndAwardAchievements = useCallback(async (currentStreak: number) => {
+    for (const achievement of ACHIEVEMENTS) {
+      if (currentStreak >= achievement.days && !earnedAchievements.includes(achievement.type)) {
+        // Award achievement
+        const { error } = await supabase
+          .from('habit_achievements')
+          .insert({
+            user_id: userId,
+            achievement_type: achievement.type,
+            streak_days: achievement.days
+          });
+
+        if (!error) {
+          setEarnedAchievements(prev => [...prev, achievement.type]);
+          setNewAchievement(achievement);
+          
+          // Celebration confetti
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+
+          toast({
+            title: "🏆 Nova Conquista!",
+            description: `Você desbloqueou: ${achievement.title}`,
+          });
+
+          setTimeout(() => setNewAchievement(null), 3000);
+        }
+      }
+    }
+  }, [earnedAchievements, userId, toast]);
+
+  const updateStreak = useCallback(async (allCompleted: boolean) => {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    if (!allCompleted) return;
+
+    let newCurrentStreak = streak.current_streak;
+    let newBestStreak = streak.best_streak;
+
+    // Check if this is a continuation of the streak
+    if (streak.last_completed_date === yesterday) {
+      newCurrentStreak += 1;
+    } else if (streak.last_completed_date !== today) {
+      // Reset streak if we missed a day (and it wasn't already completed today)
+      newCurrentStreak = 1;
+    }
+
+    if (newCurrentStreak > newBestStreak) {
+      newBestStreak = newCurrentStreak;
+    }
+
+    // Update or insert streak record
+    const { data: existingStreak } = await supabase
+      .from('habit_streaks')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingStreak) {
+      await supabase
+        .from('habit_streaks')
+        .update({
+          current_streak: newCurrentStreak,
+          best_streak: newBestStreak,
+          last_completed_date: today,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+    } else {
+      await supabase
+        .from('habit_streaks')
+        .insert({
+          user_id: userId,
+          current_streak: newCurrentStreak,
+          best_streak: newBestStreak,
+          last_completed_date: today
+        });
+    }
+
+    setStreak({
+      current_streak: newCurrentStreak,
+      best_streak: newBestStreak,
+      last_completed_date: today
+    });
+
+    // Check for achievements
+    checkAndAwardAchievements(newCurrentStreak);
+  }, [streak, userId, checkAndAwardAchievements]);
 
   const toggleHabit = async (habit: HabitDefinition) => {
     const today = new Date().toISOString().split('T')[0];
@@ -154,14 +264,25 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
         setCelebratingHabit(habit.id);
         setTimeout(() => setCelebratingHabit(null), 1500);
         
-        setHabits(prev => prev.map(h => 
+        const updatedHabits = habits.map(h => 
           h.id === habit.id ? { ...h, completed: true } : h
-        ));
+        );
+        setHabits(updatedHabits);
         
-        toast({
-          title: "Parabéns! 🎉",
-          description: `${habit.name} concluído!`,
-        });
+        // Check if all habits completed
+        const allCompleted = updatedHabits.every(h => h.completed);
+        if (allCompleted) {
+          updateStreak(true);
+          toast({
+            title: "Parabéns! 🔥",
+            description: "Todos os hábitos do dia concluídos!",
+          });
+        } else {
+          toast({
+            title: "Hábito registrado!",
+            description: `${habit.name} concluído.`,
+          });
+        }
       }
     } else {
       // Remove completion
@@ -180,47 +301,6 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
     }
   };
 
-  const addHabit = async () => {
-    if (!newHabitName.trim()) return;
-
-    const { error } = await supabase.from('habit_definitions').insert({
-      user_id: userId,
-      name: newHabitName,
-      icon: newHabitIcon,
-      color: newHabitColor,
-      is_default: false,
-      ordem: habits.length,
-    });
-
-    if (!error) {
-      setNewHabitName('');
-      setNewHabitIcon('star');
-      setNewHabitColor('primary');
-      setShowAddDialog(false);
-      fetchHabits();
-      toast({
-        title: "Hábito criado!",
-        description: `"${newHabitName}" foi adicionado aos seus hábitos diários.`,
-      });
-    }
-  };
-
-  const deleteHabit = async (habitId: string) => {
-    const { error } = await supabase
-      .from('habit_definitions')
-      .delete()
-      .eq('id', habitId)
-      .eq('user_id', userId);
-
-    if (!error) {
-      setHabits(prev => prev.filter(h => h.id !== habitId));
-      toast({
-        title: "Hábito removido",
-        description: "O hábito foi excluído com sucesso.",
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-3">
@@ -231,8 +311,56 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
     );
   }
 
+  const completedCount = habits.filter(h => h.completed).length;
+  const allCompleted = completedCount === habits.length && habits.length > 0;
+
   return (
     <div className="space-y-4">
+      {/* Streak indicator */}
+      {streak.current_streak > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{streak.current_streak} dias</p>
+              <p className="text-[10px] text-muted-foreground">Sequência atual</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Recorde</p>
+            <p className="text-sm font-bold text-orange-500">{streak.best_streak} dias</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* New Achievement Popup */}
+      <AnimatePresence>
+        {newAchievement && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            className="p-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 text-center"
+          >
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 10, 0], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.5 }}
+            >
+              <newAchievement.icon className={cn("w-12 h-12 mx-auto mb-2", newAchievement.color)} />
+            </motion.div>
+            <h3 className="font-bold text-foreground">Nova Conquista!</h3>
+            <p className={cn("text-sm font-medium", newAchievement.color)}>{newAchievement.title}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Habits grid */}
       <div className="grid grid-cols-2 gap-3">
         <AnimatePresence mode="popLayout">
           {habits.map((habit) => {
@@ -250,7 +378,7 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
                 whileTap={{ scale: 0.95 }}
                 onClick={() => toggleHabit(habit)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 min-h-[100px] group",
+                  "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 min-h-[100px]",
                   habit.completed
                     ? `${colors.bgLight} ${colors.border} ${colors.text}`
                     : "bg-card border-border hover:border-primary/30"
@@ -286,19 +414,6 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
                     </>
                   )}
                 </AnimatePresence>
-
-                {/* Delete button */}
-                {!habit.is_default && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteHabit(habit.id);
-                    }}
-                    className="absolute top-2 right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/10 hover:bg-destructive/20"
-                  >
-                    <Trash2 className="w-3 h-3 text-destructive" />
-                  </button>
-                )}
 
                 {/* Icon */}
                 <motion.div
@@ -343,103 +458,47 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
               </motion.button>
             );
           })}
-
-          {/* Add habit button */}
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <motion.button
-                layout
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-all min-h-[100px] bg-muted/30"
-              >
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-2">
-                  <Plus className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">
-                  Novo hábito
-                </span>
-              </motion.button>
-            </DialogTrigger>
-            
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar novo hábito</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Nome do hábito</Label>
-                  <Input
-                    value={newHabitName}
-                    onChange={(e) => setNewHabitName(e.target.value)}
-                    placeholder="Ex: Exercício físico"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Ícone</Label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {ICON_OPTIONS.map(({ id, icon: IconComp }) => (
-                      <button
-                        key={id}
-                        onClick={() => setNewHabitIcon(id)}
-                        className={cn(
-                          "p-2 rounded-lg border-2 transition-all",
-                          newHabitIcon === id
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:border-primary/30"
-                        )}
-                      >
-                        <IconComp className={cn(
-                          "w-5 h-5 mx-auto",
-                          newHabitIcon === id ? "text-primary" : "text-muted-foreground"
-                        )} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Cor</Label>
-                  <div className="flex gap-2">
-                    {COLOR_OPTIONS.map(({ id, class: bgClass }) => (
-                      <button
-                        key={id}
-                        onClick={() => setNewHabitColor(id)}
-                        className={cn(
-                          "w-8 h-8 rounded-full transition-all",
-                          bgClass,
-                          newHabitColor === id
-                            ? "ring-2 ring-offset-2 ring-offset-background ring-primary scale-110"
-                            : "opacity-70 hover:opacity-100"
-                        )}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddDialog(false)}
-                    className="flex-1"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={addHabit}
-                    disabled={!newHabitName.trim()}
-                    className="flex-1"
-                  >
-                    Criar hábito
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </AnimatePresence>
       </div>
+
+      {/* Achievements earned */}
+      {earnedAchievements.length > 0 && (
+        <div className="pt-2">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">Suas conquistas</h4>
+          <div className="flex flex-wrap gap-2">
+            {ACHIEVEMENTS.filter(a => earnedAchievements.includes(a.type)).map((achievement) => (
+              <motion.div
+                key={achievement.type}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium",
+                  "bg-muted/50 border border-border/50"
+                )}
+              >
+                <achievement.icon className={cn("w-3 h-3", achievement.color)} />
+                <span className="text-foreground">{achievement.title}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* All completed celebration */}
+      <AnimatePresence>
+        {allCompleted && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 text-center"
+          >
+            <p className="text-sm font-medium text-green-500">
+              🎉 Todos os hábitos do dia concluídos!
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
