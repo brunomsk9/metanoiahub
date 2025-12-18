@@ -583,6 +583,60 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_checklist_items: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+        }
+        Relationships: []
+      }
+      weekly_checklist_responses: {
+        Row: {
+          created_at: string
+          discipulador_id: string
+          id: string
+          responses: Json
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          discipulador_id: string
+          id?: string
+          responses?: Json
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          discipulador_id?: string
+          id?: string
+          responses?: Json
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

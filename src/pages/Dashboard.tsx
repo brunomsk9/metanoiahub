@@ -11,6 +11,7 @@ import { StartPlanModal } from "@/components/StartPlanModal";
 import { DiscipuladorDashboardCards } from "@/components/DiscipuladorDashboardCards";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { MeetingsManager } from "@/components/MeetingsManager";
+import { WeeklyChecklist } from "@/components/WeeklyChecklist";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +51,7 @@ interface BaseTrackProgress {
 export default function Dashboard() {
   const [streak, setStreak] = useState(0);
   const [userName, setUserName] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
   const [xpPoints, setXpPoints] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [readingPlans, setReadingPlans] = useState<ReadingPlanWithProgress[]>([]);
@@ -93,6 +95,7 @@ export default function Dashboard() {
 
       const userRoles = rolesRes.data?.map(r => r.role) || [];
       setIsDiscipulador(userRoles.includes('discipulador'));
+      setUserId(session.user.id);
       
       if (profileRes.data) {
         setUserName(profileRes.data.nome || session.user.email?.split('@')[0] || 'Discípulo');
@@ -324,12 +327,13 @@ export default function Dashboard() {
             </CollapsibleSection>
 
             {/* Discipulador Management Cards */}
-            {isDiscipulador && (
+            {isDiscipulador && userId && (
               <CollapsibleSection 
                 title="Meu Discipulado" 
                 icon={<Users className="w-4 h-4" />}
               >
                 <div className="space-y-6">
+                  <WeeklyChecklist userId={userId} />
                   <DiscipuladorDashboardCards />
                   <MeetingsManager />
                 </div>
