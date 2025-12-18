@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, BookOpen, Users, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -34,6 +35,7 @@ export function AdminTracks() {
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
+  const { churchId } = useUserChurchId();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -106,6 +108,11 @@ export function AdminTracks() {
       return;
     }
 
+    if (!churchId) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     setSaving(true);
 
     // If setting this track as base, unset any existing base track first
@@ -120,7 +127,8 @@ export function AdminTracks() {
       cover_image: form.cover_image || null,
       ordem: form.ordem,
       publico_alvo: form.publico_alvo,
-      is_base: form.is_base
+      is_base: form.is_base,
+      church_id: churchId
     };
 
     if (editing) {

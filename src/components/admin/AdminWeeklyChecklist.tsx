@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +39,7 @@ export function AdminWeeklyChecklist() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ChecklistItem | null>(null);
   const [saving, setSaving] = useState(false);
+  const { churchId } = useUserChurchId();
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
@@ -86,6 +88,11 @@ export function AdminWeeklyChecklist() {
       return;
     }
 
+    if (!churchId) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     setSaving(true);
     try {
       if (editing) {
@@ -108,7 +115,8 @@ export function AdminWeeklyChecklist() {
             titulo: form.titulo,
             descricao: form.descricao || null,
             ativo: form.ativo,
-            ordem: maxOrdem + 1
+            ordem: maxOrdem + 1,
+            church_id: churchId
           });
 
         if (error) throw error;

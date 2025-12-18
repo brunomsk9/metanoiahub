@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -41,6 +42,7 @@ export function AdminCourses() {
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
+  const { churchId } = useUserChurchId();
   
   const [form, setForm] = useState({
     titulo: '',
@@ -113,6 +115,11 @@ export function AdminCourses() {
       return;
     }
 
+    if (!churchId) {
+      toast.error('Erro: Usuário não está associado a uma igreja');
+      return;
+    }
+
     setSaving(true);
 
     const payload = {
@@ -122,7 +129,8 @@ export function AdminCourses() {
       thumbnail: form.thumbnail || null,
       duracao_minutos: form.duracao_minutos,
       ordem: form.ordem,
-      publico_alvo: form.publico_alvo
+      publico_alvo: form.publico_alvo,
+      church_id: churchId
     };
 
     if (editing) {
