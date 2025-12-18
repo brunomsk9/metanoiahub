@@ -44,49 +44,60 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        // Validate church selection for login
-        if (!selectedChurchId) {
-          toast({
-            variant: "destructive",
-            title: "Erro",
-            description: "Selecione uma igreja para continuar.",
-          });
-          setIsLoading(false);
-          return;
-        }
-
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
         
-        // Verify user belongs to selected church and check password change requirement
+        // Check if user is super_admin
         if (data.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('needs_password_change, church_id')
-            .eq('id', data.user.id)
-            .single();
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id);
           
-          if (profile?.church_id && profile.church_id !== selectedChurchId) {
-            await supabase.auth.signOut();
-            toast({
-              variant: "destructive",
-              title: "Erro",
-              description: "Você não pertence a esta igreja. Por favor, selecione a igreja correta.",
-            });
-            setIsLoading(false);
-            return;
-          }
+          const isSuperAdmin = roles?.some(r => r.role === 'super_admin');
+          
+          // Super admins don't need church selection
+          if (!isSuperAdmin) {
+            // Validate church selection for regular users
+            if (!selectedChurchId) {
+              await supabase.auth.signOut();
+              toast({
+                variant: "destructive",
+                title: "Erro",
+                description: "Selecione uma igreja para continuar.",
+              });
+              setIsLoading(false);
+              return;
+            }
+            
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('needs_password_change, church_id')
+              .eq('id', data.user.id)
+              .single();
+            
+            if (profile?.church_id && profile.church_id !== selectedChurchId) {
+              await supabase.auth.signOut();
+              toast({
+                variant: "destructive",
+                title: "Erro",
+                description: "Você não pertence a esta igreja. Por favor, selecione a igreja correta.",
+              });
+              setIsLoading(false);
+              return;
+            }
 
-          // Set the church context
-          setChurchId(selectedChurchId);
-          
-          if (profile?.needs_password_change) {
-            toast({ title: "Bem-vindo!", description: "Por favor, altere sua senha." });
-            navigate("/alterar-senha");
-            return;
+            // Set the church context
+            setChurchId(selectedChurchId);
+            
+            if (profile?.needs_password_change) {
+              toast({ title: "Bem-vindo!", description: "Por favor, altere sua senha." });
+              navigate("/alterar-senha");
+              return;
+            }
           }
         }
         
