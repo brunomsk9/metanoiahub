@@ -56,23 +56,33 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('church_id')
-          .eq('id', session.user.id)
-          .single();
+        // Check if user is super_admin - they don't need a church
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id);
         
-        if (profile?.church_id) {
-          setChurchIdState(profile.church_id);
-          
-          const { data: churchData } = await supabase
-            .from('churches')
-            .select('id, nome, slug, logo_url, cor_primaria, cor_secundaria')
-            .eq('id', profile.church_id)
+        const isSuperAdmin = roles?.some(r => r.role === 'super_admin');
+        
+        if (!isSuperAdmin) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('church_id')
+            .eq('id', session.user.id)
             .single();
           
-          if (churchData) {
-            setChurch(churchData);
+          if (profile?.church_id) {
+            setChurchIdState(profile.church_id);
+            
+            const { data: churchData } = await supabase
+              .from('churches')
+              .select('id, nome, slug, logo_url, cor_primaria, cor_secundaria')
+              .eq('id', profile.church_id)
+              .single();
+            
+            if (churchData) {
+              setChurch(churchData);
+            }
           }
         }
       } else {
@@ -89,27 +99,39 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
     loadUserChurch();
     loadChurches();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('church_id')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile?.church_id) {
-          setChurchIdState(profile.church_id);
+        // Use setTimeout to avoid deadlock
+        setTimeout(async () => {
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id);
           
-          const { data: churchData } = await supabase
-            .from('churches')
-            .select('id, nome, slug, logo_url, cor_primaria, cor_secundaria')
-            .eq('id', profile.church_id)
-            .single();
+          const isSuperAdmin = roles?.some(r => r.role === 'super_admin');
           
-          if (churchData) {
-            setChurch(churchData);
+          if (!isSuperAdmin) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('church_id')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile?.church_id) {
+              setChurchIdState(profile.church_id);
+              
+              const { data: churchData } = await supabase
+                .from('churches')
+                .select('id, nome, slug, logo_url, cor_primaria, cor_secundaria')
+                .eq('id', profile.church_id)
+                .single();
+              
+              if (churchData) {
+                setChurch(churchData);
+              }
+            }
           }
-        }
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         setChurch(null);
         setChurchIdState(null);
