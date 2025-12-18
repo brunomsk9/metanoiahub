@@ -33,10 +33,10 @@ export default function Auth() {
 
   // Auto-select first church if only one exists
   useEffect(() => {
-    if (!isLogin && churches.length === 1 && !selectedChurchId) {
+    if (churches.length === 1 && !selectedChurchId) {
       setSelectedChurchId(churches[0].id);
     }
-  }, [churches, isLogin, selectedChurchId]);
+  }, [churches, selectedChurchId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,19 +44,44 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        // Validate church selection for login
+        if (!selectedChurchId) {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Selecione uma igreja para continuar.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
         
-        // Check if user needs to change password
+        // Verify user belongs to selected church and check password change requirement
         if (data.user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('needs_password_change')
+            .select('needs_password_change, church_id')
             .eq('id', data.user.id)
             .single();
+          
+          if (profile?.church_id && profile.church_id !== selectedChurchId) {
+            await supabase.auth.signOut();
+            toast({
+              variant: "destructive",
+              title: "Erro",
+              description: "Você não pertence a esta igreja. Por favor, selecione a igreja correta.",
+            });
+            setIsLoading(false);
+            return;
+          }
+
+          // Set the church context
+          setChurchId(selectedChurchId);
           
           if (profile?.needs_password_change) {
             toast({ title: "Bem-vindo!", description: "Por favor, altere sua senha." });
@@ -131,26 +156,28 @@ export default function Auth() {
           {/* Form */}
           <div className="card-elevated p-5">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Church Selection - shown for both login and signup */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Igreja</label>
+                <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
+                  <SelectTrigger className="w-full h-10 bg-secondary border-border">
+                    <div className="flex items-center gap-2">
+                      <Church className="w-4 h-4 text-muted-foreground" />
+                      <SelectValue placeholder="Selecione sua igreja" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {churches.map((church) => (
+                      <SelectItem key={church.id} value={church.id}>
+                        {church.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {!isLogin && (
                 <>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">Igreja</label>
-                    <Select value={selectedChurchId} onValueChange={setSelectedChurchId}>
-                      <SelectTrigger className="w-full h-10 bg-secondary border-border">
-                        <div className="flex items-center gap-2">
-                          <Church className="w-4 h-4 text-muted-foreground" />
-                          <SelectValue placeholder="Selecione sua igreja" />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {churches.map((church) => (
-                          <SelectItem key={church.id} value={church.id}>
-                            {church.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground">Nome</label>
