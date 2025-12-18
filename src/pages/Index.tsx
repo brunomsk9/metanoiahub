@@ -73,8 +73,8 @@ export default function Index() {
   ];
 
   const journeySteps = [
-    { step: "1", title: "Alicerce", description: "Fundamentos da fé cristã" },
-    { step: "2", title: "Conexão Inicial", description: "Primeiros encontros" },
+    { step: "1", title: "Conexão Inicial", description: "Primeiros encontros" },
+    { step: "2", title: "Alicerce", description: "Fundamentos da fé cristã" },
     { step: "3", title: "Academia", description: "4 níveis de formação" },
     { step: "4", title: "Multiplicação", description: "Forme novos discipuladores" },
   ];
