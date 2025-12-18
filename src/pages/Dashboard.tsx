@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Leaderboard } from "@/components/Leaderboard";
-import { BookOpen, Flame, ChevronRight, BookMarked, Play, TrendingUp, Users, Trophy } from "lucide-react";
+import { BookOpen, Flame, ChevronRight, BookMarked, Play, Users, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Track {
@@ -260,62 +260,84 @@ export default function Dashboard() {
               <h1 className="text-xl font-semibold text-foreground">{userName}</h1>
             </header>
 
-            {/* Daily Verse */}
-            <DailyVerse />
+            {/* Versículo do Dia */}
+            <section className="space-y-2">
+              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Versículo do Dia</h2>
+              <DailyVerse />
+            </section>
 
-            {/* Seu Progresso */}
-            <CollapsibleSection 
-              title="Seu Progresso" 
-              icon={<TrendingUp className="w-4 h-4" />}
-              badge={`${completedHabits}/${totalHabits}`}
-            >
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                      <Flame className="w-4 h-4 text-orange-500" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold text-foreground">{streak}</p>
-                      <p className="text-[10px] text-muted-foreground">dias seguidos</p>
-                    </div>
+            {/* Seu Dia - Stats e Hábitos */}
+            <section className="space-y-4">
+              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Seu Dia</h2>
+              
+              {/* Stats Cards */}
+              <div className="flex gap-3">
+                <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                    <Flame className="w-4 h-4 text-orange-500" />
                   </div>
-                  <div className="flex-1 p-3 rounded-lg bg-muted/50">
-                    <p className="text-lg font-semibold text-foreground">{xpPoints}</p>
-                    <p className="text-[10px] text-muted-foreground">XP total</p>
+                  <div>
+                    <p className="text-lg font-semibold text-foreground">{streak}</p>
+                    <p className="text-[10px] text-muted-foreground">dias seguidos</p>
                   </div>
                 </div>
-
-                <div className="p-3 rounded-lg border border-border/50 bg-card">
-                  <div className="flex justify-between text-xs mb-2">
-                    <span className="text-muted-foreground">Hábitos de hoje</span>
-                    <span className="text-foreground">{completedHabits}/{totalHabits}</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-bar-fill"
-                      style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                {baseTrackProgress && !baseTrackProgress.isCompleted && (
-                  <AlicerceProgress
-                    trackId={baseTrackProgress.trackId}
-                    trackTitle={baseTrackProgress.trackTitle}
-                    completedLessons={baseTrackProgress.completedLessons}
-                    totalLessons={baseTrackProgress.totalLessons}
-                    isCompleted={baseTrackProgress.isCompleted}
-                    completedPresencial={baseTrackProgress.completedPresencial}
-                  />
-                )}
-
-                <div className="p-4 rounded-lg border border-border/50 bg-card">
-                  <h3 className="text-sm font-medium text-foreground mb-3">Seu dia</h3>
-                  <DailyHabits habits={habits} onToggle={handleHabitToggle} />
+                <div className="flex-1 p-3 rounded-lg bg-muted/50">
+                  <p className="text-lg font-semibold text-foreground">{xpPoints}</p>
+                  <p className="text-[10px] text-muted-foreground">XP total</p>
                 </div>
               </div>
-            </CollapsibleSection>
+
+              {/* Hábitos de Hoje */}
+              <div className="p-4 rounded-lg border border-border/50 bg-card">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-medium text-foreground">Hábitos de hoje</h3>
+                  <span className="text-xs text-muted-foreground">{completedHabits}/{totalHabits}</span>
+                </div>
+                <DailyHabits habits={habits} onToggle={handleHabitToggle} />
+                <div className="mt-3 progress-bar">
+                  <div 
+                    className="progress-bar-fill"
+                    style={{ width: `${(completedHabits / totalHabits) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Alicerce Progress */}
+              {baseTrackProgress && !baseTrackProgress.isCompleted && (
+                <AlicerceProgress
+                  trackId={baseTrackProgress.trackId}
+                  trackTitle={baseTrackProgress.trackTitle}
+                  completedLessons={baseTrackProgress.completedLessons}
+                  totalLessons={baseTrackProgress.totalLessons}
+                  isCompleted={baseTrackProgress.isCompleted}
+                  completedPresencial={baseTrackProgress.completedPresencial}
+                />
+              )}
+            </section>
+
+            {/* Meu Discipulado - apenas para discipuladores */}
+            {isDiscipulador && userId && (
+              <section className="space-y-4">
+                <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Meu Discipulado</h2>
+                
+                {/* Checklist Semanal */}
+                <div className="p-4 rounded-lg border border-border/50 bg-card">
+                  <WeeklyChecklist userId={userId} />
+                </div>
+
+                {/* Cards de Discípulos */}
+                <DiscipuladorDashboardCards />
+
+                {/* Gerenciador de Encontros */}
+                <CollapsibleSection 
+                  title="Encontros" 
+                  icon={<Users className="w-4 h-4" />}
+                  defaultOpen={false}
+                >
+                  <MeetingsManager />
+                </CollapsibleSection>
+              </section>
+            )}
 
             {/* Ranking de XP */}
             <CollapsibleSection 
@@ -325,20 +347,6 @@ export default function Dashboard() {
             >
               <Leaderboard />
             </CollapsibleSection>
-
-            {/* Discipulador Management Cards */}
-            {isDiscipulador && userId && (
-              <CollapsibleSection 
-                title="Meu Discipulado" 
-                icon={<Users className="w-4 h-4" />}
-              >
-                <div className="space-y-6">
-                  <WeeklyChecklist userId={userId} />
-                  <DiscipuladorDashboardCards />
-                  <MeetingsManager />
-                </div>
-              </CollapsibleSection>
-            )}
 
             {/* Leitura Bíblica */}
             <CollapsibleSection 
