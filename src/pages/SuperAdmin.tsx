@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -302,13 +303,13 @@ export default function SuperAdmin() {
     setIsUserDialogOpen(true);
   };
 
-  const toggleUserRole = (role: string) => {
-    setUserFormData(prev => ({
-      ...prev,
-      roles: prev.roles.includes(role)
-        ? prev.roles.filter(r => r !== role)
-        : [...prev.roles, role]
-    }));
+  const setUserRoleChecked = (role: string, checked: boolean) => {
+    setUserFormData((prev) => {
+      const hasRole = prev.roles.includes(role);
+      if (checked && !hasRole) return { ...prev, roles: [...prev.roles, role] };
+      if (!checked && hasRole) return { ...prev, roles: prev.roles.filter((r) => r !== role) };
+      return prev;
+    });
   };
 
   const handleSubmitChurch = async (e: React.FormEvent) => {
@@ -963,6 +964,9 @@ export default function SuperAdmin() {
                   <Users className="h-5 w-5 text-primary" />
                   Editar Usuário
                 </DialogTitle>
+                <DialogDescription>
+                  Atualize os dados do usuário, defina a igreja e marque um ou mais papéis de acesso.
+                </DialogDescription>
               </DialogHeader>
               {selectedUser && (
                 <form onSubmit={handleSubmitUser} className="space-y-6">
@@ -1049,9 +1053,8 @@ export default function SuperAdmin() {
                         return (
                           <div 
                             key={role.id} 
-                            onClick={() => toggleUserRole(role.id)}
                             className={cn(
-                              "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                              "flex items-center gap-3 p-3 rounded-lg border transition-all",
                               isChecked 
                                 ? "bg-primary/5 border-primary/30 shadow-sm" 
                                 : "bg-background border-border hover:bg-muted/50 hover:border-muted-foreground/20"
@@ -1061,8 +1064,7 @@ export default function SuperAdmin() {
                             <Checkbox
                               id={`role-${role.id}`}
                               checked={isChecked}
-                              onCheckedChange={() => toggleUserRole(role.id)}
-                              onClick={(e) => e.stopPropagation()}
+                              onCheckedChange={(checked) => setUserRoleChecked(role.id, checked === true)}
                             />
                             <div className="flex-1 min-w-0">
                               <label htmlFor={`role-${role.id}`} className="text-sm font-medium cursor-pointer block">
