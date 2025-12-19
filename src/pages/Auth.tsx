@@ -63,11 +63,6 @@ export default function Auth() {
           return;
         }
         
-        if (profile?.needs_password_change) {
-          toast({ title: "Bem-vindo!", description: "Por favor, altere sua senha." });
-          navigate("/alterar-senha");
-          return;
-        }
       }
       
       toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
