@@ -207,6 +207,50 @@ export default function Profile() {
   );
 }
 
+function getPasswordStrength(password: string): { score: number; label: string; color: string; feedback: string[] } {
+  const feedback: string[] = [];
+  let score = 0;
+
+  if (password.length >= 6) score += 1;
+  else feedback.push("Mínimo 6 caracteres");
+
+  if (password.length >= 8) score += 1;
+
+  if (/[a-z]/.test(password)) score += 1;
+  else feedback.push("Letra minúscula");
+
+  if (/[A-Z]/.test(password)) score += 1;
+  else feedback.push("Letra maiúscula");
+
+  if (/[0-9]/.test(password)) score += 1;
+  else feedback.push("Número");
+
+  if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+  else feedback.push("Caractere especial");
+
+  let label = "Muito fraca";
+  let color = "bg-destructive";
+
+  if (score >= 6) {
+    label = "Muito forte";
+    color = "bg-green-500";
+  } else if (score >= 5) {
+    label = "Forte";
+    color = "bg-green-400";
+  } else if (score >= 4) {
+    label = "Boa";
+    color = "bg-yellow-500";
+  } else if (score >= 3) {
+    label = "Razoável";
+    color = "bg-orange-500";
+  } else if (score >= 2) {
+    label = "Fraca";
+    color = "bg-orange-400";
+  }
+
+  return { score, label, color, feedback };
+}
+
 function ChangePasswordSection() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -216,6 +260,8 @@ function ChangePasswordSection() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const passwordStrength = getPasswordStrength(newPassword);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -313,6 +359,34 @@ function ChangePasswordSection() {
               {showNewPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </button>
           </div>
+          
+          {/* Password Strength Indicator */}
+          {newPassword && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Força da senha:</span>
+                <span className={cn(
+                  "text-xs font-medium",
+                  passwordStrength.score >= 5 ? "text-green-500" : 
+                  passwordStrength.score >= 4 ? "text-yellow-500" : 
+                  passwordStrength.score >= 3 ? "text-orange-500" : "text-destructive"
+                )}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className={cn("h-full transition-all duration-300", passwordStrength.color)}
+                  style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
+                />
+              </div>
+              {passwordStrength.feedback.length > 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  Adicione: {passwordStrength.feedback.slice(0, 3).join(", ")}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-1.5">
