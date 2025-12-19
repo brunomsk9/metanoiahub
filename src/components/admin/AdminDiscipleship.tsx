@@ -558,6 +558,15 @@ export function AdminDiscipleship() {
         </Card>
       )}
 
+      {/* Info banner for non-admins */}
+      {!isAdmin && (
+        <div className="flex items-center gap-3 p-4 rounded-lg border border-muted bg-muted/30">
+          <Users className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          <p className="text-sm text-muted-foreground">
+            Apenas administradores podem adicionar ou remover discípulos. Entre em contato com o admin da sua igreja para solicitar alterações.
+          </p>
+        </div>
+      )}
 
       {/* Relationships list */}
       <Card>
