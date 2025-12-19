@@ -558,41 +558,6 @@ export function AdminDiscipleship() {
         </Card>
       )}
 
-      {/* Add new disciple (for discipuladores) */}
-      {!isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              Adicionar Discípulo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
-              <Select value={selectedDisciple} onValueChange={setSelectedDisciple}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Selecione um discípulo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableDisciples.length === 0 ? (
-                    <SelectItem value="none" disabled>Nenhum discípulo disponível</SelectItem>
-                  ) : (
-                    availableDisciples.map(disciple => (
-                      <SelectItem key={disciple.id} value={disciple.id}>
-                        {disciple.nome || 'Sem nome'}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddDisciple} disabled={!selectedDisciple}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Relationships list */}
       <Card>
