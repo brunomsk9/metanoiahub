@@ -257,9 +257,18 @@ function ChangePasswordSection() {
       setConfirmPassword('');
       setIsOpen(false);
     } catch (error: any) {
+      let errorMessage = error.message;
+      
+      // Handle common Supabase auth errors
+      if (error.message?.includes('same_password') || error.status === 422) {
+        errorMessage = "A nova senha deve ser diferente da senha atual.";
+      } else if (error.message?.includes('weak_password')) {
+        errorMessage = "A senha é muito fraca. Use letras, números e caracteres especiais.";
+      }
+      
       toast({
         title: "Erro ao alterar senha",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
