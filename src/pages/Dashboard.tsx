@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useCallback, memo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { MentorChatButton } from "@/components/MentorChat";
 import { Sidebar } from "@/components/Sidebar";
@@ -7,25 +7,19 @@ import { ReadingPlanCard } from "@/components/ReadingPlanCard";
 import { AlicerceProgress } from "@/components/AlicerceProgress";
 import { DailyVerse } from "@/components/DailyVerse";
 import { StartPlanModal } from "@/components/StartPlanModal";
-import { DiscipuladorDashboardCards } from "@/components/DiscipuladorDashboardCards";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
-import { MeetingsManager } from "@/components/MeetingsManager";
-import { WeeklyChecklist } from "@/components/WeeklyChecklist";
 import { DailyHabitsCard } from "@/components/DailyHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Leaderboard } from "@/components/Leaderboard";
 import { BookOpen, Flame, ChevronRight, BookMarked, Play, Users, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
-interface Track {
-  id: string;
-  titulo: string;
-  descricao: string | null;
-  cover_image: string | null;
-  coursesCount: number;
-}
+// Lazy load heavy components
+const DiscipuladorDashboardCards = lazy(() => import("@/components/DiscipuladorDashboardCards").then(m => ({ default: m.DiscipuladorDashboardCards })));
+const MeetingsManager = lazy(() => import("@/components/MeetingsManager").then(m => ({ default: m.MeetingsManager })));
+const WeeklyChecklist = lazy(() => import("@/components/WeeklyChecklist").then(m => ({ default: m.WeeklyChecklist })));
 
 interface ReadingPlanWithProgress {
   id: string;
@@ -39,131 +33,35 @@ interface ReadingPlanWithProgress {
   hasProgress: boolean;
 }
 
-interface BaseTrackProgress {
-  trackId: string;
-  trackTitle: string;
-  completedLessons: number;
-  totalLessons: number;
-  isCompleted: boolean;
-  completedPresencial: boolean;
-}
+const SectionSkeleton = memo(() => (
+  <div className="space-y-2">
+    <Skeleton className="h-4 w-24" />
+    <Skeleton className="h-20 rounded-lg" />
+  </div>
+));
 
 export default function Dashboard() {
-  const [streak, setStreak] = useState(0);
-  const [userName, setUserName] = useState<string>('');
-  const [userId, setUserId] = useState<string>('');
-  const [xpPoints, setXpPoints] = useState(0);
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [readingPlans, setReadingPlans] = useState<ReadingPlanWithProgress[]>([]);
-  const [baseTrackProgress, setBaseTrackProgress] = useState<BaseTrackProgress | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    userId,
+    userName,
+    streak,
+    xpPoints,
+    tracks,
+    baseTrackProgress,
+    isDiscipulador,
+    loading,
+    annualPlans,
+    semesterPlans,
+    otherPlans,
+    plansInProgress,
+    getDurationLabel,
+  } = useDashboardData();
+
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<ReadingPlanWithProgress | null>(null);
   const [showStartModal, setShowStartModal] = useState(false);
-  const [isDiscipulador, setIsDiscipulador] = useState(false);
   const [completedHabits, setCompletedHabits] = useState(0);
   const [totalHabits, setTotalHabits] = useState(2);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const checkAuthAndFetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
-      
-      const [profileRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes, rolesRes] = await Promise.all([
-        supabase.from('profiles').select('nome, current_streak, xp_points, onboarding_completed').eq('id', session.user.id).maybeSingle(),
-        supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
-        supabase.from('reading_plans').select('*').order('duracao_dias', { ascending: false }),
-        supabase.from('user_reading_progress').select('*').eq('user_id', session.user.id),
-        supabase.from('tracks').select('id, titulo').eq('is_base', true).maybeSingle(),
-        supabase.rpc('user_completed_base_track', { _user_id: session.user.id }),
-        supabase.from('discipleship_relationships').select('alicerce_completed_presencial').eq('discipulo_id', session.user.id).eq('alicerce_completed_presencial', true).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', session.user.id)
-      ]);
-
-      // Redirect to onboarding if not completed
-      if (profileRes.data && !profileRes.data.onboarding_completed) {
-        navigate('/onboarding');
-        return;
-      }
-
-      const userRoles = rolesRes.data?.map(r => r.role) || [];
-      setIsDiscipulador(userRoles.includes('discipulador'));
-      setUserId(session.user.id);
-      
-      if (profileRes.data) {
-        setUserName(profileRes.data.nome || session.user.email?.split('@')[0] || 'Discípulo');
-        setStreak(profileRes.data.current_streak || 0);
-        setXpPoints(profileRes.data.xp_points || 0);
-      }
-
-
-      if (tracksRes.data) {
-        const formattedTracks = tracksRes.data.map(track => ({
-          id: track.id,
-          titulo: track.titulo,
-          descricao: track.descricao,
-          cover_image: track.cover_image,
-          coursesCount: track.courses?.[0]?.count || 0,
-        }));
-        setTracks(formattedTracks);
-      }
-
-      if (plansRes.data) {
-        const plansWithProgress = plansRes.data.map(plan => {
-          const userProgress = progressRes.data?.find(p => p.plan_id === plan.id);
-          return {
-            id: plan.id,
-            titulo: plan.titulo,
-            descricao: plan.descricao,
-            duracao_dias: plan.duracao_dias,
-            cover_image: plan.cover_image,
-            categoria: plan.categoria || 'leitura bíblica',
-            currentDay: userProgress?.current_day || 1,
-            completedDays: userProgress?.completed_days || [],
-            hasProgress: !!userProgress
-          };
-        });
-        setReadingPlans(plansWithProgress);
-      }
-
-      if (baseTrackRes.data) {
-        const baseTrack = baseTrackRes.data;
-        const isCompleted = baseCompletedRes.data === true || !!presencialRes.data;
-        
-        const { data: lessonsData } = await supabase
-          .from('courses')
-          .select('id')
-          .eq('track_id', baseTrack.id);
-        
-        if (lessonsData && lessonsData.length > 0) {
-          const courseIds = lessonsData.map(c => c.id);
-          const [totalLessonsRes, completedLessonsRes] = await Promise.all([
-            supabase.from('lessons').select('id', { count: 'exact' }).in('course_id', courseIds),
-            supabase.from('user_progress').select('id', { count: 'exact' }).eq('user_id', session.user.id).eq('completed', true).in('lesson_id', 
-              (await supabase.from('lessons').select('id').in('course_id', courseIds)).data?.map(l => l.id) || []
-            )
-          ]);
-          
-          setBaseTrackProgress({
-            trackId: baseTrack.id,
-            trackTitle: baseTrack.titulo,
-            completedLessons: completedLessonsRes.count || 0,
-            totalLessons: totalLessonsRes.count || 0,
-            isCompleted,
-            completedPresencial: !!presencialRes.data
-          });
-        }
-      }
-
-      setLoading(false);
-    };
-
-    checkAuthAndFetchData();
-  }, [navigate]);
 
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -175,11 +73,6 @@ export default function Dashboard() {
     setTotalHabits(total);
   }, []);
 
-  const annualPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias >= 365), [readingPlans]);
-  const semesterPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias >= 180 && p.duracao_dias < 365), [readingPlans]);
-  const otherPlans = useMemo(() => readingPlans.filter(p => p.duracao_dias < 180), [readingPlans]);
-  const plansInProgress = useMemo(() => readingPlans.filter(p => p.hasProgress && p.completedDays.length > 0 && p.completedDays.length < p.duracao_dias), [readingPlans]);
-
   const handleOpenStartModal = useCallback((plan: ReadingPlanWithProgress) => {
     setSelectedPlanForModal(plan);
     setShowStartModal(true);
@@ -189,12 +82,20 @@ export default function Dashboard() {
     window.location.reload();
   }, []);
 
-  const getDurationLabel = useCallback((days: number) => {
-    if (days >= 365) return `${Math.round(days / 365)} ano`;
-    if (days >= 180) return `${Math.round(days / 30)} meses`;
-    if (days >= 30) return `${Math.round(days / 7)} semanas`;
-    return `${days} dias`;
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Sidebar onLogout={handleLogout} userName="" />
+        <main className="pt-14 lg:pt-16 pb-24">
+          <div className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6">
+            <SectionSkeleton />
+            <SectionSkeleton />
+            <SectionSkeleton />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -276,11 +177,15 @@ export default function Dashboard() {
                 
                 {/* Checklist Semanal */}
                 <div className="p-4 rounded-lg border border-border/50 bg-card">
-                  <WeeklyChecklist userId={userId} />
+                  <Suspense fallback={<Skeleton className="h-20" />}>
+                    <WeeklyChecklist userId={userId} />
+                  </Suspense>
                 </div>
 
                 {/* Cards de Discípulos */}
-                <DiscipuladorDashboardCards />
+                <Suspense fallback={<Skeleton className="h-32" />}>
+                  <DiscipuladorDashboardCards />
+                </Suspense>
 
                 {/* Gerenciador de Encontros */}
                 <CollapsibleSection 
@@ -288,7 +193,9 @@ export default function Dashboard() {
                   icon={<Users className="w-4 h-4" />}
                   defaultOpen={false}
                 >
-                  <MeetingsManager />
+                  <Suspense fallback={<Skeleton className="h-20" />}>
+                    <MeetingsManager />
+                  </Suspense>
                 </CollapsibleSection>
               </section>
             )}
@@ -338,144 +245,131 @@ export default function Dashboard() {
                 )}
 
                 {/* Annual Plans */}
-                {(loading || annualPlans.length > 0) && (
+                {annualPlans.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Planos Anuais</h3>
-                    {loading ? (
-                      <Skeleton className="h-32 rounded-xl" />
-                    ) : (
-                      annualPlans.map((plan, index) => {
-                        const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
-                        const isStarted = plan.hasProgress;
-                        return (
-                          <div
-                            key={plan.id}
-                            className={cn(
-                              "relative overflow-hidden rounded-xl transition-all",
-                              index === 0 ? "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30" : "bg-card border border-border hover:border-primary/30"
-                            )}
-                          >
-                            <div className="flex items-start gap-4 p-4">
-                              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                                <img
-                                  src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
-                                  alt={plan.titulo}
-                                  className="w-full h-full object-cover"
-                                />
+                    {annualPlans.map((plan, index) => {
+                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                      const isStarted = plan.hasProgress;
+                      return (
+                        <div
+                          key={plan.id}
+                          className={cn(
+                            "relative overflow-hidden rounded-xl transition-all",
+                            index === 0 ? "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30" : "bg-card border border-border hover:border-primary/30"
+                          )}
+                        >
+                          <div className="flex items-start gap-4 p-4">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                              <img
+                                src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"}
+                                alt={plan.titulo}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h4 className="font-medium text-foreground mb-0.5">{plan.titulo}</h4>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">{plan.descricao}</p>
+                                </div>
+                                {isStarted && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/20 text-primary flex-shrink-0">
+                                    {progress}%
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div>
-                                    <h4 className="font-medium text-foreground mb-0.5">{plan.titulo}</h4>
-                                    <p className="text-xs text-muted-foreground line-clamp-2">{plan.descricao}</p>
-                                  </div>
-                                  {isStarted && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/20 text-primary flex-shrink-0">
-                                      {progress}%
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="mt-3 flex items-center gap-3">
-                                  {isStarted ? (
-                                    <>
-                                      <div className="flex-1">
-                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-                                        </div>
+                              <div className="mt-3 flex items-center gap-3">
+                                {isStarted ? (
+                                  <>
+                                    <div className="flex-1">
+                                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
                                       </div>
-                                      <button onClick={() => navigate(`/plano/${plan.id}`)} className="text-xs text-primary font-medium hover:underline">
-                                        Continuar
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span className="text-[10px] text-muted-foreground flex-shrink-0">{getDurationLabel(plan.duracao_dias)}</span>
-                                      <button onClick={() => handleOpenStartModal(plan)} className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
-                                        Iniciar
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
+                                    </div>
+                                    <button onClick={() => navigate(`/plano/${plan.id}`)} className="text-xs text-primary font-medium hover:underline">
+                                      Continuar
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[10px] text-muted-foreground flex-shrink-0">{getDurationLabel(plan.duracao_dias)}</span>
+                                    <button onClick={() => handleOpenStartModal(plan)} className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
+                                      Iniciar
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* Semester Plans */}
-                {(loading || semesterPlans.length > 0) && (
+                {semesterPlans.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Planos de 6 Meses</h3>
-                    {loading ? (
-                      <Skeleton className="h-28 rounded-xl" />
-                    ) : (
-                      semesterPlans.map((plan) => {
-                        const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
-                        const isStarted = plan.hasProgress;
-                        return (
-                          <div key={plan.id} className="relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/30 transition-all">
-                            <div className="flex items-start gap-4 p-4">
-                              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                                <img src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"} alt={plan.titulo} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-foreground text-sm mb-0.5">{plan.titulo}</h4>
-                                <div className="flex items-center gap-3">
-                                  {isStarted ? (
-                                    <>
-                                      <div className="flex-1">
-                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-                                        </div>
+                    {semesterPlans.map((plan) => {
+                      const progress = Math.round((plan.completedDays.length / plan.duracao_dias) * 100);
+                      const isStarted = plan.hasProgress;
+                      return (
+                        <div key={plan.id} className="relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/30 transition-all">
+                          <div className="flex items-start gap-4 p-4">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                              <img src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&auto=format&fit=crop"} alt={plan.titulo} className="w-full h-full object-cover" loading="lazy" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-foreground text-sm mb-0.5">{plan.titulo}</h4>
+                              <div className="flex items-center gap-3">
+                                {isStarted ? (
+                                  <>
+                                    <div className="flex-1">
+                                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
                                       </div>
-                                      <span className="text-xs text-primary font-medium">{progress}%</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span className="text-[10px] text-muted-foreground">{getDurationLabel(plan.duracao_dias)}</span>
-                                      <button onClick={() => handleOpenStartModal(plan)} className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
-                                        Iniciar
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
+                                    </div>
+                                    <span className="text-xs text-primary font-medium">{progress}%</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[10px] text-muted-foreground">{getDurationLabel(plan.duracao_dias)}</span>
+                                    <button onClick={() => handleOpenStartModal(plan)} className="ml-auto px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
+                                      Iniciar
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* Other Plans */}
-                {(loading || otherPlans.length > 0) && (
+                {otherPlans.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Planos Curtos</h3>
-                    {loading ? (
-                      <div className="grid grid-cols-2 gap-3">
-                        {[1, 2].map((i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        {otherPlans.map((plan) => (
-                          <ReadingPlanCard
-                            key={plan.id}
-                            id={plan.id}
-                            titulo={plan.titulo}
-                            descricao={plan.descricao}
-                            coverImage={plan.cover_image}
-                            duracaoDias={plan.duracao_dias}
-                            currentDay={plan.currentDay}
-                            completedDays={plan.completedDays}
-                            onClick={(id) => plan.hasProgress ? navigate(`/plano/${id}`) : handleOpenStartModal(plan)}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                      {otherPlans.map((plan) => (
+                        <ReadingPlanCard
+                          key={plan.id}
+                          id={plan.id}
+                          titulo={plan.titulo}
+                          descricao={plan.descricao}
+                          coverImage={plan.cover_image}
+                          duracaoDias={plan.duracao_dias}
+                          currentDay={plan.currentDay}
+                          completedDays={plan.completedDays}
+                          onClick={(id) => plan.hasProgress ? navigate(`/plano/${id}`) : handleOpenStartModal(plan)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -488,35 +382,29 @@ export default function Dashboard() {
               badge={tracks.length}
             >
               <div className="space-y-2">
-                {loading ? (
-                  [1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-lg" />)
-                ) : (
-                  <>
-                    {tracks.map((track) => (
-                      <div
-                        key={track.id}
-                        onClick={() => navigate(`/trilhas`)}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors cursor-pointer"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium text-foreground truncate">{track.titulo}</h3>
-                          <p className="text-xs text-muted-foreground">{track.coursesCount} cursos</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    ))}
-                    <button 
-                      onClick={() => navigate('/trilhas')}
-                      className="w-full text-xs text-primary font-medium flex items-center justify-center gap-1 py-2"
-                    >
-                      Ver todas
-                      <ChevronRight className="w-3 h-3" />
-                    </button>
-                  </>
-                )}
+                {tracks.map((track) => (
+                  <div
+                    key={track.id}
+                    onClick={() => navigate(`/trilhas`)}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-foreground truncate">{track.titulo}</h3>
+                      <p className="text-xs text-muted-foreground">{track.coursesCount} cursos</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </div>
+                ))}
+                <button 
+                  onClick={() => navigate('/trilhas')}
+                  className="w-full text-xs text-primary font-medium flex items-center justify-center gap-1 py-2"
+                >
+                  Ver todas
+                  <ChevronRight className="w-3 h-3" />
+                </button>
               </div>
             </CollapsibleSection>
 

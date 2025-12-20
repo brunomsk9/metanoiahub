@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen, Heart, Star, Sun, Moon, Zap, Target, 
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface HabitDefinition {
   id: string;
@@ -80,128 +81,195 @@ const getColorClass = (colorId: string) => {
   return colorMap[colorId] || colorMap.primary;
 };
 
-export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps) {
-  const [habits, setHabits] = useState<HabitDefinition[]>([]);
-  const [loading, setLoading] = useState(true);
+// Fetch functions
+async function fetchHabits(userId: string) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const [{ data: definitions }, { data: completions }] = await Promise.all([
+    supabase.from('habit_definitions').select('*').eq('is_active', true).order('ordem'),
+    supabase.from('daily_habits').select('habit_type').eq('user_id', userId).eq('completed_date', today)
+  ]);
+
+  if (!definitions) return [];
+
+  const completedIds = new Set(completions?.map(c => c.habit_type) || []);
+  return definitions.map(h => ({ ...h, completed: completedIds.has(h.id) }));
+}
+
+async function fetchStreak(userId: string): Promise<HabitStreak> {
+  const { data } = await supabase.from('habit_streaks').select('*').eq('user_id', userId).maybeSingle();
+  return data || { current_streak: 0, best_streak: 0, last_completed_date: null };
+}
+
+async function fetchAchievements(userId: string): Promise<string[]> {
+  const { data } = await supabase.from('habit_achievements').select('achievement_type').eq('user_id', userId);
+  return data?.map(a => a.achievement_type) || [];
+}
+
+// Memoized Habit Item
+const HabitItem = memo(function HabitItem({
+  habit,
+  isCelebrating,
+  onToggle
+}: {
+  habit: HabitDefinition;
+  isCelebrating: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = getIconComponent(habit.icon);
+  const colors = getColorClass(habit.color);
+
+  return (
+    <motion.button
+      layout
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onToggle}
+      className={cn(
+        "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 min-h-[100px]",
+        habit.completed
+          ? `${colors.bgLight} ${colors.border} ${colors.text}`
+          : "bg-card border-border hover:border-primary/30"
+      )}
+    >
+      <AnimatePresence>
+        {isCelebrating && (
+          <>
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 2, opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className={cn("absolute inset-0 rounded-xl", colors.bg)}
+            />
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+                animate={{ 
+                  scale: 1,
+                  x: (i % 2 === 0 ? 1 : -1) * (20 + Math.random() * 20),
+                  y: -30 - Math.random() * 20,
+                  opacity: 0
+                }}
+                transition={{ duration: 0.6, delay: i * 0.05 }}
+                className="absolute"
+              >
+                <Sparkles className={cn("w-4 h-4", colors.text)} />
+              </motion.div>
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        animate={isCelebrating ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] } : {}}
+        transition={{ duration: 0.5 }}
+        className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-all",
+          habit.completed ? colors.bg : "bg-muted"
+        )}
+      >
+        {habit.completed ? (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 500 }}
+          >
+            <Check className="w-5 h-5 text-white" />
+          </motion.div>
+        ) : (
+          <Icon className={cn("w-5 h-5", colors.text)} />
+        )}
+      </motion.div>
+
+      <span className={cn(
+        "text-xs font-medium text-center line-clamp-2",
+        habit.completed ? colors.text : "text-muted-foreground"
+      )}>
+        {habit.name}
+      </span>
+
+      {habit.completed && (
+        <motion.span
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={cn("text-[10px] mt-1", colors.text)}
+        >
+          Concluído ✓
+        </motion.span>
+      )}
+    </motion.button>
+  );
+});
+
+export const DailyHabitsCard = memo(function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps) {
   const [celebratingHabit, setCelebratingHabit] = useState<string | null>(null);
-  const [streak, setStreak] = useState<HabitStreak>({ current_streak: 0, best_streak: 0, last_completed_date: null });
-  const [earnedAchievements, setEarnedAchievements] = useState<string[]>([]);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchHabits();
-    fetchStreak();
-    fetchAchievements();
-  }, [userId]);
+  // Queries with caching
+  const { data: habits = [], isLoading: loadingHabits } = useQuery({
+    queryKey: ['habits', userId],
+    queryFn: () => fetchHabits(userId),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
 
+  const { data: streak = { current_streak: 0, best_streak: 0, last_completed_date: null } } = useQuery({
+    queryKey: ['habitStreak', userId],
+    queryFn: () => fetchStreak(userId),
+    staleTime: 1000 * 60 * 2,
+  });
+
+  const { data: earnedAchievements = [] } = useQuery({
+    queryKey: ['habitAchievements', userId],
+    queryFn: () => fetchAchievements(userId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Notify parent of habit changes
   useEffect(() => {
     const completed = habits.filter(h => h.completed).length;
     onHabitsChange?.(completed, habits.length);
   }, [habits, onHabitsChange]);
 
-  const fetchHabits = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Fetch global habit definitions
-    const { data: definitions } = await supabase
-      .from('habit_definitions')
-      .select('*')
-      .eq('is_active', true)
-      .order('ordem');
-
-    if (!definitions || definitions.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    // Fetch today's completions
-    const { data: completions } = await supabase
-      .from('daily_habits')
-      .select('habit_type')
-      .eq('user_id', userId)
-      .eq('completed_date', today);
-
-    const completedIds = new Set(completions?.map(c => c.habit_type) || []);
-    
-    setHabits(definitions.map(h => ({
-      ...h,
-      completed: completedIds.has(h.id)
-    })));
-    setLoading(false);
-  };
-
-  const fetchStreak = async () => {
-    const { data } = await supabase
-      .from('habit_streaks')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (data) {
-      setStreak(data);
-    }
-  };
-
-  const fetchAchievements = async () => {
-    const { data } = await supabase
-      .from('habit_achievements')
-      .select('achievement_type')
-      .eq('user_id', userId);
-
-    if (data) {
-      setEarnedAchievements(data.map(a => a.achievement_type));
-    }
-  };
-
   const checkAndAwardAchievements = useCallback(async (currentStreak: number) => {
     for (const achievement of ACHIEVEMENTS) {
       if (currentStreak >= achievement.days && !earnedAchievements.includes(achievement.type)) {
-        // Award achievement
-        const { error } = await supabase
-          .from('habit_achievements')
-          .insert({
-            user_id: userId,
-            achievement_type: achievement.type,
-            streak_days: achievement.days
-          });
+        const { error } = await supabase.from('habit_achievements').insert({
+          user_id: userId,
+          achievement_type: achievement.type,
+          streak_days: achievement.days
+        });
 
         if (!error) {
-          setEarnedAchievements(prev => [...prev, achievement.type]);
+          queryClient.invalidateQueries({ queryKey: ['habitAchievements', userId] });
           setNewAchievement(achievement);
           
-          // Celebration confetti
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
-
-          toast({
-            title: "🏆 Nova Conquista!",
-            description: `Você desbloqueou: ${achievement.title}`,
-          });
-
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          toast({ title: "🏆 Nova Conquista!", description: `Você desbloqueou: ${achievement.title}` });
           setTimeout(() => setNewAchievement(null), 3000);
         }
+        break;
       }
     }
-  }, [earnedAchievements, userId, toast]);
+  }, [earnedAchievements, userId, toast, queryClient]);
 
   const updateStreak = useCallback(async (allCompleted: boolean) => {
+    if (!allCompleted) return;
+
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-
-    if (!allCompleted) return;
 
     let newCurrentStreak = streak.current_streak;
     let newBestStreak = streak.best_streak;
 
-    // Check if this is a continuation of the streak
     if (streak.last_completed_date === yesterday) {
       newCurrentStreak += 1;
     } else if (streak.last_completed_date !== today) {
-      // Reset streak if we missed a day (and it wasn't already completed today)
       newCurrentStreak = 1;
     }
 
@@ -209,99 +277,69 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
       newBestStreak = newCurrentStreak;
     }
 
-    // Update or insert streak record
-    const { data: existingStreak } = await supabase
-      .from('habit_streaks')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
+    const { data: existingStreak } = await supabase.from('habit_streaks').select('id').eq('user_id', userId).maybeSingle();
 
     if (existingStreak) {
-      await supabase
-        .from('habit_streaks')
-        .update({
-          current_streak: newCurrentStreak,
-          best_streak: newBestStreak,
-          last_completed_date: today,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+      await supabase.from('habit_streaks').update({
+        current_streak: newCurrentStreak,
+        best_streak: newBestStreak,
+        last_completed_date: today,
+        updated_at: new Date().toISOString()
+      }).eq('user_id', userId);
     } else {
-      await supabase
-        .from('habit_streaks')
-        .insert({
-          user_id: userId,
-          current_streak: newCurrentStreak,
-          best_streak: newBestStreak,
-          last_completed_date: today
-        });
+      await supabase.from('habit_streaks').insert({
+        user_id: userId,
+        current_streak: newCurrentStreak,
+        best_streak: newBestStreak,
+        last_completed_date: today
+      });
     }
 
-    setStreak({
-      current_streak: newCurrentStreak,
-      best_streak: newBestStreak,
-      last_completed_date: today
-    });
-
-    // Check for achievements
+    queryClient.invalidateQueries({ queryKey: ['habitStreak', userId] });
     checkAndAwardAchievements(newCurrentStreak);
-  }, [streak, userId, checkAndAwardAchievements]);
+  }, [streak, userId, checkAndAwardAchievements, queryClient]);
 
-  const toggleHabit = async (habit: HabitDefinition) => {
+  const toggleHabit = useCallback(async (habit: HabitDefinition) => {
     const today = new Date().toISOString().split('T')[0];
     
     if (!habit.completed) {
-      // Mark as completed
-      const { error } = await supabase
-        .from('daily_habits')
-        .insert({
-          user_id: userId,
-          habit_type: habit.id,
-          completed_date: today,
-        });
+      const { error } = await supabase.from('daily_habits').insert({
+        user_id: userId,
+        habit_type: habit.id,
+        completed_date: today,
+      });
 
       if (!error) {
         setCelebratingHabit(habit.id);
         setTimeout(() => setCelebratingHabit(null), 1500);
         
-        const updatedHabits = habits.map(h => 
-          h.id === habit.id ? { ...h, completed: true } : h
+        queryClient.setQueryData(['habits', userId], (old: HabitDefinition[] | undefined) => 
+          old?.map(h => h.id === habit.id ? { ...h, completed: true } : h) || []
         );
-        setHabits(updatedHabits);
         
-        // Check if all habits completed
+        const updatedHabits = habits.map(h => h.id === habit.id ? { ...h, completed: true } : h);
         const allCompleted = updatedHabits.every(h => h.completed);
+        
         if (allCompleted) {
           updateStreak(true);
-          toast({
-            title: "Parabéns! 🔥",
-            description: "Todos os hábitos do dia concluídos!",
-          });
+          toast({ title: "Parabéns! 🔥", description: "Todos os hábitos do dia concluídos!" });
         } else {
-          toast({
-            title: "Hábito registrado!",
-            description: `${habit.name} concluído.`,
-          });
+          toast({ title: "Hábito registrado!", description: `${habit.name} concluído.` });
         }
       }
     } else {
-      // Remove completion
-      const { error } = await supabase
-        .from('daily_habits')
-        .delete()
-        .eq('user_id', userId)
-        .eq('habit_type', habit.id)
-        .eq('completed_date', today);
+      const { error } = await supabase.from('daily_habits').delete()
+        .eq('user_id', userId).eq('habit_type', habit.id).eq('completed_date', today);
 
       if (!error) {
-        setHabits(prev => prev.map(h => 
-          h.id === habit.id ? { ...h, completed: false } : h
-        ));
+        queryClient.setQueryData(['habits', userId], (old: HabitDefinition[] | undefined) => 
+          old?.map(h => h.id === habit.id ? { ...h, completed: false } : h) || []
+        );
       }
     }
-  };
+  }, [userId, habits, updateStreak, toast, queryClient]);
 
-  if (loading) {
+  if (loadingHabits) {
     return (
       <div className="grid grid-cols-2 gap-3">
         {[1, 2].map(i => (
@@ -363,101 +401,14 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
       {/* Habits grid */}
       <div className="grid grid-cols-2 gap-3">
         <AnimatePresence mode="popLayout">
-          {habits.map((habit) => {
-            const Icon = getIconComponent(habit.icon);
-            const colors = getColorClass(habit.color);
-            const isCelebrating = celebratingHabit === habit.id;
-
-            return (
-              <motion.button
-                key={habit.id}
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => toggleHabit(habit)}
-                className={cn(
-                  "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 min-h-[100px]",
-                  habit.completed
-                    ? `${colors.bgLight} ${colors.border} ${colors.text}`
-                    : "bg-card border-border hover:border-primary/30"
-                )}
-              >
-                {/* Celebration effect */}
-                <AnimatePresence>
-                  {isCelebrating && (
-                    <>
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 2, opacity: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className={cn("absolute inset-0 rounded-xl", colors.bg)}
-                      />
-                      {[...Array(6)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
-                          animate={{ 
-                            scale: 1,
-                            x: (i % 2 === 0 ? 1 : -1) * (20 + Math.random() * 20),
-                            y: -30 - Math.random() * 20,
-                            opacity: 0
-                          }}
-                          transition={{ duration: 0.6, delay: i * 0.05 }}
-                          className="absolute"
-                        >
-                          <Sparkles className={cn("w-4 h-4", colors.text)} />
-                        </motion.div>
-                      ))}
-                    </>
-                  )}
-                </AnimatePresence>
-
-                {/* Icon */}
-                <motion.div
-                  animate={isCelebrating ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] } : {}}
-                  transition={{ duration: 0.5 }}
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-all",
-                    habit.completed ? colors.bg : "bg-muted"
-                  )}
-                >
-                  {habit.completed ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500 }}
-                    >
-                      <Check className="w-5 h-5 text-white" />
-                    </motion.div>
-                  ) : (
-                    <Icon className={cn("w-5 h-5", colors.text)} />
-                  )}
-                </motion.div>
-
-                {/* Name */}
-                <span className={cn(
-                  "text-xs font-medium text-center line-clamp-2",
-                  habit.completed ? colors.text : "text-muted-foreground"
-                )}>
-                  {habit.name}
-                </span>
-
-                {/* Completed indicator */}
-                {habit.completed && (
-                  <motion.span
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={cn("text-[10px] mt-1", colors.text)}
-                  >
-                    Concluído ✓
-                  </motion.span>
-                )}
-              </motion.button>
-            );
-          })}
+          {habits.map((habit) => (
+            <HabitItem
+              key={habit.id}
+              habit={habit}
+              isCelebrating={celebratingHabit === habit.id}
+              onToggle={() => toggleHabit(habit)}
+            />
+          ))}
         </AnimatePresence>
       </div>
 
@@ -491,14 +442,14 @@ export function DailyHabitsCard({ userId, onHabitsChange }: DailyHabitsCardProps
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 text-center"
+            className="p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 text-center"
           >
-            <p className="text-sm font-medium text-green-500">
-              🎉 Todos os hábitos do dia concluídos!
-            </p>
+            <Sparkles className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <p className="font-semibold text-foreground">Dia completo!</p>
+            <p className="text-xs text-muted-foreground">Todos os hábitos concluídos</p>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-}
+});
