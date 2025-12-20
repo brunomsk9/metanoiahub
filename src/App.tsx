@@ -25,6 +25,7 @@ const ReadingPlan = lazy(() => import("./pages/ReadingPlan"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Library = lazy(() => import("./pages/Library"));
+const Achievements = lazy(() => import("./pages/Achievements"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
@@ -69,6 +70,7 @@ function AnimatedRoutes() {
           <Route path="/plano/:id" element={<ReadingPlan />} />
           <Route path="/alterar-senha" element={<ChangePassword />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/conquistas" element={<Achievements />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
