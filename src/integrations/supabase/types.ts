@@ -196,6 +196,50 @@ export type Database = {
         }
         Relationships: []
       }
+      discipleship_history: {
+        Row: {
+          change_type: string
+          changed_by: string
+          church_id: string | null
+          created_at: string
+          discipulo_id: string
+          id: string
+          new_discipulador_id: string | null
+          notes: string | null
+          old_discipulador_id: string | null
+        }
+        Insert: {
+          change_type: string
+          changed_by: string
+          church_id?: string | null
+          created_at?: string
+          discipulo_id: string
+          id?: string
+          new_discipulador_id?: string | null
+          notes?: string | null
+          old_discipulador_id?: string | null
+        }
+        Update: {
+          change_type?: string
+          changed_by?: string
+          church_id?: string | null
+          created_at?: string
+          discipulo_id?: string
+          id?: string
+          new_discipulador_id?: string | null
+          notes?: string | null
+          old_discipulador_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discipleship_history_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discipleship_notes: {
         Row: {
           created_at: string
