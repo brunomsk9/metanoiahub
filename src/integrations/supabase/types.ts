@@ -1035,6 +1035,7 @@ export type Database = {
         Args: { _discipulador_id: string }
         Returns: number
       }
+      get_max_disciples_limit: { Args: { _church_id: string }; Returns: number }
       get_user_church_id: { Args: { _user_id: string }; Returns: string }
       get_user_emails: {
         Args: never
