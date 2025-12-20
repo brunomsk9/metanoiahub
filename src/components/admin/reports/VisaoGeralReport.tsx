@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, BookOpen, Heart, Flame, TrendingUp, GraduationCap } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis } from "recharts";
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 
 interface Stats {
   totalUsers: number;
@@ -25,17 +26,20 @@ interface MonthlyData {
 
 export function VisaoGeralReport() {
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<PeriodOption>("6m");
   const [stats, setStats] = useState<Stats | null>(null);
   const [roleDistribution, setRoleDistribution] = useState<{ name: string; value: number; fill: string }[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [period]);
 
   const fetchData = async () => {
     try {
-      // Get user's church_id
+      setLoading(true);
+      const periodStart = getDateFromPeriod(period);
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -64,12 +68,18 @@ export function VisaoGeralReport() {
         supabase.from('user_roles').select('role, user_id')
       ]);
 
-      const profiles = profilesResult.data || [];
-      const relationships = relationshipsResult.data || [];
+      let profiles = profilesResult.data || [];
+      let relationships = relationshipsResult.data || [];
       const tracks = tracksResult.data || [];
       const courses = coursesResult.data || [];
       const lessons = lessonsResult.data || [];
       const roles = rolesResult.data || [];
+
+      // Filter by period
+      if (periodStart) {
+        profiles = profiles.filter(p => new Date(p.created_at) >= periodStart);
+        relationships = relationships.filter(r => new Date(r.created_at) >= periodStart);
+      }
 
       // Calculate stats
       const usersWithStreak = profiles.filter(p => p.current_streak > 0).length;
@@ -119,21 +129,25 @@ export function VisaoGeralReport() {
         }))
       );
 
-      // Monthly data (last 6 months)
+      // Monthly data based on period
+      const monthsToShow = period === "30d" ? 1 : period === "3m" ? 3 : period === "6m" ? 6 : period === "1y" ? 12 : 6;
       const now = new Date();
       const monthlyStats: MonthlyData[] = [];
       
-      for (let i = 5; i >= 0; i--) {
+      for (let i = monthsToShow - 1; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
         const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
 
-        const usersInMonth = profiles.filter(p => {
+        const allProfiles = profilesResult.data || [];
+        const allRelationships = relationshipsResult.data || [];
+
+        const usersInMonth = allProfiles.filter(p => {
           const created = new Date(p.created_at);
           return created <= monthEnd;
         }).length;
 
-        const discipuladosInMonth = relationships.filter(r => {
+        const discipuladosInMonth = allRelationships.filter(r => {
           const created = new Date(r.created_at);
           return created <= monthEnd;
         }).length;
@@ -155,10 +169,13 @@ export function VisaoGeralReport() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(8)].map((_, i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -170,6 +187,11 @@ export function VisaoGeralReport() {
 
   return (
     <div className="space-y-6">
+      {/* Period Filter */}
+      <div className="flex justify-end">
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

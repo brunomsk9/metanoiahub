@@ -5,8 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { BookOpen, GraduationCap, CheckCircle } from "lucide-react";
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 
 interface TrackStats {
   id: string;
@@ -28,16 +29,20 @@ interface CourseStats {
 
 export function CursosTrillhasReport() {
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<PeriodOption>("6m");
   const [trackStats, setTrackStats] = useState<TrackStats[]>([]);
   const [courseStats, setCourseStats] = useState<CourseStats[]>([]);
   const [topLessons, setTopLessons] = useState<{ titulo: string; completions: number }[]>([]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [period]);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
+      const periodStart = getDateFromPeriod(period);
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -54,13 +59,18 @@ export function CursosTrillhasReport() {
         supabase.from('tracks').select('id, titulo').eq('church_id', churchId),
         supabase.from('courses').select('id, titulo, track_id').eq('church_id', churchId),
         supabase.from('lessons').select('id, titulo, course_id').eq('church_id', churchId),
-        supabase.from('user_progress').select('lesson_id, user_id, completed').eq('completed', true)
+        supabase.from('user_progress').select('lesson_id, user_id, completed, completed_at').eq('completed', true)
       ]);
 
       const tracks = tracksResult.data || [];
       const courses = coursesResult.data || [];
       const lessons = lessonsResult.data || [];
-      const progress = progressResult.data || [];
+      let progress = progressResult.data || [];
+
+      // Filter progress by period
+      if (periodStart) {
+        progress = progress.filter(p => p.completed_at && new Date(p.completed_at) >= periodStart);
+      }
 
       // Build track stats
       const trackStatsMap: TrackStats[] = tracks.map(track => {
@@ -129,6 +139,7 @@ export function CursosTrillhasReport() {
   if (loading) {
     return (
       <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
         <Skeleton className="h-32" />
         <Skeleton className="h-64" />
       </div>
@@ -141,6 +152,11 @@ export function CursosTrillhasReport() {
 
   return (
     <div className="space-y-6">
+      {/* Period Filter */}
+      <div className="flex justify-end">
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+
       {/* Track Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {trackStats.map(track => (

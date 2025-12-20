@@ -5,8 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
 import { Heart, CheckCircle2, Users, TrendingUp } from "lucide-react";
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 
 interface StageStats {
   name: string;
@@ -25,15 +26,19 @@ interface DiscipuladoStats {
 
 export function DiscipuladoReport() {
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<PeriodOption>("6m");
   const [stats, setStats] = useState<DiscipuladoStats | null>(null);
   const [monthlyProgress, setMonthlyProgress] = useState<{ month: string; novos: number; concluidos: number }[]>([]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [period]);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
+      const periodStart = getDateFromPeriod(period);
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -51,7 +56,13 @@ export function DiscipuladoReport() {
         .select('*')
         .eq('church_id', churchId);
 
-      const rels = relationships || [];
+      let rels = relationships || [];
+      
+      // Filter by period
+      if (periodStart) {
+        rels = rels.filter(r => new Date(r.created_at) >= periodStart);
+      }
+
       const activeRels = rels.filter(r => r.status === 'active');
       const completedRels = rels.filter(r => r.status === 'completed');
 
@@ -131,21 +142,24 @@ export function DiscipuladoReport() {
         stages
       });
 
-      // Monthly progress (last 6 months)
+      // Monthly progress based on period
+      const monthsToShow = period === "30d" ? 1 : period === "3m" ? 3 : period === "6m" ? 6 : period === "1y" ? 12 : 6;
       const now = new Date();
       const monthly: { month: string; novos: number; concluidos: number }[] = [];
       
-      for (let i = 5; i >= 0; i--) {
+      for (let i = monthsToShow - 1; i >= 0; i--) {
         const startDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
         const monthName = startDate.toLocaleDateString('pt-BR', { month: 'short' });
 
-        const novos = rels.filter(r => {
+        const allRels = relationships || [];
+        const novos = allRels.filter(r => {
           const created = new Date(r.created_at);
           return created >= startDate && created <= endDate;
         }).length;
 
-        const concluidos = completedRels.filter(r => {
+        const allCompleted = allRels.filter(r => r.status === 'completed');
+        const concluidos = allCompleted.filter(r => {
           if (!r.completed_at) return false;
           const completed = new Date(r.completed_at);
           return completed >= startDate && completed <= endDate;
@@ -165,6 +179,7 @@ export function DiscipuladoReport() {
   if (loading) {
     return (
       <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
         <Skeleton className="h-32" />
         <Skeleton className="h-64" />
       </div>
@@ -178,6 +193,11 @@ export function DiscipuladoReport() {
 
   return (
     <div className="space-y-6">
+      {/* Period Filter */}
+      <div className="flex justify-end">
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

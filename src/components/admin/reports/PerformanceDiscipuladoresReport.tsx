@@ -8,6 +8,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users, Flame, Calendar, CheckCircle2, TrendingUp } from "lucide-react";
+import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 
 interface DiscipuladorStats {
   id: string;
@@ -21,6 +22,7 @@ interface DiscipuladorStats {
 
 export function PerformanceDiscipuladoresReport() {
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<PeriodOption>("6m");
   const [discipuladores, setDiscipuladores] = useState<DiscipuladorStats[]>([]);
   const [summary, setSummary] = useState({
     totalDiscipuladores: 0,
@@ -31,10 +33,13 @@ export function PerformanceDiscipuladoresReport() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [period]);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
+      const periodStart = getDateFromPeriod(period);
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -71,19 +76,26 @@ export function PerformanceDiscipuladoresReport() {
       // Fetch relationships, meetings, and checklist responses
       const [relationshipsResult, meetingsResult, checklistResult] = await Promise.all([
         supabase.from('discipleship_relationships')
-          .select('discipulador_id, discipulo_id, alicerce_completed_presencial, status')
+          .select('discipulador_id, discipulo_id, alicerce_completed_presencial, status, created_at')
           .eq('church_id', churchId)
           .eq('status', 'active'),
         supabase.from('meetings')
-          .select('discipulador_id, id')
+          .select('discipulador_id, id, created_at')
           .eq('church_id', churchId),
         supabase.from('weekly_checklist_responses')
-          .select('discipulador_id, responses')
+          .select('discipulador_id, responses, created_at')
       ]);
 
-      const relationships = relationshipsResult.data || [];
-      const meetings = meetingsResult.data || [];
-      const checklistResponses = checklistResult.data || [];
+      let relationships = relationshipsResult.data || [];
+      let meetings = meetingsResult.data || [];
+      let checklistResponses = checklistResult.data || [];
+
+      // Filter by period
+      if (periodStart) {
+        relationships = relationships.filter(r => new Date(r.created_at) >= periodStart);
+        meetings = meetings.filter(m => new Date(m.created_at) >= periodStart);
+        checklistResponses = checklistResponses.filter(c => new Date(c.created_at) >= periodStart);
+      }
 
       // Get discipulo profiles for streak data
       const discipuloIds = [...new Set(relationships.map(r => r.discipulo_id))];
@@ -167,6 +179,7 @@ export function PerformanceDiscipuladoresReport() {
   if (loading) {
     return (
       <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
         <Skeleton className="h-32" />
         <Skeleton className="h-64" />
       </div>
@@ -181,6 +194,11 @@ export function PerformanceDiscipuladoresReport() {
 
   return (
     <div className="space-y-6">
+      {/* Period Filter */}
+      <div className="flex justify-end">
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
