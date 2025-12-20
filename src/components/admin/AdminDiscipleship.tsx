@@ -206,6 +206,12 @@ export function AdminDiscipleship() {
       return;
     }
 
+    // Prevent self-discipleship
+    if (selectedDisciple === currentUserId) {
+      toast.error('Você não pode se auto-discipular');
+      return;
+    }
+
     // Fetch the current user's church_id to ensure proper association
     const { data: currentProfile } = await supabase
       .from('profiles')
@@ -241,6 +247,12 @@ export function AdminDiscipleship() {
   const handleAdminAssociate = async () => {
     if (!selectedDiscipulador || !selectedAdminDisciple) {
       toast.error('Selecione o discipulador e o discípulo');
+      return;
+    }
+
+    // Prevent self-discipleship
+    if (selectedDiscipulador === selectedAdminDisciple) {
+      toast.error('Uma pessoa não pode se auto-discipular');
       return;
     }
 
@@ -320,6 +332,12 @@ export function AdminDiscipleship() {
 
     if (newDiscipuladorId === transferringRelationship.discipulador_id) {
       toast.error('Selecione um discipulador diferente do atual');
+      return;
+    }
+
+    // Prevent self-discipleship on transfer
+    if (newDiscipuladorId === transferringRelationship.discipulo_id) {
+      toast.error('Uma pessoa não pode se auto-discipular');
       return;
     }
 
