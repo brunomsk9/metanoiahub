@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -67,6 +69,14 @@ export function AdminDiscipleship() {
   const [searchTerm, setSearchTerm] = useState("");
   const [openDiscipulador, setOpenDiscipulador] = useState(false);
   const [openAdminDisciple, setOpenAdminDisciple] = useState(false);
+  
+  // Transfer state
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferringRelationship, setTransferringRelationship] = useState<Relationship | null>(null);
+  const [newDiscipuladorId, setNewDiscipuladorId] = useState<string>("");
+  const [transferNotes, setTransferNotes] = useState<string>("");
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [openTransferDiscipulador, setOpenTransferDiscipulador] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -293,6 +303,56 @@ export function AdminDiscipleship() {
 
     toast.success('Relacionamento removido');
     fetchData();
+  };
+
+  const handleOpenTransferDialog = (relationship: Relationship) => {
+    setTransferringRelationship(relationship);
+    setNewDiscipuladorId("");
+    setTransferNotes("");
+    setTransferDialogOpen(true);
+  };
+
+  const handleTransfer = async () => {
+    if (!transferringRelationship || !newDiscipuladorId) {
+      toast.error('Selecione o novo discipulador');
+      return;
+    }
+
+    if (newDiscipuladorId === transferringRelationship.discipulador_id) {
+      toast.error('Selecione um discipulador diferente do atual');
+      return;
+    }
+
+    setIsTransferring(true);
+
+    try {
+      const { error } = await supabase
+        .from('discipleship_relationships')
+        .update({ 
+          discipulador_id: newDiscipuladorId 
+        })
+        .eq('id', transferringRelationship.id);
+
+      if (error) {
+        console.error('Error transferring disciple:', error);
+        toast.error('Erro ao transferir discípulo');
+        return;
+      }
+
+      const newDiscipuladorNome = availableDiscipuladores.find(d => d.id === newDiscipuladorId)?.nome;
+      toast.success(`${transferringRelationship.discipulo?.nome} transferido para ${newDiscipuladorNome}`);
+      
+      setTransferDialogOpen(false);
+      setTransferringRelationship(null);
+      setNewDiscipuladorId("");
+      setTransferNotes("");
+      fetchData();
+    } catch (error) {
+      console.error('Error transferring:', error);
+      toast.error('Erro ao transferir discípulo');
+    } finally {
+      setIsTransferring(false);
+    }
   };
 
   const handleViewProgress = async (discipleId: string) => {
@@ -878,6 +938,19 @@ export function AdminDiscipleship() {
                       </DialogContent>
                     </Dialog>
 
+                    {/* Transfer Button - only for admins */}
+                    {isAdmin && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => handleOpenTransferDialog(rel)}
+                        title="Transferir para outro discipulador"
+                      >
+                        <ArrowRightLeft className="w-4 h-4" />
+                      </Button>
+                    )}
+
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -900,6 +973,117 @@ export function AdminDiscipleship() {
           <DiscipleshipHistory />
         </TabsContent>
       )}
+
+      {/* Transfer Dialog */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-blue-600" />
+              Transferir Discípulo
+            </DialogTitle>
+          </DialogHeader>
+
+          {transferringRelationship && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Discípulo</p>
+                <p className="font-semibold">{transferringRelationship.discipulo?.nome}</p>
+                <p className="text-sm text-muted-foreground mt-2 mb-1">Discipulador atual</p>
+                <p className="font-medium">{transferringRelationship.discipulador?.nome}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Novo Discipulador *</Label>
+                <Popover open={openTransferDiscipulador} onOpenChange={setOpenTransferDiscipulador}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openTransferDiscipulador}
+                      className="w-full justify-between"
+                    >
+                      {newDiscipuladorId
+                        ? availableDiscipuladores.find(d => d.id === newDiscipuladorId)?.nome || 'Selecionar...'
+                        : "Selecione o novo discipulador..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Buscar discipulador..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum discipulador encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {availableDiscipuladores
+                            .filter(d => d.id !== transferringRelationship.discipulador_id)
+                            .map(d => (
+                              <CommandItem
+                                key={d.id}
+                                value={d.nome || 'Sem nome'}
+                                onSelect={() => {
+                                  setNewDiscipuladorId(d.id);
+                                  setOpenTransferDiscipulador(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    newDiscipuladorId === d.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {d.nome || 'Sem nome'}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="transfer-notes">Motivo da transferência (opcional)</Label>
+                <Textarea
+                  id="transfer-notes"
+                  placeholder="Ex: Mudança de célula, afinidade, etc."
+                  value={transferNotes}
+                  onChange={(e) => setTransferNotes(e.target.value)}
+                  className="resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setTransferDialogOpen(false)}
+                  disabled={isTransferring}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleTransfer}
+                  disabled={!newDiscipuladorId || isTransferring}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isTransferring ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Transferindo...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRightLeft className="h-4 w-4 mr-2" />
+                      Transferir
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 }
