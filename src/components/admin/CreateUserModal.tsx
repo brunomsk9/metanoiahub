@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, AlertTriangle } from 'lucide-react';
+import { Loader2, UserPlus, AlertTriangle, Users } from 'lucide-react';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
+
+interface Discipulador {
+  id: string;
+  nome: string;
+}
 
 interface CreateUserModalProps {
   open: boolean;
@@ -29,8 +41,57 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [roles, setRoles] = useState<AppRole[]>(['discipulo']);
+  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>('');
+  const [discipuladores, setDiscipuladores] = useState<Discipulador[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingDiscipuladores, setLoadingDiscipuladores] = useState(false);
   const { churchId, loading: loadingChurch } = useUserChurchId();
+
+  // Fetch discipuladores when modal opens
+  useEffect(() => {
+    if (open && churchId) {
+      fetchDiscipuladores();
+    }
+  }, [open, churchId]);
+
+  const fetchDiscipuladores = async () => {
+    if (!churchId) return;
+    
+    setLoadingDiscipuladores(true);
+    try {
+      // Get all users with discipulador role in this church
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'discipulador');
+
+      if (rolesError) throw rolesError;
+
+      const discipuladorIds = rolesData?.map(r => r.user_id) || [];
+
+      if (discipuladorIds.length === 0) {
+        setDiscipuladores([]);
+        return;
+      }
+
+      // Get profiles of discipuladores in the same church
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, nome')
+        .eq('church_id', churchId)
+        .in('id', discipuladorIds)
+        .order('nome');
+
+      if (profilesError) throw profilesError;
+
+      setDiscipuladores(profiles || []);
+    } catch (error) {
+      console.error('Error fetching discipuladores:', error);
+      toast.error('Erro ao carregar discipuladores');
+    } finally {
+      setLoadingDiscipuladores(false);
+    }
+  };
 
   const handleRoleToggle = (role: AppRole, checked: boolean) => {
     if (checked) {
@@ -44,6 +105,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
     setNome('');
     setEmail('');
     setRoles(['discipulo']);
+    setSelectedDiscipulador('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +144,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
           users: [{
             email: email.trim().toLowerCase(),
             nome: nome.trim(),
-            role: roles[0] || 'discipulo' // Primary role
+            role: roles[0] || 'discipulo'
           }],
           church_id: churchId
         }
@@ -95,20 +157,52 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
       const result = response.data;
       
       if (result.results?.[0]?.success) {
+        // Get the new user's ID by searching for them
+        const { data: newUserProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('church_id', churchId)
+          .ilike('nome', nome.trim())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
         // If user has multiple roles, add the additional ones
-        if (roles.length > 1) {
-          const userId = result.results[0].userId;
+        if (newUserProfile && roles.length > 1) {
           for (let i = 1; i < roles.length; i++) {
             await supabase.from('user_roles').insert({
-              user_id: userId,
+              user_id: newUserProfile.id,
               role: roles[i]
             });
           }
         }
+
+        // Create discipleship relationship if a discipulador was selected
+        if (selectedDiscipulador && newUserProfile) {
+          const { error: relationshipError } = await supabase
+            .from('discipleship_relationships')
+            .insert({
+              discipulador_id: selectedDiscipulador,
+              discipulo_id: newUserProfile.id,
+              church_id: churchId,
+              status: 'active'
+            });
+
+          if (relationshipError) {
+            console.error('Error creating discipleship relationship:', relationshipError);
+            toast.warning('Usuário criado, mas houve erro ao vincular ao discipulador');
+          } else {
+            const discipuladorNome = discipuladores.find(d => d.id === selectedDiscipulador)?.nome;
+            toast.success('Usuário criado e vinculado!', {
+              description: `Senha padrão: mudar123. Discipulador: ${discipuladorNome}`
+            });
+          }
+        } else {
+          toast.success('Usuário criado com sucesso!', {
+            description: `Senha padrão: mudar123`
+          });
+        }
         
-        toast.success('Usuário criado com sucesso!', {
-          description: `Senha padrão: mudar123`
-        });
         resetForm();
         onOpenChange(false);
         onUserCreated();
@@ -204,6 +298,42 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Discipulador Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="discipulador" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Vincular a Discipulador (opcional)
+            </Label>
+            <Select
+              value={selectedDiscipulador}
+              onValueChange={setSelectedDiscipulador}
+              disabled={isLoading || loadingDiscipuladores}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={
+                  loadingDiscipuladores 
+                    ? "Carregando..." 
+                    : discipuladores.length === 0 
+                      ? "Nenhum discipulador disponível"
+                      : "Selecione um discipulador"
+                } />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não vincular agora</SelectItem>
+                {discipuladores.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {discipuladores.length === 0 && !loadingDiscipuladores && (
+              <p className="text-xs text-muted-foreground">
+                Nenhum discipulador cadastrado na igreja. Crie um usuário com a role "Discipulador" primeiro.
+              </p>
+            )}
           </div>
 
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex gap-2">
