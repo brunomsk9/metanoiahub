@@ -3,11 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, Users, UserCheck, Shield, Search, Upload } from 'lucide-react';
+import { Loader2, Users, UserCheck, Shield, Search, Upload, UserPlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Database } from '@/integrations/supabase/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminUserImport } from './AdminUserImport';
+import { CreateUserModal } from './CreateUserModal';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -23,6 +24,7 @@ export function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -165,7 +167,13 @@ export function AdminUsers() {
 
       <TabsContent value="list" className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <p className="text-muted-foreground">{users.length} usuário(s) cadastrado(s)</p>
+          <div className="flex items-center gap-4">
+            <p className="text-muted-foreground">{users.length} usuário(s) cadastrado(s)</p>
+            <Button onClick={() => setCreateModalOpen(true)} size="sm" className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              Novo Usuário
+            </Button>
+          </div>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -176,6 +184,12 @@ export function AdminUsers() {
             />
           </div>
         </div>
+
+        <CreateUserModal
+          open={createModalOpen}
+          onOpenChange={setCreateModalOpen}
+          onUserCreated={fetchUsers}
+        />
 
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           {filteredUsers.length === 0 ? (
