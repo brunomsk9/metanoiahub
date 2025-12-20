@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
@@ -14,6 +14,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DiscipleshipHistory } from "./DiscipleshipHistory";
 
 interface Profile {
   id: string;
@@ -447,7 +449,21 @@ export function AdminDiscipleship() {
   }
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="relationships" className="space-y-6">
+      <TabsList className="bg-muted/50">
+        <TabsTrigger value="relationships" className="gap-2">
+          <Users className="w-4 h-4" />
+          Relacionamentos
+        </TabsTrigger>
+        {isAdmin && (
+          <TabsTrigger value="history" className="gap-2">
+            <History className="w-4 h-4" />
+            Histórico
+          </TabsTrigger>
+        )}
+      </TabsList>
+
+      <TabsContent value="relationships" className="space-y-6">
       {/* Admin association */}
       {isAdmin && (
         <Card className="border-primary/20 bg-primary/5">
@@ -877,6 +893,13 @@ export function AdminDiscipleship() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </TabsContent>
+
+      {isAdmin && (
+        <TabsContent value="history">
+          <DiscipleshipHistory />
+        </TabsContent>
+      )}
+    </Tabs>
   );
 }
