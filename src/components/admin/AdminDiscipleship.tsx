@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2 } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -18,6 +18,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DiscipleshipHistory } from "./DiscipleshipHistory";
+import { useChurch } from "@/contexts/ChurchContext";
 
 interface Profile {
   id: string;
@@ -53,9 +54,10 @@ interface DiscipleProgress {
   alicerceTotal: number;
 }
 
-const MAX_DISCIPLES_PER_DISCIPULADOR = 15;
+const DEFAULT_MAX_DISCIPLES = 15;
 
 export function AdminDiscipleship() {
+  const { churchId } = useChurch();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [availableDisciples, setAvailableDisciples] = useState<Profile[]>([]);
   const [availableDiscipuladores, setAvailableDiscipuladores] = useState<Profile[]>([]);
@@ -72,6 +74,10 @@ export function AdminDiscipleship() {
   const [openDiscipulador, setOpenDiscipulador] = useState(false);
   const [openAdminDisciple, setOpenAdminDisciple] = useState(false);
   const [discipuladorDiscipleCount, setDiscipuladorDiscipleCount] = useState<Record<string, number>>({});
+  const [maxDisciplesLimit, setMaxDisciplesLimit] = useState<number>(DEFAULT_MAX_DISCIPLES);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [newMaxLimit, setNewMaxLimit] = useState<string>("");
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
   
   // Transfer state
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
@@ -83,7 +89,68 @@ export function AdminDiscipleship() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    fetchMaxDisciplesLimit();
+  }, [churchId]);
+
+  const fetchMaxDisciplesLimit = async () => {
+    if (!churchId) return;
+    
+    const { data, error } = await supabase
+      .from('churches')
+      .select('configuracoes')
+      .eq('id', churchId)
+      .maybeSingle();
+    
+    if (!error && data?.configuracoes) {
+      const config = data.configuracoes as { max_disciples_per_discipulador?: number };
+      setMaxDisciplesLimit(config.max_disciples_per_discipulador || DEFAULT_MAX_DISCIPLES);
+    }
+  };
+
+  const handleSaveMaxLimit = async () => {
+    const newLimit = parseInt(newMaxLimit);
+    if (isNaN(newLimit) || newLimit < 1 || newLimit > 100) {
+      toast.error('O limite deve ser um número entre 1 e 100');
+      return;
+    }
+
+    setIsSavingSettings(true);
+    
+    try {
+      // Get current config
+      const { data: currentData } = await supabase
+        .from('churches')
+        .select('configuracoes')
+        .eq('id', churchId)
+        .maybeSingle();
+      
+      const currentConfig = (currentData?.configuracoes as Record<string, unknown>) || {};
+      const updatedConfig = {
+        ...currentConfig,
+        max_disciples_per_discipulador: newLimit
+      };
+
+      const { error } = await supabase
+        .from('churches')
+        .update({ configuracoes: updatedConfig })
+        .eq('id', churchId);
+
+      if (error) {
+        console.error('Error saving limit:', error);
+        toast.error('Erro ao salvar configuração');
+        return;
+      }
+
+      setMaxDisciplesLimit(newLimit);
+      setSettingsDialogOpen(false);
+      toast.success(`Limite atualizado para ${newLimit} discípulos por discipulador`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Erro ao salvar configuração');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -273,8 +340,8 @@ export function AdminDiscipleship() {
 
     // Check max disciples limit
     const currentCount = discipuladorDiscipleCount[selectedDiscipulador] || 0;
-    if (currentCount >= MAX_DISCIPLES_PER_DISCIPULADOR) {
-      toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+    if (currentCount >= maxDisciplesLimit) {
+      toast.error(`Este discipulador já atingiu o limite máximo de ${maxDisciplesLimit} discípulos`);
       return;
     }
 
@@ -304,7 +371,7 @@ export function AdminDiscipleship() {
       if (error.code === '23505') {
         toast.error('Este discípulo já está associado a um discipulador');
       } else if (error.message?.includes('limite máximo')) {
-        toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+        toast.error(`Este discipulador já atingiu o limite máximo de ${maxDisciplesLimit} discípulos`);
       } else {
         toast.error('Erro ao associar discípulo');
       }
@@ -367,8 +434,8 @@ export function AdminDiscipleship() {
 
     // Check max disciples limit for new discipulador
     const newDiscipuladorCount = discipuladorDiscipleCount[newDiscipuladorId] || 0;
-    if (newDiscipuladorCount >= MAX_DISCIPLES_PER_DISCIPULADOR) {
-      toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+    if (newDiscipuladorCount >= maxDisciplesLimit) {
+      toast.error(`Este discipulador já atingiu o limite máximo de ${maxDisciplesLimit} discípulos`);
       return;
     }
 
@@ -385,7 +452,7 @@ export function AdminDiscipleship() {
       if (error) {
         console.error('Error transferring disciple:', error);
         if (error.message?.includes('limite máximo')) {
-          toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+          toast.error(`Este discipulador já atingiu o limite máximo de ${maxDisciplesLimit} discípulos`);
         } else {
           toast.error('Erro ao transferir discípulo');
         }
@@ -562,32 +629,96 @@ export function AdminDiscipleship() {
   }
 
   return (
-    <Tabs defaultValue="relationships" className="space-y-6">
-      <TabsList className="bg-muted/50">
-        <TabsTrigger value="relationships" className="gap-2">
-          <Users className="w-4 h-4" />
-          Relacionamentos
-        </TabsTrigger>
-        {isAdmin && (
-          <TabsTrigger value="history" className="gap-2">
-            <History className="w-4 h-4" />
-            Histórico
-          </TabsTrigger>
-        )}
-      </TabsList>
+    <>
+      {/* Settings Dialog */}
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Configurações de Discipulado
+            </DialogTitle>
+            <DialogDescription>
+              Configure os parâmetros do sistema de discipulado para sua igreja.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="maxLimit">Limite máximo de discípulos por discipulador</Label>
+              <Input
+                id="maxLimit"
+                type="number"
+                min={1}
+                max={100}
+                placeholder={String(maxDisciplesLimit)}
+                value={newMaxLimit}
+                onChange={(e) => setNewMaxLimit(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Valor atual: {maxDisciplesLimit} discípulos. O limite pode ser de 1 a 100.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveMaxLimit} disabled={isSavingSettings || !newMaxLimit}>
+              {isSavingSettings ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <TabsContent value="relationships" className="space-y-6">
-      {/* Admin association */}
-      {isAdmin && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link className="w-5 h-5" />
-              Associar Discípulo a Discipulador (Admin)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3 flex-wrap">
+      <Tabs defaultValue="relationships" className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <TabsList className="bg-muted/50">
+            <TabsTrigger value="relationships" className="gap-2">
+              <Users className="w-4 h-4" />
+              Relacionamentos
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="history" className="gap-2">
+                <History className="w-4 h-4" />
+                Histórico
+              </TabsTrigger>
+            )}
+          </TabsList>
+          
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setNewMaxLimit(String(maxDisciplesLimit));
+                setSettingsDialogOpen(true);
+              }}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Configurações
+            </Button>
+          )}
+        </div>
+
+        <TabsContent value="relationships" className="space-y-6">
+        {/* Admin association */}
+        {isAdmin && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Link className="w-5 h-5" />
+                Associar Discípulo a Discipulador (Admin)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3 flex-wrap">
               {/* Discipulador Combobox */}
               <Popover open={openDiscipulador} onOpenChange={setOpenDiscipulador}>
                 <PopoverTrigger asChild>
@@ -611,7 +742,7 @@ export function AdminDiscipleship() {
                       <CommandGroup>
                         {availableDiscipuladores.map(d => {
                           const count = discipuladorDiscipleCount[d.id] || 0;
-                          const isAtLimit = count >= MAX_DISCIPLES_PER_DISCIPULADOR;
+                          const isAtLimit = count >= maxDisciplesLimit;
                           return (
                             <CommandItem
                               key={d.id}
@@ -634,7 +765,7 @@ export function AdminDiscipleship() {
                                 variant={isAtLimit ? "destructive" : "secondary"} 
                                 className="ml-2 text-xs"
                               >
-                                {count}/{MAX_DISCIPLES_PER_DISCIPULADOR}
+                                {count}/{maxDisciplesLimit}
                               </Badge>
                             </CommandItem>
                           );
@@ -754,10 +885,10 @@ export function AdminDiscipleship() {
                             <Users className="w-3 h-3" />
                             {rel.discipulador.nome}
                             <Badge 
-                              variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= MAX_DISCIPLES_PER_DISCIPULADOR ? "destructive" : "secondary"}
+                              variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit ? "destructive" : "secondary"}
                               className="ml-1 text-[10px] px-1.5 py-0"
                             >
-                              {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{MAX_DISCIPLES_PER_DISCIPULADOR}
+                              {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
                             </Badge>
                           </span>
                         )}
@@ -1177,6 +1308,7 @@ export function AdminDiscipleship() {
           )}
         </DialogContent>
       </Dialog>
-    </Tabs>
+      </Tabs>
+    </>
   );
 }
