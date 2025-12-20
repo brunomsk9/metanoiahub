@@ -1031,6 +1031,10 @@ export type Database = {
         Args: { _church_id: string; _user_id: string }
         Returns: boolean
       }
+      count_active_disciples: {
+        Args: { _discipulador_id: string }
+        Returns: number
+      }
       get_user_church_id: { Args: { _user_id: string }; Returns: string }
       get_user_emails: {
         Args: never

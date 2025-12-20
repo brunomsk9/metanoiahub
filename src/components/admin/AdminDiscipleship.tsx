@@ -53,6 +53,8 @@ interface DiscipleProgress {
   alicerceTotal: number;
 }
 
+const MAX_DISCIPLES_PER_DISCIPULADOR = 15;
+
 export function AdminDiscipleship() {
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [availableDisciples, setAvailableDisciples] = useState<Profile[]>([]);
@@ -69,6 +71,7 @@ export function AdminDiscipleship() {
   const [searchTerm, setSearchTerm] = useState("");
   const [openDiscipulador, setOpenDiscipulador] = useState(false);
   const [openAdminDisciple, setOpenAdminDisciple] = useState(false);
+  const [discipuladorDiscipleCount, setDiscipuladorDiscipleCount] = useState<Record<string, number>>({});
   
   // Transfer state
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
@@ -179,7 +182,7 @@ export function AdminDiscipleship() {
       }
     }
 
-    // Fetch discipuladores for admin association
+    // Fetch discipuladores for admin association and count their disciples
     if (userIsAdmin) {
       const { data: discipuladoresRoles } = await supabase
         .from('user_roles')
@@ -194,7 +197,19 @@ export function AdminDiscipleship() {
           .in('id', discipuladorIds);
         
         setAvailableDiscipuladores(discipuladorProfiles || []);
+
+        // Count disciples per discipulador
+        const counts: Record<string, number> = {};
+        for (const discipuladorId of discipuladorIds) {
+          const count = rels?.filter(r => r.discipulador_id === discipuladorId && r.status === 'active').length || 0;
+          counts[discipuladorId] = count;
+        }
+        setDiscipuladorDiscipleCount(counts);
       }
+    } else {
+      // For non-admin, count own disciples
+      const ownCount = rels?.filter(r => r.discipulador_id === user.id && r.status === 'active').length || 0;
+      setDiscipuladorDiscipleCount({ [user.id]: ownCount });
     }
 
     setLoading(false);
@@ -256,6 +271,13 @@ export function AdminDiscipleship() {
       return;
     }
 
+    // Check max disciples limit
+    const currentCount = discipuladorDiscipleCount[selectedDiscipulador] || 0;
+    if (currentCount >= MAX_DISCIPLES_PER_DISCIPULADOR) {
+      toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+      return;
+    }
+
     // Fetch the discipulador's church_id to ensure proper association
     const { data: discipuladorProfile } = await supabase
       .from('profiles')
@@ -281,6 +303,8 @@ export function AdminDiscipleship() {
       console.error('Error associating:', error);
       if (error.code === '23505') {
         toast.error('Este discípulo já está associado a um discipulador');
+      } else if (error.message?.includes('limite máximo')) {
+        toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
       } else {
         toast.error('Erro ao associar discípulo');
       }
@@ -341,6 +365,13 @@ export function AdminDiscipleship() {
       return;
     }
 
+    // Check max disciples limit for new discipulador
+    const newDiscipuladorCount = discipuladorDiscipleCount[newDiscipuladorId] || 0;
+    if (newDiscipuladorCount >= MAX_DISCIPLES_PER_DISCIPULADOR) {
+      toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+      return;
+    }
+
     setIsTransferring(true);
 
     try {
@@ -353,7 +384,11 @@ export function AdminDiscipleship() {
 
       if (error) {
         console.error('Error transferring disciple:', error);
-        toast.error('Erro ao transferir discípulo');
+        if (error.message?.includes('limite máximo')) {
+          toast.error(`Este discipulador já atingiu o limite máximo de ${MAX_DISCIPLES_PER_DISCIPULADOR} discípulos`);
+        } else {
+          toast.error('Erro ao transferir discípulo');
+        }
         return;
       }
 
@@ -574,24 +609,36 @@ export function AdminDiscipleship() {
                     <CommandList>
                       <CommandEmpty>Nenhum discipulador encontrado.</CommandEmpty>
                       <CommandGroup>
-                        {availableDiscipuladores.map(d => (
-                          <CommandItem
-                            key={d.id}
-                            value={d.nome || 'Sem nome'}
-                            onSelect={() => {
-                              setSelectedDiscipulador(d.id);
-                              setOpenDiscipulador(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedDiscipulador === d.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {d.nome || 'Sem nome'}
-                          </CommandItem>
-                        ))}
+                        {availableDiscipuladores.map(d => {
+                          const count = discipuladorDiscipleCount[d.id] || 0;
+                          const isAtLimit = count >= MAX_DISCIPLES_PER_DISCIPULADOR;
+                          return (
+                            <CommandItem
+                              key={d.id}
+                              value={d.nome || 'Sem nome'}
+                              onSelect={() => {
+                                setSelectedDiscipulador(d.id);
+                                setOpenDiscipulador(false);
+                              }}
+                              disabled={isAtLimit}
+                              className={isAtLimit ? "opacity-50" : ""}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedDiscipulador === d.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <span className="flex-1">{d.nome || 'Sem nome'}</span>
+                              <Badge 
+                                variant={isAtLimit ? "destructive" : "secondary"} 
+                                className="ml-2 text-xs"
+                              >
+                                {count}/{MAX_DISCIPLES_PER_DISCIPULADOR}
+                              </Badge>
+                            </CommandItem>
+                          );
+                        })}
                       </CommandGroup>
                     </CommandList>
                   </Command>
