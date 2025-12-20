@@ -1,6 +1,7 @@
-import { useState, useEffect, memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Flame, BookOpen } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface DiscipleInfo {
   id: string;
@@ -10,56 +11,74 @@ interface DiscipleInfo {
   alicerce_completed: boolean;
 }
 
+async function fetchDisciples(): Promise<DiscipleInfo[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return [];
+
+  const { data: relationships } = await supabase
+    .from('discipleship_relationships')
+    .select('discipulo_id, alicerce_completed_presencial')
+    .eq('discipulador_id', session.user.id)
+    .eq('status', 'active');
+
+  if (!relationships || relationships.length === 0) return [];
+
+  const discipleIds = relationships.map(r => r.discipulo_id);
+  
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, nome, current_streak, xp_points')
+    .in('id', discipleIds);
+
+  if (!profiles) return [];
+
+  return profiles.map(p => ({
+    ...p,
+    alicerce_completed: relationships.find(r => r.discipulo_id === p.id)?.alicerce_completed_presencial || false
+  }));
+}
+
+const DiscipleItem = memo(function DiscipleItem({ disciple }: { disciple: DiscipleInfo }) {
+  return (
+    <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+          {disciple.nome?.charAt(0)?.toUpperCase() || '?'}
+        </div>
+        <span className="text-sm text-foreground">{disciple.nome || 'Sem nome'}</span>
+      </div>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Flame className="w-3 h-3 text-orange-500" />
+        {disciple.current_streak}
+      </div>
+    </div>
+  );
+});
+
 export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCards() {
-  const [disciples, setDisciples] = useState<DiscipleInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: disciples = [], isLoading } = useQuery({
+    queryKey: ['disciples'],
+    queryFn: fetchDisciples,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
-  useEffect(() => {
-    fetchDisciples();
-  }, []);
+  const avgStreak = useMemo(() => 
+    disciples.length > 0 
+      ? Math.round(disciples.reduce((sum, d) => sum + d.current_streak, 0) / disciples.length)
+      : 0, 
+    [disciples]
+  );
 
-  const fetchDisciples = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+  const alicerceCompleted = useMemo(() => 
+    disciples.filter(d => d.alicerce_completed).length, 
+    [disciples]
+  );
 
-    const { data: relationships } = await supabase
-      .from('discipleship_relationships')
-      .select('discipulo_id, alicerce_completed_presencial')
-      .eq('discipulador_id', session.user.id)
-      .eq('status', 'active');
-
-    if (relationships && relationships.length > 0) {
-      const discipleIds = relationships.map(r => r.discipulo_id);
-      
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, nome, current_streak, xp_points')
-        .in('id', discipleIds);
-
-      if (profiles) {
-        const disciplesWithProgress = profiles.map(p => ({
-          ...p,
-          alicerce_completed: relationships.find(r => r.discipulo_id === p.id)?.alicerce_completed_presencial || false
-        }));
-        setDisciples(disciplesWithProgress);
-      }
-    }
-
-    setLoading(false);
-  };
-
-  const avgStreak = useMemo(() => disciples.length > 0 
-    ? Math.round(disciples.reduce((sum, d) => sum + d.current_streak, 0) / disciples.length)
-    : 0, [disciples]);
-
-  const alicerceCompleted = useMemo(() => disciples.filter(d => d.alicerce_completed).length, [disciples]);
-
-  if (loading) return null;
+  if (isLoading) return null;
   if (disciples.length === 0) return null;
 
   return (
     <div className="space-y-3">
-      
       <div className="grid grid-cols-3 gap-2">
         <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
           <div className="flex items-center gap-2 mb-1">
@@ -89,21 +108,7 @@ export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCar
       {/* Quick list of disciples */}
       <div className="space-y-2">
         {disciples.slice(0, 3).map((disciple) => (
-          <div 
-            key={disciple.id}
-            className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
-          >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
-                {disciple.nome?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-              <span className="text-sm text-foreground">{disciple.nome || 'Sem nome'}</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Flame className="w-3 h-3 text-orange-500" />
-              {disciple.current_streak}
-            </div>
-          </div>
+          <DiscipleItem key={disciple.id} disciple={disciple} />
         ))}
       </div>
     </div>
