@@ -135,6 +135,18 @@ const Onboarding = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
+        return;
+      }
+      
+      // Check if onboarding is already completed
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      
+      if (profile?.onboarding_completed) {
+        navigate('/dashboard');
       }
     };
     checkAuth();
@@ -142,14 +154,23 @@ const Onboarding = () => {
 
   const completeOnboarding = async () => {
     setIsCompleting(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await supabase
-        .from('profiles')
-        .update({ onboarding_completed: true })
-        .eq('id', session.user.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onboarding_completed: true })
+          .eq('id', session.user.id);
+        
+        if (error) {
+          console.error('Error completing onboarding:', error);
+        }
+      }
+      navigate("/dashboard");
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      navigate("/dashboard");
     }
-    navigate("/dashboard");
   };
 
   const nextStep = () => {
