@@ -753,6 +753,12 @@ export function AdminDiscipleship() {
                           <span className="text-xs font-medium flex items-center gap-1">
                             <Users className="w-3 h-3" />
                             {rel.discipulador.nome}
+                            <Badge 
+                              variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= MAX_DISCIPLES_PER_DISCIPULADOR ? "destructive" : "secondary"}
+                              className="ml-1 text-[10px] px-1.5 py-0"
+                            >
+                              {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{MAX_DISCIPLES_PER_DISCIPULADOR}
+                            </Badge>
                           </span>
                         )}
                         <span className="flex items-center gap-1">
