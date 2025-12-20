@@ -13,9 +13,10 @@ import { AdminWeeklyChecklist } from '@/components/admin/AdminWeeklyChecklist';
 import { AdminChecklistCompliance } from '@/components/admin/AdminChecklistCompliance';
 import { AdminAISettings } from '@/components/admin/AdminAISettings';
 import { AdminHabits } from '@/components/admin/AdminHabits';
+import { AdminReports } from '@/components/admin/AdminReports';
 import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,7 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
@@ -142,6 +143,7 @@ export default function Admin() {
       case 'ai-settings': return <AdminAISettings />;
       case 'habits': return <AdminHabits />;
       case 'presentation': return <PresentationPdfGenerator />;
+      case 'reports': return <AdminReports />;
       default: return null;
     }
   };
@@ -247,6 +249,16 @@ export default function Admin() {
               >
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Usuários</span>
+              </Button>
+
+              <Button
+                variant={activeSection === 'reports' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('reports')}
+                className="gap-2"
+              >
+                <PieChart className="h-4 w-4" />
+                <span className="hidden sm:inline">Relatórios</span>
               </Button>
             </>
           )}
