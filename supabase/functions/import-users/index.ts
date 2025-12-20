@@ -139,13 +139,14 @@ serve(async (req) => {
 
         const userId = authData.user.id;
 
-        // Update profile with nome, church_id and set needs_password_change flag
+        // Update profile with nome, church_id, set needs_password_change flag and mark onboarding as completed
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
           .update({ 
             nome: userData.nome, 
             needs_password_change: true,
-            church_id: church_id
+            church_id: church_id,
+            onboarding_completed: true
           })
           .eq('id', userId);
 
