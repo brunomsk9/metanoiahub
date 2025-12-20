@@ -20,6 +20,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 const DiscipuladorDashboardCards = lazy(() => import("@/components/DiscipuladorDashboardCards").then(m => ({ default: m.DiscipuladorDashboardCards })));
 const MeetingsManager = lazy(() => import("@/components/MeetingsManager").then(m => ({ default: m.MeetingsManager })));
 const WeeklyChecklist = lazy(() => import("@/components/WeeklyChecklist").then(m => ({ default: m.WeeklyChecklist })));
+const AchievementBadges = lazy(() => import("@/components/AchievementBadges").then(m => ({ default: m.AchievementBadges })));
 
 interface ReadingPlanWithProgress {
   id: string;
@@ -156,6 +157,11 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+
+              {/* Conquistas */}
+              <Suspense fallback={<Skeleton className="h-32" />}>
+                <AchievementBadges compact />
+              </Suspense>
 
               {/* Alicerce Progress */}
               {baseTrackProgress && !baseTrackProgress.isCompleted && (

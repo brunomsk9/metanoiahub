@@ -15,7 +15,8 @@ import {
   Compass,
   FolderOpen,
   ShieldAlert,
-  Church
+  Church,
+  Trophy
 } from "lucide-react";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ interface SidebarProps {
 const learningItems = [
   { path: '/trilhas', label: 'Trilhas', icon: Compass, requiresDiscipulador: false },
   { path: '/biblioteca', label: 'Biblioteca', icon: BookMarked, requiresDiscipulador: false },
+  { path: '/conquistas', label: 'Conquistas', icon: Trophy, requiresDiscipulador: false },
   { path: '/sos', label: 'S.O.S.', icon: LifeBuoy, requiresDiscipulador: true },
 ];
 
