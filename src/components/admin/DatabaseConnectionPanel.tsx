@@ -3,12 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Check, Database, Shield, AlertTriangle, History, User, Clock } from 'lucide-react';
+import { Copy, Check, Database, Shield, AlertTriangle, History, User, Clock, Eye, EyeOff, Lock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -20,11 +30,13 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const PROJECT_REF = 'cnpvlloooyyxlgayfzth';
+const DB_PASSWORD = 'Metanoia@Hub#2025!Secure';
 
 interface ConnectionInfo {
   label: string;
   description: string;
   connectionString: string;
+  connectionStringWithPassword: string;
   type: 'readonly' | 'admin';
 }
 
@@ -41,19 +53,22 @@ const connectionStrings: ConnectionInfo[] = [
   {
     label: 'Conexão Direta (Admin)',
     description: 'Acesso completo ao banco. Use apenas em ferramentas seguras como DBeaver ou VS Code.',
-    connectionString: `postgresql://postgres:[YOUR-PASSWORD]@db.${PROJECT_REF}.supabase.co:5432/postgres`,
+    connectionString: `postgresql://postgres:[SENHA-PROTEGIDA]@db.${PROJECT_REF}.supabase.co:5432/postgres`,
+    connectionStringWithPassword: `postgresql://postgres:${DB_PASSWORD}@db.${PROJECT_REF}.supabase.co:5432/postgres`,
     type: 'admin',
   },
   {
     label: 'Pooler - Transaction Mode (Recomendado)',
     description: 'Conexão via pool. Ideal para aplicações serverless e conexões de curta duração.',
-    connectionString: `postgresql://postgres.${PROJECT_REF}:[YOUR-PASSWORD]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`,
+    connectionString: `postgresql://postgres.${PROJECT_REF}:[SENHA-PROTEGIDA]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`,
+    connectionStringWithPassword: `postgresql://postgres.${PROJECT_REF}:${DB_PASSWORD}@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`,
     type: 'admin',
   },
   {
     label: 'Pooler - Session Mode',
     description: 'Conexão via pool com sessão persistente. Use para prepared statements.',
-    connectionString: `postgresql://postgres.${PROJECT_REF}:[YOUR-PASSWORD]@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`,
+    connectionString: `postgresql://postgres.${PROJECT_REF}:[SENHA-PROTEGIDA]@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`,
+    connectionStringWithPassword: `postgresql://postgres.${PROJECT_REF}:${DB_PASSWORD}@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`,
     type: 'admin',
   },
 ];
@@ -63,6 +78,10 @@ export function DatabaseConnectionPanel() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [passwordRevealed, setPasswordRevealed] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     logPanelAccess();
@@ -109,6 +128,106 @@ export function DatabaseConnectionPanel() {
     }
   };
 
+  const verifyPasswordAndReveal = async () => {
+    if (!adminPassword.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Digite sua senha.',
+      });
+      return;
+    }
+
+    setVerifying(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Usuário não encontrado.',
+        });
+        return;
+      }
+
+      // Verify password by trying to sign in
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: adminPassword,
+      });
+
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Senha incorreta',
+          description: 'A senha informada não está correta.',
+        });
+        
+        // Log failed attempt
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nome')
+          .eq('id', user.id)
+          .single();
+
+        await supabase.from('super_admin_audit_logs').insert({
+          user_id: user.id,
+          user_name: profile?.nome || user.email || 'Desconhecido',
+          action: 'reveal_password_failed',
+          details: { attempted_at: new Date().toISOString() },
+          user_agent: navigator.userAgent,
+        });
+        loadAuditLogs();
+        return;
+      }
+
+      // Password verified successfully
+      setPasswordRevealed(true);
+      setShowPasswordDialog(false);
+      setAdminPassword('');
+
+      // Log successful reveal
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nome')
+        .eq('id', user.id)
+        .single();
+
+      await supabase.from('super_admin_audit_logs').insert({
+        user_id: user.id,
+        user_name: profile?.nome || user.email || 'Desconhecido',
+        action: 'reveal_password_success',
+        details: { revealed_at: new Date().toISOString() },
+        user_agent: navigator.userAgent,
+      });
+      loadAuditLogs();
+
+      toast({
+        title: 'Senha revelada',
+        description: 'As strings de conexão agora mostram a senha completa.',
+      });
+
+      // Auto-hide password after 5 minutes
+      setTimeout(() => {
+        setPasswordRevealed(false);
+        toast({
+          title: 'Senha ocultada',
+          description: 'Por segurança, a senha foi ocultada novamente.',
+        });
+      }, 5 * 60 * 1000);
+
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Erro ao verificar senha.',
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const copyToClipboard = async (text: string, index: number, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -126,8 +245,8 @@ export function DatabaseConnectionPanel() {
         await supabase.from('super_admin_audit_logs').insert({
           user_id: user.id,
           user_name: profile?.nome || user.email || 'Desconhecido',
-          action: 'copy_connection_string',
-          details: { connection_type: label, copied_at: new Date().toISOString() },
+          action: passwordRevealed ? 'copy_connection_with_password' : 'copy_connection_string',
+          details: { connection_type: label, copied_at: new Date().toISOString(), with_password: passwordRevealed },
           user_agent: navigator.userAgent,
         });
         
@@ -154,16 +273,27 @@ export function DatabaseConnectionPanel() {
       case 'view_database_connections':
         return 'Visualizou conexões';
       case 'copy_connection_string':
-        return 'Copiou string de conexão';
+        return 'Copiou string (sem senha)';
+      case 'copy_connection_with_password':
+        return 'Copiou string COM senha';
+      case 'reveal_password_success':
+        return 'Revelou senha';
+      case 'reveal_password_failed':
+        return 'Tentativa falha de revelar senha';
       default:
         return action;
     }
   };
 
-  const getActionBadgeVariant = (action: string) => {
+  const getActionBadgeVariant = (action: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (action) {
-      case 'copy_connection_string':
+      case 'copy_connection_with_password':
+      case 'reveal_password_success':
         return 'destructive';
+      case 'reveal_password_failed':
+        return 'destructive';
+      case 'copy_connection_string':
+        return 'secondary';
       default:
         return 'secondary';
     }
@@ -182,12 +312,33 @@ export function DatabaseConnectionPanel() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
+          <Alert variant={passwordRevealed ? "destructive" : "default"} className={passwordRevealed ? "bg-destructive/10 border-destructive/30" : ""}>
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Atenção: Segurança</AlertTitle>
-            <AlertDescription>
-              A senha do banco está protegida. Acesse o painel Cloud → Database → Settings para obter a senha completa 
-              ou use a <code className="bg-muted px-1 rounded">SUPABASE_DB_URL</code> nos secrets.
+            <AlertTitle>{passwordRevealed ? 'Modo Senha Visível' : 'Senha Protegida'}</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                {passwordRevealed 
+                  ? 'As strings de conexão estão mostrando a senha real. A senha será ocultada automaticamente em 5 minutos.'
+                  : 'A senha do banco está oculta. Clique no botão para revelar usando sua senha de login.'}
+              </span>
+              <Button 
+                variant={passwordRevealed ? "outline" : "secondary"}
+                size="sm"
+                onClick={() => {
+                  if (passwordRevealed) {
+                    setPasswordRevealed(false);
+                  } else {
+                    setShowPasswordDialog(true);
+                  }
+                }}
+                className="ml-4 gap-2"
+              >
+                {passwordRevealed ? (
+                  <><EyeOff className="h-4 w-4" /> Ocultar Senha</>
+                ) : (
+                  <><Eye className="h-4 w-4" /> Revelar Senha</>
+                )}
+              </Button>
             </AlertDescription>
           </Alert>
 
@@ -212,11 +363,20 @@ export function DatabaseConnectionPanel() {
                       >
                         <Shield className="h-3 w-3 mr-1" /> Admin
                       </Badge>
+                      {passwordRevealed && (
+                        <Badge variant="outline" className="text-xs border-destructive text-destructive">
+                          <Lock className="h-3 w-3 mr-1" /> Com Senha
+                        </Badge>
+                      )}
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(conn.connectionString, index, conn.label)}
+                      onClick={() => copyToClipboard(
+                        passwordRevealed ? conn.connectionStringWithPassword : conn.connectionString, 
+                        index, 
+                        conn.label
+                      )}
                       className="gap-2"
                     >
                       {copiedIndex === index ? (
@@ -228,7 +388,7 @@ export function DatabaseConnectionPanel() {
                   </div>
                   <p className="text-sm text-muted-foreground">{conn.description}</p>
                   <code className="block text-xs bg-background p-2 rounded border font-mono break-all">
-                    {conn.connectionString}
+                    {passwordRevealed ? conn.connectionStringWithPassword : conn.connectionString}
                   </code>
                 </div>
               ))}
@@ -239,11 +399,11 @@ export function DatabaseConnectionPanel() {
                 <div className="border rounded-lg p-4 space-y-2">
                   <h4 className="font-semibold flex items-center gap-2">
                     <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
-                    Obter a Senha
+                    Revelar a Senha
                   </h4>
                   <p className="text-sm text-muted-foreground ml-8">
-                    A senha está disponível no secret <code className="bg-muted px-1 rounded">SUPABASE_DB_URL</code> ou 
-                    no painel Cloud → Database → Settings.
+                    Clique em "Revelar Senha" acima e confirme com sua senha de login do sistema.
+                    A senha será exibida nas strings de conexão.
                   </p>
                 </div>
 
@@ -258,7 +418,7 @@ export function DatabaseConnectionPanel() {
                     <li>Porta: <code className="bg-muted px-1 rounded">5432</code></li>
                     <li>Database: <code className="bg-muted px-1 rounded">postgres</code></li>
                     <li>Usuário: <code className="bg-muted px-1 rounded">postgres</code></li>
-                    <li>Senha: obtida no passo 1</li>
+                    <li>Senha: revelada no passo 1</li>
                   </ul>
                 </div>
 
@@ -269,8 +429,8 @@ export function DatabaseConnectionPanel() {
                   </h4>
                   <ul className="text-sm text-muted-foreground ml-8 space-y-1 list-disc list-inside">
                     <li>Instale a extensão SQLTools + PostgreSQL Driver</li>
-                    <li>Adicione nova conexão usando a string de conexão (Pooler recomendado)</li>
-                    <li>Substitua <code className="bg-muted px-1 rounded">[YOUR-PASSWORD]</code> pela senha real</li>
+                    <li>Revele a senha e copie a string de conexão completa</li>
+                    <li>Cole diretamente na configuração do SQLTools</li>
                   </ul>
                 </div>
 
@@ -279,9 +439,9 @@ export function DatabaseConnectionPanel() {
                     <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm">4</span>
                     Terminal (psql)
                   </h4>
-                  <code className="block text-xs bg-background p-2 rounded border font-mono ml-8 break-all">
-                    psql "postgresql://postgres:[YOUR-PASSWORD]@db.{PROJECT_REF}.supabase.co:5432/postgres"
-                  </code>
+                  <p className="text-sm text-muted-foreground ml-8">
+                    Copie a string de conexão com senha revelada e cole diretamente no terminal.
+                  </p>
                 </div>
               </div>
             </TabsContent>
@@ -335,7 +495,7 @@ export function DatabaseConnectionPanel() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {log.action === 'copy_connection_string' && log.details ? (
+                        {(log.action === 'copy_connection_string' || log.action === 'copy_connection_with_password') && log.details ? (
                           <span>{(log.details as Record<string, string>).connection_type}</span>
                         ) : (
                           '-'
@@ -355,6 +515,50 @@ export function DatabaseConnectionPanel() {
           )}
         </CardContent>
       </Card>
+
+      {/* Password Verification Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Verificação de Segurança
+            </DialogTitle>
+            <DialogDescription>
+              Digite sua senha de login para revelar a senha do banco de dados.
+              Esta ação será registrada no log de auditoria.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Sua senha de login</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                placeholder="Digite sua senha..."
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    verifyPasswordAndReveal();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowPasswordDialog(false);
+              setAdminPassword('');
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={verifyPasswordAndReveal} disabled={verifying}>
+              {verifying ? 'Verificando...' : 'Revelar Senha'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
