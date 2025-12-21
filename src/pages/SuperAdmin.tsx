@@ -53,7 +53,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, 
   Search, BookOpen, GraduationCap, FileText, LifeBuoy, CalendarDays, 
-  ClipboardList, BarChart3, Bot, Presentation, Sparkles, ChevronDown, LayoutDashboard
+  ClipboardList, BarChart3, Bot, Presentation, Sparkles, ChevronDown, LayoutDashboard, Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
@@ -72,8 +72,9 @@ import { AdminChecklistCompliance } from '@/components/admin/AdminChecklistCompl
 import { AdminAISettings } from '@/components/admin/AdminAISettings';
 import { AdminHabits } from '@/components/admin/AdminHabits';
 import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
+import { DatabaseConnectionPanel } from '@/components/admin/DatabaseConnectionPanel';
 
-type ContentSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'admin-users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits';
+type ContentSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'admin-users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'database';
 
 const contentSections = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
@@ -88,6 +89,7 @@ const contentSections = [
   { id: 'ai-settings' as const, label: 'Configurações IA', icon: Bot },
   { id: 'presentation' as const, label: 'Apresentação', icon: Presentation },
   { id: 'admin-users' as const, label: 'Usuários (Admin)', icon: Users },
+  { id: 'database' as const, label: 'Conexão Banco', icon: Database },
 ];
 
 interface ChurchData {
@@ -497,6 +499,7 @@ export default function SuperAdmin() {
       case 'ai-settings': return <AdminAISettings />;
       case 'habits': return <AdminHabits />;
       case 'presentation': return <PresentationPdfGenerator />;
+      case 'database': return <DatabaseConnectionPanel />;
       default: return null;
     }
   };
