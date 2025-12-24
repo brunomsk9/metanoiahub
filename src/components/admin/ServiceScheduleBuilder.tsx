@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -200,11 +200,14 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const [isAddVolunteerOpen, setIsAddVolunteerOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [selectedVolunteerId, setSelectedVolunteerId] = useState('');
+  const [isAutoScheduling, setIsAutoScheduling] = useState(false);
+  const [recentSchedules, setRecentSchedules] = useState<{ volunteer_id: string; service_id: string }[]>([]);
 
   useEffect(() => {
     if (churchId) {
       fetchData();
       getCurrentUser();
+      fetchRecentSchedules();
     }
   }, [churchId]);
 
@@ -214,6 +217,22 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       fetchAvailability();
     }
   }, [selectedServiceId]);
+
+  // Fetch schedules from recent services to avoid consecutive scheduling
+  const fetchRecentSchedules = async () => {
+    if (!churchId) return;
+    
+    const { data } = await supabase
+      .from('schedules')
+      .select('volunteer_id, service_id, services!inner(data_hora)')
+      .eq('church_id', churchId)
+      .gte('services.data_hora', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('services(data_hora)', { ascending: false });
+    
+    if (data) {
+      setRecentSchedules(data.map(s => ({ volunteer_id: s.volunteer_id, service_id: s.service_id })));
+    }
+  };
 
   const getCurrentUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -485,6 +504,123 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     }
   };
 
+  // Auto-scheduling function
+  const handleAutoSchedule = async () => {
+    if (!selectedServiceId || !churchId) {
+      toast.error('Selecione um culto primeiro');
+      return;
+    }
+
+    setIsAutoScheduling(true);
+
+    try {
+      // Get the selected service index to check for consecutive services
+      const selectedServiceIndex = services.findIndex(s => s.id === selectedServiceId);
+      const previousServiceIds = services
+        .slice(Math.max(0, selectedServiceIndex - 2), selectedServiceIndex)
+        .map(s => s.id);
+
+      // Get schedules from previous 2 services
+      const volunteersInRecentServices = recentSchedules
+        .filter(s => previousServiceIds.includes(s.service_id))
+        .reduce((acc, s) => {
+          acc[s.volunteer_id] = (acc[s.volunteer_id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+      // Get available volunteers for this service
+      const availableVolunteers = availability
+        .filter(a => a.is_available)
+        .map(a => a.volunteer_id);
+
+      let scheduledCount = 0;
+
+      // For each ministry with positions
+      for (const ministry of ministriesWithPositions) {
+        const ministryPositions = positions.filter(p => p.ministry_id === ministry.id);
+        const ministryVolunteerIds = volunteers
+          .filter(v => v.ministry_id === ministry.id)
+          .map(v => v.user_id);
+
+        for (const position of ministryPositions) {
+          const existingSchedules = schedules.filter(s => s.position_id === position.id);
+          const slotsNeeded = position.quantidade_minima - existingSchedules.length;
+          
+          if (slotsNeeded <= 0) continue;
+
+          // Get eligible volunteers for this position
+          const eligibleVolunteers = users.filter(u => {
+            // Must be in the ministry
+            if (!ministryVolunteerIds.includes(u.id)) return false;
+            
+            // Check gender restriction
+            if (position.genero_restrito && position.genero_restrito !== 'unissex') {
+              if (!u.genero || u.genero !== position.genero_restrito) return false;
+            }
+            
+            // Not already scheduled for this position
+            if (existingSchedules.some(s => s.volunteer_id === u.id)) return false;
+            
+            // Not already scheduled in current schedules array (local state)
+            if (schedules.some(s => s.volunteer_id === u.id && s.position_id === position.id)) return false;
+            
+            return true;
+          });
+
+          // Sort volunteers by priority:
+          // 1. Available and not in recent services
+          // 2. Available but in recent services (less preferred)
+          // 3. Not available but not in recent services
+          // 4. Not available and in recent services
+          const sortedVolunteers = eligibleVolunteers.sort((a, b) => {
+            const aAvailable = availableVolunteers.includes(a.id);
+            const bAvailable = availableVolunteers.includes(b.id);
+            const aRecentCount = volunteersInRecentServices[a.id] || 0;
+            const bRecentCount = volunteersInRecentServices[b.id] || 0;
+            
+            // Prioritize available volunteers
+            if (aAvailable !== bAvailable) return aAvailable ? -1 : 1;
+            
+            // Then prioritize those with fewer recent schedules
+            return aRecentCount - bRecentCount;
+          });
+
+          // Pick volunteers for slots needed
+          const selectedVolunteers = sortedVolunteers.slice(0, slotsNeeded);
+
+          for (const volunteer of selectedVolunteers) {
+            const { error } = await supabase.from('schedules').insert({
+              service_id: selectedServiceId,
+              ministry_id: ministry.id,
+              position_id: position.id,
+              volunteer_id: volunteer.id,
+              church_id: churchId,
+              created_by: currentUserId,
+              status: 'pending',
+            });
+
+            if (!error) {
+              scheduledCount++;
+            }
+          }
+        }
+      }
+
+      if (scheduledCount > 0) {
+        toast.success(`${scheduledCount} voluntário(s) escalado(s) automaticamente`);
+        fetchSchedules();
+        fetchRecentSchedules();
+      } else {
+        toast.info('Nenhum voluntário disponível para escalar ou todas as posições já estão preenchidas');
+      }
+    } catch (error) {
+      console.error('Erro no auto-escalonamento:', error);
+      toast.error('Erro ao realizar escalonamento automático');
+    } finally {
+      setIsAutoScheduling(false);
+    }
+  };
+
   // Drag and Drop state
   const [activeSchedule, setActiveSchedule] = useState<Schedule | null>(null);
 
@@ -650,7 +786,20 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                   {format(new Date(selectedService.data_hora), 'EEEE, HH:mm', { locale: ptBR })}
                 </div>
               </div>
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoSchedule}
+                  disabled={isAutoScheduling}
+                >
+                  {isAutoScheduling ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-4 w-4 mr-1" />
+                  )}
+                  Escalar Automaticamente
+                </Button>
                 <Badge variant="outline" className="text-sm">
                   {schedules.length} escalado{schedules.length !== 1 ? 's' : ''}
                 </Badge>
