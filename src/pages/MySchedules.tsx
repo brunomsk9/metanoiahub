@@ -6,7 +6,8 @@ import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar, Clock, Users, CheckCircle, XCircle, Loader2, CalendarCheck, CalendarX, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -34,12 +35,34 @@ interface Schedule {
   };
 }
 
+interface Service {
+  id: string;
+  nome: string;
+  data_hora: string;
+  descricao: string | null;
+}
+
+interface Availability {
+  id: string;
+  service_id: string;
+  is_available: boolean;
+  notes: string | null;
+}
+
 export default function MySchedules() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [userName, setUserName] = useState("");
   const [updatingSchedule, setUpdatingSchedule] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [churchId, setChurchId] = useState<string | null>(null);
+  
+  // Availability states
+  const [upcomingServices, setUpcomingServices] = useState<Service[]>([]);
+  const [availabilities, setAvailabilities] = useState<Map<string, Availability>>(new Map());
+  const [updatingAvailability, setUpdatingAvailability] = useState<string | null>(null);
+  const [availabilityNotes, setAvailabilityNotes] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     checkAuth();
@@ -52,17 +75,23 @@ export default function MySchedules() {
       return;
     }
     
+    setUserId(session.user.id);
+    
     const { data: profile } = await supabase
       .from('profiles')
-      .select('nome')
+      .select('nome, church_id')
       .eq('id', session.user.id)
       .single();
     
     if (profile) {
       setUserName(profile.nome);
+      setChurchId(profile.church_id);
     }
     
-    await fetchSchedules(session.user.id);
+    await Promise.all([
+      fetchSchedules(session.user.id),
+      fetchUpcomingServices(profile?.church_id, session.user.id)
+    ]);
   };
 
   const fetchSchedules = async (userId: string) => {
@@ -98,7 +127,6 @@ export default function MySchedules() {
 
       if (error) throw error;
       
-      // Filter out schedules where service is null (past services or invalid references)
       const validSchedules = (data || []).filter(s => s.service !== null) as Schedule[];
       setSchedules(validSchedules);
     } catch (error) {
@@ -106,6 +134,95 @@ export default function MySchedules() {
       toast.error('Erro ao carregar escalas');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUpcomingServices = async (churchId: string | null, userId: string) => {
+    if (!churchId) return;
+    
+    try {
+      // Fetch upcoming services
+      const { data: services, error: servicesError } = await supabase
+        .from('services')
+        .select('id, nome, data_hora, descricao')
+        .eq('church_id', churchId)
+        .gte('data_hora', new Date().toISOString())
+        .order('data_hora', { ascending: true })
+        .limit(10);
+
+      if (servicesError) throw servicesError;
+      setUpcomingServices(services || []);
+
+      // Fetch user's availabilities
+      const { data: userAvailabilities, error: availError } = await supabase
+        .from('volunteer_availability')
+        .select('id, service_id, is_available, notes')
+        .eq('volunteer_id', userId);
+
+      if (availError) throw availError;
+
+      const availMap = new Map<string, Availability>();
+      const notesMap = new Map<string, string>();
+      (userAvailabilities || []).forEach(a => {
+        availMap.set(a.service_id, a);
+        notesMap.set(a.service_id, a.notes || '');
+      });
+      setAvailabilities(availMap);
+      setAvailabilityNotes(notesMap);
+    } catch (error) {
+      console.error('Error fetching services/availability:', error);
+    }
+  };
+
+  const handleAvailabilityChange = async (serviceId: string, isAvailable: boolean) => {
+    if (!userId || !churchId) return;
+    
+    setUpdatingAvailability(serviceId);
+    try {
+      const existingAvailability = availabilities.get(serviceId);
+      const notes = availabilityNotes.get(serviceId) || null;
+
+      if (existingAvailability) {
+        const { error } = await supabase
+          .from('volunteer_availability')
+          .update({ is_available: isAvailable, notes })
+          .eq('id', existingAvailability.id);
+
+        if (error) throw error;
+
+        setAvailabilities(prev => {
+          const newMap = new Map(prev);
+          newMap.set(serviceId, { ...existingAvailability, is_available: isAvailable, notes });
+          return newMap;
+        });
+      } else {
+        const { data, error } = await supabase
+          .from('volunteer_availability')
+          .insert({
+            service_id: serviceId,
+            volunteer_id: userId,
+            church_id: churchId,
+            is_available: isAvailable,
+            notes
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setAvailabilities(prev => {
+          const newMap = new Map(prev);
+          newMap.set(serviceId, data);
+          return newMap;
+        });
+      }
+
+      toast.success(isAvailable ? 'Disponibilidade confirmada!' : 'Indisponibilidade registrada');
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      toast.error('Erro ao atualizar disponibilidade');
+    } finally {
+      setUpdatingAvailability(null);
     }
   };
 
@@ -170,6 +287,96 @@ export default function MySchedules() {
               Visualize e confirme suas escalas de serviço
             </p>
           </div>
+
+          {/* Availability Section */}
+          {upcomingServices.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <CalendarCheck className="w-5 h-5 text-primary" />
+                Informar Disponibilidade
+              </h2>
+              <div className="grid gap-3">
+                {upcomingServices.map((service) => {
+                  const availability = availabilities.get(service.id);
+                  const isUpdating = updatingAvailability === service.id;
+                  
+                  return (
+                    <Card key={service.id} className="bg-card/50 border-border/50">
+                      <CardContent className="py-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">{service.nome}</p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {format(new Date(service.data_hora), "dd/MM/yyyy", { locale: ptBR })}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                {format(new Date(service.data_hora), "HH:mm", { locale: ptBR })}
+                              </span>
+                            </div>
+                            {availability && (
+                              <div className="mt-2">
+                                <Textarea
+                                  placeholder="Observações (opcional)"
+                                  value={availabilityNotes.get(service.id) || ''}
+                                  onChange={(e) => setAvailabilityNotes(prev => {
+                                    const newMap = new Map(prev);
+                                    newMap.set(service.id, e.target.value);
+                                    return newMap;
+                                  })}
+                                  className="text-sm h-16 resize-none"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={availability?.is_available === true ? "default" : "outline"}
+                              onClick={() => handleAvailabilityChange(service.id, true)}
+                              disabled={isUpdating}
+                              className={availability?.is_available === true 
+                                ? "bg-green-600 hover:bg-green-700" 
+                                : "border-green-500/30 text-green-600 hover:bg-green-500/10"}
+                            >
+                              {isUpdating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <CalendarCheck className="w-4 h-4 mr-1" />
+                                  Disponível
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={availability?.is_available === false ? "default" : "outline"}
+                              onClick={() => handleAvailabilityChange(service.id, false)}
+                              disabled={isUpdating}
+                              className={availability?.is_available === false 
+                                ? "bg-red-600 hover:bg-red-700" 
+                                : "border-red-500/30 text-red-600 hover:bg-red-500/10"}
+                            >
+                              {isUpdating ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <CalendarX className="w-4 h-4 mr-1" />
+                                  Indisponível
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
