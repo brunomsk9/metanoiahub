@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DiscipleshipHistory } from "./DiscipleshipHistory";
+import { DiscipleshipOrganogram } from "./DiscipleshipOrganogram";
 import { useChurch } from "@/contexts/ChurchContext";
 
 interface Profile {
@@ -685,6 +686,12 @@ export function AdminDiscipleship() {
               Relacionamentos
             </TabsTrigger>
             {isAdmin && (
+              <TabsTrigger value="organogram" className="gap-2">
+                <GitBranch className="w-4 h-4" />
+                Organograma
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="history" className="gap-2">
                 <History className="w-4 h-4" />
                 Histórico
@@ -1191,6 +1198,12 @@ export function AdminDiscipleship() {
         </CardContent>
       </Card>
       </TabsContent>
+
+      {isAdmin && (
+        <TabsContent value="organogram">
+          <DiscipleshipOrganogram />
+        </TabsContent>
+      )}
 
       {isAdmin && (
         <TabsContent value="history">
