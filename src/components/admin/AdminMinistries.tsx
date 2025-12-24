@@ -14,13 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableUserSelect } from './SearchableUserSelect';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -389,44 +383,25 @@ export function AdminMinistries() {
                       <Crown className="h-4 w-4 text-amber-500" />
                       Líder Principal
                     </Label>
-                    <Select
-                      value={formData.lider_principal_id || "__none__"}
-                      onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value === "__none__" ? "" : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum</SelectItem>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableUserSelect
+                      users={users}
+                      value={formData.lider_principal_id}
+                      onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value })}
+                      placeholder="Buscar líder..."
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <User className="h-4 w-4 text-blue-500" />
                       Líder Secundário
                     </Label>
-                    <Select
-                      value={formData.lider_secundario_id || "__none__"}
-                      onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value === "__none__" ? "" : value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum</SelectItem>
-                        {users.filter(u => u.id !== formData.lider_principal_id).map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableUserSelect
+                      users={users}
+                      value={formData.lider_secundario_id}
+                      onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value })}
+                      placeholder="Buscar líder..."
+                      excludeIds={formData.lider_principal_id ? [formData.lider_principal_id] : []}
+                    />
                   </div>
                 </div>
               </div>
@@ -576,44 +551,25 @@ export function AdminMinistries() {
                   <Crown className="h-4 w-4 text-amber-500" />
                   Líder Principal
                 </Label>
-                <Select
-                  value={formData.lider_principal_id || "__none__"}
-                  onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value === "__none__" ? "" : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Nenhum</SelectItem>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableUserSelect
+                  users={users}
+                  value={formData.lider_principal_id}
+                  onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value })}
+                  placeholder="Buscar líder..."
+                />
               </div>
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <User className="h-4 w-4 text-blue-500" />
                   Líder Secundário
                 </Label>
-                <Select
-                  value={formData.lider_secundario_id || "__none__"}
-                  onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value === "__none__" ? "" : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Nenhum</SelectItem>
-                    {users.filter(u => u.id !== formData.lider_principal_id).map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableUserSelect
+                  users={users}
+                  value={formData.lider_secundario_id}
+                  onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value })}
+                  placeholder="Buscar líder..."
+                  excludeIds={formData.lider_principal_id ? [formData.lider_principal_id] : []}
+                />
               </div>
             </div>
           </div>
