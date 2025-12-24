@@ -250,6 +250,39 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     setIsAddVolunteerOpen(true);
   };
 
+  const sendScheduleNotification = async (volunteerId: string, positionName: string, ministryName: string) => {
+    try {
+      // Get volunteer email from auth.users via profiles
+      const { data: userData } = await supabase.rpc('get_user_emails');
+      const volunteerData = users.find(u => u.id === volunteerId);
+      const volunteerEmail = userData?.find((u: { id: string; email: string }) => u.id === volunteerId)?.email;
+      
+      if (!volunteerEmail || !volunteerData || !selectedService) {
+        console.log('Missing data for email notification');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('send-schedule-notification', {
+        body: {
+          volunteerEmail,
+          volunteerName: volunteerData.nome,
+          serviceName: selectedService.nome,
+          serviceDate: selectedService.data_hora,
+          positionName,
+          ministryName,
+        },
+      });
+
+      if (error) {
+        console.error('Failed to send notification:', error);
+      } else {
+        console.log('Notification sent to:', volunteerEmail);
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
+
   const handleAddVolunteer = async () => {
     if (!selectedPosition || !selectedVolunteerId || !selectedServiceId || !churchId) {
       toast.error('Selecione um voluntário');
@@ -284,6 +317,14 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       toast.success('Voluntário escalado com sucesso');
       setIsAddVolunteerOpen(false);
       fetchSchedules();
+      
+      // Send email notification
+      const ministry = ministries.find(m => m.id === selectedPosition.ministry_id);
+      sendScheduleNotification(
+        selectedVolunteerId, 
+        selectedPosition.nome, 
+        ministry?.nome || 'Ministério'
+      );
     }
 
     setSaving(false);

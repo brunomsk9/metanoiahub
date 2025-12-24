@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-presentation-pdf]
 verify_jwt = false
+
+[functions.send-schedule-notification]
+verify_jwt = false
