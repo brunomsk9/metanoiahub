@@ -19,6 +19,7 @@ interface UserRow {
   email: string;
   nome: string;
   role: string;
+  genero?: string;
 }
 
 interface ImportResult {
@@ -94,6 +95,7 @@ export function AdminUserImport() {
     const emailIdx = headers.findIndex(h => h === 'email');
     const nomeIdx = headers.findIndex(h => h === 'nome' || h === 'name' || h === 'nome completo');
     const roleIdx = headers.findIndex(h => h === 'role' || h === 'papel' || h === 'tipo');
+    const generoIdx = headers.findIndex(h => h === 'genero' || h === 'sexo' || h === 'gender');
 
     if (emailIdx === -1 || nomeIdx === -1) {
       toast.error("CSV deve conter colunas 'email' e 'nome'");
@@ -104,10 +106,16 @@ export function AdminUserImport() {
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
       if (values[emailIdx]) {
+        const generoValue = generoIdx !== -1 ? values[generoIdx]?.toLowerCase() : undefined;
+        const validGenero = generoValue === 'masculino' || generoValue === 'm' ? 'masculino' 
+          : generoValue === 'feminino' || generoValue === 'f' ? 'feminino' 
+          : undefined;
+        
         users.push({
           email: values[emailIdx],
           nome: values[nomeIdx] || '',
-          role: roleIdx !== -1 ? values[roleIdx] || 'discipulo' : 'discipulo'
+          role: roleIdx !== -1 ? values[roleIdx] || 'discipulo' : 'discipulo',
+          genero: validGenero
         });
       }
     }
@@ -216,7 +224,7 @@ export function AdminUserImport() {
   };
 
   const downloadTemplate = () => {
-    const template = "email,nome,role\njohn@example.com,John Doe,discipulo\njane@example.com,Jane Smith,discipulador";
+    const template = "email,nome,role,genero\njohn@example.com,John Doe,discipulo,masculino\njane@example.com,Jane Smith,discipulador,feminino";
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -312,7 +320,7 @@ export function AdminUserImport() {
         <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-4" />
         <p className="text-foreground font-medium">Clique para selecionar arquivo CSV</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Colunas: email, nome, role (discipulo/discipulador/admin)
+          Colunas: email, nome, role (discipulo/discipulador/admin), genero (masculino/feminino)
         </p>
       </div>
 
@@ -335,6 +343,7 @@ export function AdminUserImport() {
                 <tr>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Email</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Nome</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Sexo</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Role</th>
                   {results && (
                     <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
@@ -348,6 +357,15 @@ export function AdminUserImport() {
                     <tr key={idx} className="hover:bg-muted/30">
                       <td className="px-4 py-2 text-foreground">{user.email}</td>
                       <td className="px-4 py-2 text-foreground">{user.nome}</td>
+                      <td className="px-4 py-2">
+                        {user.genero ? (
+                          <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">
+                            {user.genero === 'masculino' ? 'M' : 'F'}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2">
                         <span className="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">
                           {user.role}
