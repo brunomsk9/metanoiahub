@@ -202,6 +202,17 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const [selectedVolunteerId, setSelectedVolunteerId] = useState('');
   const [isAutoScheduling, setIsAutoScheduling] = useState(false);
   const [recentSchedules, setRecentSchedules] = useState<{ volunteer_id: string; service_id: string }[]>([]);
+  
+  // Auto-schedule preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewSchedules, setPreviewSchedules] = useState<{
+    ministry: Ministry;
+    position: Position;
+    volunteer: UserProfile;
+    isAvailable: boolean;
+    recentCount: number;
+  }[]>([]);
+  const [isConfirmingAutoSchedule, setIsConfirmingAutoSchedule] = useState(false);
 
   useEffect(() => {
     if (churchId) {
@@ -504,8 +515,8 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     }
   };
 
-  // Auto-scheduling function
-  const handleAutoSchedule = async () => {
+  // Generate preview of auto-scheduling
+  const handleAutoSchedulePreview = () => {
     if (!selectedServiceId || !churchId) {
       toast.error('Selecione um culto primeiro');
       return;
@@ -533,7 +544,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         .filter(a => a.is_available)
         .map(a => a.volunteer_id);
 
-      let scheduledCount = 0;
+      const preview: typeof previewSchedules = [];
 
       // For each ministry with positions
       for (const ministry of ministriesWithPositions) {
@@ -550,74 +561,101 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
 
           // Get eligible volunteers for this position
           const eligibleVolunteers = users.filter(u => {
-            // Must be in the ministry
             if (!ministryVolunteerIds.includes(u.id)) return false;
             
-            // Check gender restriction
             if (position.genero_restrito && position.genero_restrito !== 'unissex') {
               if (!u.genero || u.genero !== position.genero_restrito) return false;
             }
             
-            // Not already scheduled for this position
             if (existingSchedules.some(s => s.volunteer_id === u.id)) return false;
-            
-            // Not already scheduled in current schedules array (local state)
             if (schedules.some(s => s.volunteer_id === u.id && s.position_id === position.id)) return false;
             
             return true;
           });
 
-          // Sort volunteers by priority:
-          // 1. Available and not in recent services
-          // 2. Available but in recent services (less preferred)
-          // 3. Not available but not in recent services
-          // 4. Not available and in recent services
           const sortedVolunteers = eligibleVolunteers.sort((a, b) => {
             const aAvailable = availableVolunteers.includes(a.id);
             const bAvailable = availableVolunteers.includes(b.id);
             const aRecentCount = volunteersInRecentServices[a.id] || 0;
             const bRecentCount = volunteersInRecentServices[b.id] || 0;
             
-            // Prioritize available volunteers
             if (aAvailable !== bAvailable) return aAvailable ? -1 : 1;
-            
-            // Then prioritize those with fewer recent schedules
             return aRecentCount - bRecentCount;
           });
 
-          // Pick volunteers for slots needed
           const selectedVolunteers = sortedVolunteers.slice(0, slotsNeeded);
 
           for (const volunteer of selectedVolunteers) {
-            const { error } = await supabase.from('schedules').insert({
-              service_id: selectedServiceId,
-              ministry_id: ministry.id,
-              position_id: position.id,
-              volunteer_id: volunteer.id,
-              church_id: churchId,
-              created_by: currentUserId,
-              status: 'pending',
+            preview.push({
+              ministry,
+              position,
+              volunteer,
+              isAvailable: availableVolunteers.includes(volunteer.id),
+              recentCount: volunteersInRecentServices[volunteer.id] || 0,
             });
-
-            if (!error) {
-              scheduledCount++;
-            }
           }
         }
       }
 
+      if (preview.length === 0) {
+        toast.info('Nenhum voluntário disponível para escalar ou todas as posições já estão preenchidas');
+      } else {
+        setPreviewSchedules(preview);
+        setIsPreviewOpen(true);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar preview:', error);
+      toast.error('Erro ao gerar preview do escalonamento');
+    } finally {
+      setIsAutoScheduling(false);
+    }
+  };
+
+  // Confirm and execute auto-scheduling
+  const handleConfirmAutoSchedule = async () => {
+    if (!selectedServiceId || !churchId) return;
+
+    setIsConfirmingAutoSchedule(true);
+
+    try {
+      let scheduledCount = 0;
+
+      for (const item of previewSchedules) {
+        const { error } = await supabase.from('schedules').insert({
+          service_id: selectedServiceId,
+          ministry_id: item.ministry.id,
+          position_id: item.position.id,
+          volunteer_id: item.volunteer.id,
+          church_id: churchId,
+          created_by: currentUserId,
+          status: 'pending',
+        });
+
+        if (!error) {
+          scheduledCount++;
+          
+          // Send notification
+          sendScheduleNotification(
+            item.volunteer.id,
+            item.position.nome,
+            item.ministry.nome
+          );
+        }
+      }
+
       if (scheduledCount > 0) {
-        toast.success(`${scheduledCount} voluntário(s) escalado(s) automaticamente`);
+        toast.success(`${scheduledCount} voluntário(s) escalado(s) com sucesso`);
         fetchSchedules();
         fetchRecentSchedules();
-      } else {
-        toast.info('Nenhum voluntário disponível para escalar ou todas as posições já estão preenchidas');
       }
+
+      setIsPreviewOpen(false);
+      setPreviewSchedules([]);
     } catch (error) {
       console.error('Erro no auto-escalonamento:', error);
       toast.error('Erro ao realizar escalonamento automático');
     } finally {
-      setIsAutoScheduling(false);
+      setIsConfirmingAutoSchedule(false);
     }
   };
 
@@ -790,7 +828,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleAutoSchedule}
+                  onClick={handleAutoSchedulePreview}
                   disabled={isAutoScheduling}
                 >
                   {isAutoScheduling ? (
@@ -1053,6 +1091,111 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
             <Button onClick={handleAddVolunteer} disabled={saving || !selectedVolunteerId}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Escalar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Auto-Schedule Preview */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wand2 className="h-5 w-5" />
+              Preview do Escalonamento Automático
+            </DialogTitle>
+            <DialogDescription>
+              Revise os voluntários que serão escalados antes de confirmar
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {previewSchedules.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum voluntário para escalar
+              </p>
+            ) : (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  <strong>{previewSchedules.length}</strong> voluntário(s) serão escalados
+                </div>
+                
+                {/* Group by ministry */}
+                {ministriesWithPositions
+                  .filter(m => previewSchedules.some(p => p.ministry.id === m.id))
+                  .map(ministry => {
+                    const ministryItems = previewSchedules.filter(p => p.ministry.id === ministry.id);
+                    
+                    return (
+                      <Card key={ministry.id}>
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: ministry.cor }}
+                            />
+                            {ministry.nome}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="py-2 space-y-2">
+                          {ministryItems.map((item, idx) => (
+                            <div
+                              key={`${item.position.id}-${item.volunteer.id}-${idx}`}
+                              className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                                  {item.volunteer.nome.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm">{item.volunteer.nome}</p>
+                                  <p className="text-xs text-muted-foreground">{item.position.nome}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {item.recentCount > 0 && (
+                                  <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-700">
+                                    {item.recentCount}x recente
+                                  </Badge>
+                                )}
+                                {item.isAvailable ? (
+                                  <Badge className="bg-green-500/20 text-green-700 border-green-300">
+                                    <Check className="w-3 h-3 mr-1" />
+                                    Disponível
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-700">
+                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                    Não informado
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Critérios aplicados:</strong> Prioridade para voluntários disponíveis e que não serviram nos últimos 2 cultos. Restrições de gênero respeitadas.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmAutoSchedule}
+              disabled={isConfirmingAutoSchedule || previewSchedules.length === 0}
+            >
+              {isConfirmingAutoSchedule && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar Escalonamento
             </Button>
           </DialogFooter>
         </DialogContent>
