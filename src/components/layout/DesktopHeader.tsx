@@ -29,7 +29,7 @@ export const DesktopHeader = memo(function DesktopHeader({
   const { church } = useChurch();
 
   return (
-    <header className="hidden lg:flex fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-sm border-b border-border/50 z-40">
+    <header className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-sm border-b border-border/50 z-40">
       <div className="flex items-center justify-between w-full px-6">
         {/* Logo */}
         <div className="flex items-center gap-3">
