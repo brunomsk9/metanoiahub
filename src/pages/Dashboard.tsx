@@ -12,7 +12,8 @@ import { DailyHabitsCard } from "@/components/DailyHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Leaderboard } from "@/components/Leaderboard";
-import { BookOpen, Flame, ChevronRight, BookMarked, Play, Users, Trophy } from "lucide-react";
+import { BookOpen, Flame, ChevronRight, BookMarked, Play, Users, Trophy, CalendarDays } from "lucide-react";
+import { VolunteerSchedules } from "@/components/VolunteerSchedules";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
@@ -204,6 +205,17 @@ export default function Dashboard() {
                   </Suspense>
                 </CollapsibleSection>
               </section>
+            )}
+
+            {/* Minhas Escalas - para todos os usuários */}
+            {userId && (
+              <CollapsibleSection 
+                title="Minhas Escalas" 
+                icon={<CalendarDays className="w-4 h-4" />}
+                defaultOpen={false}
+              >
+                <VolunteerSchedules userId={userId} />
+              </CollapsibleSection>
             )}
 
             {/* Ranking de XP */}
