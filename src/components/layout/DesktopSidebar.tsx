@@ -143,7 +143,7 @@ export const DesktopSidebar = memo(function DesktopSidebar({
   );
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 flex-col bg-card border-r border-border/50">
+    <aside className="hidden lg:flex fixed right-0 top-0 bottom-0 w-64 flex-col bg-card border-l border-border/50">
       {/* Logo */}
       <div className="p-4 border-b border-border/50">
         <div className="flex items-center gap-3">
