@@ -1,11 +1,31 @@
-import { memo } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, Bell } from "lucide-react";
+import { memo, useState, useEffect, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { 
+  ChevronLeft, 
+  Bell, 
+  Menu, 
+  X, 
+  Home, 
+  GraduationCap, 
+  Trophy, 
+  User, 
+  Settings, 
+  Calendar, 
+  BookOpen, 
+  Library, 
+  AlertCircle,
+  LogOut,
+  ShieldCheck
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useChurch } from "@/contexts/ChurchContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface AppHeaderProps {
   title?: string;
@@ -14,6 +34,21 @@ interface AppHeaderProps {
   className?: string;
   transparent?: boolean;
 }
+
+// Cache for user roles
+let cachedRoles: {
+  isAdmin: boolean;
+  isDiscipulador: boolean;
+  isSuperAdmin: boolean;
+  isLiderMinisterial: boolean;
+  userId: string | null;
+} = {
+  isAdmin: false,
+  isDiscipulador: false,
+  isSuperAdmin: false,
+  isLiderMinisterial: false,
+  userId: null,
+};
 
 export const AppHeader = memo(function AppHeader({
   title,
@@ -24,7 +59,86 @@ export const AppHeader = memo(function AppHeader({
 }: AppHeaderProps) {
   const { church } = useChurch();
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === "/dashboard";
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
+  const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
+  const [isLiderMinisterial, setIsLiderMinisterial] = useState(cachedRoles.isLiderMinisterial);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    checkRoles();
+  }, []);
+
+  const checkRoles = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      if (cachedRoles.userId === session.user.id) {
+        setIsAdmin(cachedRoles.isAdmin);
+        setIsDiscipulador(cachedRoles.isDiscipulador);
+        setIsSuperAdmin(cachedRoles.isSuperAdmin);
+        setIsLiderMinisterial(cachedRoles.isLiderMinisterial);
+      } else {
+        const [rolesRes, profileRes] = await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_id", session.user.id),
+          supabase.from("profiles").select("nome").eq("id", session.user.id).single()
+        ]);
+
+        const userRoles = rolesRes.data?.map((r) => r.role) || [];
+        const admin = userRoles.includes("admin");
+        const discipulador = userRoles.includes("discipulador");
+        const superAdmin = userRoles.includes("super_admin");
+        const liderMinisterial = userRoles.includes("lider_ministerial");
+
+        cachedRoles = {
+          isAdmin: admin,
+          isDiscipulador: discipulador,
+          isSuperAdmin: superAdmin,
+          isLiderMinisterial: liderMinisterial,
+          userId: session.user.id,
+        };
+
+        setIsAdmin(admin);
+        setIsDiscipulador(discipulador);
+        setIsSuperAdmin(superAdmin);
+        setIsLiderMinisterial(liderMinisterial);
+        setUserName(profileRes.data?.nome || "");
+      }
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  const handleNavigate = (path: string) => {
+    setIsMenuOpen(false);
+    navigate(path);
+  };
+
+  const mainNavItems = [
+    { path: "/dashboard", label: "Início", icon: Home },
+    { path: "/trilhas", label: "Trilhas", icon: GraduationCap },
+    { path: "/biblioteca", label: "Biblioteca", icon: Library },
+    { path: "/conquistas", label: "Conquistas", icon: Trophy },
+    { path: "/minhas-escalas", label: "Minhas Escalas", icon: Calendar },
+    { path: "/perfil", label: "Meu Perfil", icon: User },
+  ];
+
+  const discipuladorItems = [
+    { path: "/sos", label: "S.O.S. Discipulador", icon: AlertCircle },
+  ];
+
+  const adminItems = [
+    { path: "/admin", label: "Painel Admin", icon: Settings },
+  ];
+
+  const superAdminItems = [
+    { path: "/super-admin", label: "Super Admin", icon: ShieldCheck },
+  ];
 
   return (
     <header
@@ -75,13 +189,167 @@ export const AppHeader = memo(function AppHeader({
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <ThemeToggle />
           <Button variant="ghost" size="icon" className="h-9 w-9 relative">
             <Bell className="w-5 h-5 text-muted-foreground" />
-            {/* Notification badge placeholder */}
-            {/* <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" /> */}
           </Button>
+
+          {/* Hamburger Menu for Mobile */}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 lg:hidden">
+                <Menu className="w-5 h-5 text-foreground" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] p-0">
+              <SheetHeader className="p-4 pb-2 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={metanoiaLogo}
+                    alt="Metanoia Hub"
+                    className="w-10 h-10 object-contain"
+                  />
+                  <div>
+                    <SheetTitle className="text-left text-base">Metanoia Hub</SheetTitle>
+                    {userName && (
+                      <p className="text-xs text-muted-foreground">Olá, {userName.split(' ')[0]}</p>
+                    )}
+                  </div>
+                </div>
+              </SheetHeader>
+
+              <ScrollArea className="flex-1 h-[calc(100vh-140px)]">
+                <div className="p-2">
+                  {/* Main Navigation */}
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 py-2">
+                      Navegação
+                    </p>
+                    {mainNavItems.map((item) => {
+                      const isActive = location.pathname === item.path;
+                      return (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigate(item.path)}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
+                            isActive 
+                              ? "bg-primary/10 text-primary font-medium" 
+                              : "text-foreground hover:bg-muted"
+                          )}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Discipulador Section */}
+                  {isDiscipulador && (
+                    <>
+                      <Separator className="my-3" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 py-2">
+                          Discipulador
+                        </p>
+                        {discipuladorItems.map((item) => {
+                          const isActive = location.pathname === item.path;
+                          return (
+                            <button
+                              key={item.path}
+                              onClick={() => handleNavigate(item.path)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
+                                isActive 
+                                  ? "bg-primary/10 text-primary font-medium" 
+                                  : "text-foreground hover:bg-muted"
+                              )}
+                            >
+                              <item.icon className="w-5 h-5" />
+                              <span className="text-sm">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Admin Section */}
+                  {(isAdmin || isLiderMinisterial) && (
+                    <>
+                      <Separator className="my-3" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 py-2">
+                          Administração
+                        </p>
+                        {adminItems.map((item) => {
+                          const isActive = location.pathname.startsWith(item.path);
+                          return (
+                            <button
+                              key={item.path}
+                              onClick={() => handleNavigate(item.path)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
+                                isActive 
+                                  ? "bg-primary/10 text-primary font-medium" 
+                                  : "text-foreground hover:bg-muted"
+                              )}
+                            >
+                              <item.icon className="w-5 h-5" />
+                              <span className="text-sm">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Super Admin Section */}
+                  {isSuperAdmin && (
+                    <>
+                      <Separator className="my-3" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 py-2">
+                          Super Admin
+                        </p>
+                        {superAdminItems.map((item) => {
+                          const isActive = location.pathname === item.path;
+                          return (
+                            <button
+                              key={item.path}
+                              onClick={() => handleNavigate(item.path)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
+                                isActive 
+                                  ? "bg-primary/10 text-primary font-medium" 
+                                  : "text-foreground hover:bg-muted"
+                              )}
+                            >
+                              <item.icon className="w-5 h-5" />
+                              <span className="text-sm">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </ScrollArea>
+
+              {/* Footer */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-sm font-medium">Sair da conta</span>
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
