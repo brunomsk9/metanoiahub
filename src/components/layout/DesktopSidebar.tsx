@@ -9,29 +9,17 @@ import {
   Settings,
   Users,
   Calendar,
-  LogOut,
   ChevronDown,
   ShieldAlert,
-  UserCircle,
   FolderOpen,
-  Church,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { useChurch } from "@/contexts/ChurchContext";
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-
-interface DesktopSidebarProps {
-  onLogout?: () => void;
-  userName?: string;
-}
 
 // Cache for user roles
 let cachedRoles: {
@@ -48,12 +36,8 @@ let cachedRoles: {
   userId: null,
 };
 
-export const DesktopSidebar = memo(function DesktopSidebar({
-  onLogout,
-  userName,
-}: DesktopSidebarProps) {
+export const DesktopSidebar = memo(function DesktopSidebar() {
   const location = useLocation();
-  const { church } = useChurch();
   const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
   const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
   const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
@@ -143,31 +127,7 @@ export const DesktopSidebar = memo(function DesktopSidebar({
   );
 
   return (
-    <aside className="hidden lg:flex fixed right-0 top-0 bottom-0 w-64 flex-col bg-card border-l border-border/50">
-      {/* Logo */}
-      <div className="p-4 border-b border-border/50">
-        <div className="flex items-center gap-3">
-          <img
-            src={metanoiaLogo}
-            alt="Metanoia Hub"
-            className="w-10 h-10 object-contain"
-          />
-          <div>
-            <span className="font-display font-semibold text-foreground text-base tracking-tight">
-              Metanoia Hub
-            </span>
-            {church && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Church className="w-3 h-3 text-primary" />
-                <span className="text-xs font-medium text-primary">
-                  {church.nome}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-56 flex-col bg-card border-r border-border/50">
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         <NavItem
@@ -275,37 +235,6 @@ export const DesktopSidebar = memo(function DesktopSidebar({
           </div>
         )}
       </nav>
-
-      {/* User Section */}
-      <div className="p-3 border-t border-border/50">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-            {userName?.charAt(0).toUpperCase() || "U"}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {userName || "Usuário"}
-            </p>
-            <NavLink
-              to="/perfil"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Ver perfil
-            </NavLink>
-          </div>
-          <ThemeToggle />
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onLogout}
-          className="w-full mt-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sair
-        </Button>
-      </div>
     </aside>
   );
 });
