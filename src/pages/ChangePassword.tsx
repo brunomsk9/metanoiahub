@@ -78,20 +78,27 @@ const ChangePassword = () => {
       // Update profile to mark password as changed
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .update({ needs_password_change: false })
-          .eq('id', user.id);
+          .eq('id', user.id)
+          .select('onboarding_completed')
+          .single();
 
         if (profileError) throw profileError;
+
+        toast({
+          title: "Senha alterada",
+          description: "Sua senha foi alterada com sucesso!"
+        });
+
+        // Redirect to onboarding if not completed, otherwise dashboard
+        if (!profile?.onboarding_completed) {
+          navigate('/onboarding');
+        } else {
+          navigate('/dashboard');
+        }
       }
-
-      toast({
-        title: "Senha alterada",
-        description: "Sua senha foi alterada com sucesso!"
-      });
-
-      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "Erro ao alterar senha",

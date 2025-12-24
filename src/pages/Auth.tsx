@@ -30,10 +30,10 @@ export default function Auth() {
       if (error) throw error;
       
       if (data.user) {
-        // Fetch user profile to get their church_id
+        // Fetch user profile to get their church_id and check onboarding status
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('needs_password_change, church_id')
+          .select('needs_password_change, church_id, onboarding_completed')
           .eq('id', data.user.id)
           .maybeSingle();
         
@@ -63,11 +63,24 @@ export default function Auth() {
           setIsLoading(false);
           return;
         }
+
+        toast({ title: "Bem-vindo!", description: "Login realizado com sucesso." });
         
+        // Check if user needs to change password first
+        if (profile?.needs_password_change) {
+          navigate("/alterar-senha");
+          return;
+        }
+        
+        // Check if user needs onboarding
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding");
+          return;
+        }
+        
+        // Otherwise go to dashboard
+        navigate("/dashboard");
       }
-      
-      toast({ title: "Bem-vindo de volta!", description: "Login realizado com sucesso." });
-      navigate("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
