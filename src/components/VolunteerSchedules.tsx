@@ -79,8 +79,59 @@ export function VolunteerSchedules({ userId, churchId }: VolunteerSchedulesProps
     enabled: !!userId,
   });
 
+  const notifyLeader = async (schedule: Schedule, status: "confirmed" | "declined") => {
+    try {
+      if (!schedule.ministry?.id) return;
+      
+      // Get ministry leader info
+      const { data: ministry } = await supabase
+        .from("ministries")
+        .select("lider_principal_id, lider_secundario_id")
+        .eq("id", schedule.ministry.id)
+        .single();
+      
+      if (!ministry?.lider_principal_id) return;
+
+      // Get leader profile and email
+      const { data: leaderProfile } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", ministry.lider_principal_id)
+        .single();
+
+      const { data: userEmails } = await supabase.rpc('get_user_emails');
+      const leaderEmail = userEmails?.find((u: { id: string; email: string }) => u.id === ministry.lider_principal_id)?.email;
+      
+      // Get volunteer name
+      const { data: volunteerProfile } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", userId)
+        .single();
+
+      if (!leaderEmail || !volunteerProfile) return;
+
+      await supabase.functions.invoke('notify-schedule-response', {
+        body: {
+          leaderEmail,
+          leaderName: leaderProfile?.nome || 'Líder',
+          volunteerName: volunteerProfile.nome,
+          serviceName: schedule.service?.nome || 'Culto',
+          serviceDate: schedule.service?.data_hora,
+          positionName: schedule.position?.nome || 'Posição',
+          ministryName: schedule.ministry?.nome || 'Ministério',
+          status,
+        },
+      });
+
+      console.log('Leader notification sent');
+    } catch (error) {
+      console.error('Error notifying leader:', error);
+    }
+  };
+
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ scheduleId, status }: { scheduleId: string; status: string }) => {
+    mutationFn: async ({ scheduleId, status, schedule }: { scheduleId: string; status: string; schedule: Schedule }) => {
       const { error } = await supabase
         .from("schedules")
         .update({ 
@@ -90,6 +141,9 @@ export function VolunteerSchedules({ userId, churchId }: VolunteerSchedulesProps
         .eq("id", scheduleId);
 
       if (error) throw error;
+      
+      // Notify leader about the response
+      await notifyLeader(schedule, status as "confirmed" | "declined");
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["volunteer-schedules"] });
@@ -316,8 +370,8 @@ export function VolunteerSchedules({ userId, churchId }: VolunteerSchedulesProps
                   key={schedule.id}
                   schedule={schedule}
                   now={now}
-                  onConfirm={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "confirmed" })}
-                  onDecline={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "declined" })}
+                  onConfirm={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "confirmed", schedule })}
+                  onDecline={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "declined", schedule })}
                   isUpdating={updateStatusMutation.isPending}
                 />
               ))}
@@ -361,8 +415,8 @@ export function VolunteerSchedules({ userId, churchId }: VolunteerSchedulesProps
                   schedule={schedule}
                   now={now}
                   showDate
-                  onConfirm={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "confirmed" })}
-                  onDecline={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "declined" })}
+                  onConfirm={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "confirmed", schedule })}
+                  onDecline={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "declined", schedule })}
                   isUpdating={updateStatusMutation.isPending}
                 />
               ))
