@@ -1154,6 +1154,24 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                             );
                             const isReplacing = replacingItem?.index === itemIndex;
                             
+                            // Check if volunteer is already scheduled in another position for this service
+                            const otherSchedulesForVolunteer = schedules.filter(
+                              s => s.volunteer_id === item.volunteer.id && s.position_id !== item.position.id
+                            );
+                            const otherPreviewForVolunteer = previewSchedules.filter(
+                              (p, i) => p.volunteer.id === item.volunteer.id && i !== itemIndex
+                            );
+                            const isDuplicate = otherSchedulesForVolunteer.length > 0 || otherPreviewForVolunteer.length > 0;
+                            
+                            // Get position names where volunteer is already scheduled
+                            const duplicatePositionNames = [
+                              ...otherSchedulesForVolunteer.map(s => {
+                                const pos = positions.find(p => p.id === s.position_id);
+                                return pos?.nome || 'Outra posição';
+                              }),
+                              ...otherPreviewForVolunteer.map(p => p.position.nome)
+                            ];
+                            
                             // Get eligible volunteers for replacement
                             const eligibleForReplacement = users.filter(u => {
                               const ministryVolunteerIds = volunteers
@@ -1180,20 +1198,35 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                                 key={`${item.position.id}-${item.volunteer.id}-${idx}`}
                                 className={cn(
                                   "p-2 bg-muted/50 rounded-lg group",
-                                  isReplacing && "ring-2 ring-primary"
+                                  isReplacing && "ring-2 ring-primary",
+                                  isDuplicate && "bg-red-500/10 border border-red-300"
                                 )}
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                                    <div className={cn(
+                                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                                      isDuplicate ? "bg-red-500/20 text-red-700" : "bg-primary/10 text-primary"
+                                    )}>
                                       {item.volunteer.nome.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
                                       <p className="font-medium text-sm">{item.volunteer.nome}</p>
                                       <p className="text-xs text-muted-foreground">{item.position.nome}</p>
+                                      {isDuplicate && (
+                                        <p className="text-xs text-red-600 font-medium">
+                                          Também em: {duplicatePositionNames.join(', ')}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
+                                    {isDuplicate && (
+                                      <Badge className="bg-red-500/20 text-red-700 border-red-300">
+                                        <AlertCircle className="w-3 h-3 mr-1" />
+                                        Duplicado
+                                      </Badge>
+                                    )}
                                     {item.recentCount > 0 && (
                                       <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-700">
                                         {item.recentCount}x recente
