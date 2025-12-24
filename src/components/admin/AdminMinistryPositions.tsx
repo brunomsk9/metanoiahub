@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Trash2, Edit, GripVertical, Users, ChevronDown, ChevronRight } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, Edit, GripVertical, Users, ChevronDown, ChevronRight, User, UserCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+type GenderType = 'masculino' | 'feminino' | 'unissex';
+
+const GENDER_OPTIONS: { value: GenderType; label: string; icon: React.ReactNode }[] = [
+  { value: 'unissex', label: 'Unissex', icon: <Users className="h-4 w-4" /> },
+  { value: 'masculino', label: 'Apenas Homens', icon: <User className="h-4 w-4" /> },
+  { value: 'feminino', label: 'Apenas Mulheres', icon: <UserCircle2 className="h-4 w-4" /> },
+];
 
 interface Ministry {
   id: string;
@@ -39,6 +54,7 @@ interface Position {
   is_active: boolean;
   ministry_id: string;
   church_id: string;
+  genero_restrito: GenderType | null;
 }
 
 export function AdminMinistryPositions() {
@@ -60,6 +76,7 @@ export function AdminMinistryPositions() {
     nome: '',
     descricao: '',
     quantidade_minima: 1,
+    genero_restrito: 'unissex' as GenderType,
   });
 
   useEffect(() => {
@@ -119,6 +136,7 @@ export function AdminMinistryPositions() {
       nome: positionForm.nome,
       descricao: positionForm.descricao || null,
       quantidade_minima: positionForm.quantidade_minima,
+      genero_restrito: positionForm.genero_restrito,
       ministry_id: selectedMinistryId,
       church_id: churchId,
       ordem: editingPosition ? editingPosition.ordem : maxOrdem + 1,
@@ -171,6 +189,7 @@ export function AdminMinistryPositions() {
       nome: '',
       descricao: '',
       quantidade_minima: 1,
+      genero_restrito: 'unissex',
     });
     setEditingPosition(null);
     setSelectedMinistryId('');
@@ -189,6 +208,7 @@ export function AdminMinistryPositions() {
       nome: position.nome,
       descricao: position.descricao || '',
       quantidade_minima: position.quantidade_minima,
+      genero_restrito: position.genero_restrito || 'unissex',
     });
     setIsPositionDialogOpen(true);
   };
@@ -320,9 +340,16 @@ export function AdminMinistryPositions() {
                                 {position.descricao && (
                                   <p className="text-sm text-muted-foreground">{position.descricao}</p>
                                 )}
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Mínimo: {position.quantidade_minima} {position.quantidade_minima === 1 ? 'pessoa' : 'pessoas'}
-                                </p>
+                                <div className="flex items-center gap-3 mt-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    Mínimo: {position.quantidade_minima} {position.quantidade_minima === 1 ? 'pessoa' : 'pessoas'}
+                                  </p>
+                                  {position.genero_restrito && position.genero_restrito !== 'unissex' && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {position.genero_restrito === 'masculino' ? '♂ Homens' : '♀ Mulheres'}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
@@ -404,6 +431,30 @@ export function AdminMinistryPositions() {
               />
               <p className="text-xs text-muted-foreground">
                 Quantas pessoas no mínimo são necessárias nesta posição por culto
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Restrição de Gênero</Label>
+              <Select
+                value={positionForm.genero_restrito}
+                onValueChange={(value: GenderType) => setPositionForm({ ...positionForm, genero_restrito: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        {option.icon}
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Define se a posição é exclusiva para homens, mulheres ou ambos
               </p>
             </div>
           </div>
