@@ -38,7 +38,7 @@ export function AppShell({
       <main
         className={cn(
           "pt-14 lg:pt-0 pb-6",
-          "lg:ml-64", // Space for desktop sidebar
+          "lg:mr-64", // Space for desktop sidebar on right
           className
         )}
       >
