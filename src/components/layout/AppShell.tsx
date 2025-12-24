@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "./AppHeader";
 import { DesktopHeader } from "./DesktopHeader";
+import { DesktopSidebar } from "./DesktopSidebar";
 
 interface AppShellProps {
   children: ReactNode;
@@ -26,8 +27,11 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop Header with logo + navigation */}
+      {/* Desktop Header with logo + user */}
       <DesktopHeader title={headerTitle} onLogout={onLogout} userName={userName} />
+
+      {/* Desktop Sidebar - below header, on the left */}
+      <DesktopSidebar />
 
       {/* Mobile Header with hamburger menu */}
       <div className="lg:hidden">
@@ -38,6 +42,7 @@ export function AppShell({
       <main
         className={cn(
           "pt-14 lg:pt-16 pb-6",
+          "lg:ml-56", // Space for desktop sidebar on left
           className
         )}
       >
