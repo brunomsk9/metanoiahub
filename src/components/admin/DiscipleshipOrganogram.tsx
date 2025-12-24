@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Users, User, ChevronDown, ChevronRight, Search, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Loader2, Users, User, ChevronDown, ChevronRight, Search, ZoomIn, ZoomOut, Maximize2, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,7 @@ export function DiscipleshipOrganogram() {
   const [search, setSearch] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [zoom, setZoom] = useState(100);
+  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>('all');
 
   useEffect(() => {
     if (churchId) {
@@ -65,6 +67,14 @@ export function DiscipleshipOrganogram() {
     
     setLoading(false);
   };
+
+  // Get all discipuladores for filter
+  const discipuladores = useMemo(() => {
+    const discipuladorIds = new Set(relationships.map(r => r.discipulador_id));
+    return profiles
+      .filter(p => discipuladorIds.has(p.id))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [profiles, relationships]);
 
   // Build tree structure
   const tree = useMemo(() => {
@@ -116,16 +126,24 @@ export function DiscipleshipOrganogram() {
     };
 
     const roots: TreeNode[] = [];
-    rootDiscipuladores.forEach(id => {
-      const node = buildNode(id, new Set());
+    
+    // If a specific discipulador is selected, start from that person
+    if (selectedDiscipulador && selectedDiscipulador !== 'all') {
+      const node = buildNode(selectedDiscipulador, new Set());
       if (node) roots.push(node);
-    });
+    } else {
+      // Show all root discipuladores
+      rootDiscipuladores.forEach(id => {
+        const node = buildNode(id, new Set());
+        if (node) roots.push(node);
+      });
+    }
 
     // Sort roots by disciple count
     roots.sort((a, b) => b.discipleCount - a.discipleCount);
 
     return roots;
-  }, [profiles, relationships]);
+  }, [profiles, relationships, selectedDiscipulador]);
 
   // Expand all nodes initially
   useEffect(() => {
@@ -325,17 +343,39 @@ export function DiscipleshipOrganogram() {
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-card border border-border rounded-lg p-4">
-        <div className="relative flex-1 w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar pessoa..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+      <div className="flex flex-col gap-3 bg-card border border-border rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          {/* Filter by Discipulador */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="Filtrar por discipulador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os discipuladores</SelectItem>
+                {discipuladores.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Search */}
+          <div className="relative flex-1 w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar pessoa..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 justify-end">
           <Button variant="outline" size="sm" onClick={expandAll}>
             <Maximize2 className="h-4 w-4 mr-1" />
             Expandir
