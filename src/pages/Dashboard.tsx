@@ -1,7 +1,7 @@
 import { useState, useCallback, memo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { MentorChatButton } from "@/components/MentorChat";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { PageTransition } from "@/components/PageTransition";
 import { ReadingPlanCard } from "@/components/ReadingPlanCard";
 import { AlicerceProgress } from "@/components/AlicerceProgress";
@@ -87,29 +87,23 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Sidebar onLogout={handleLogout} userName="" />
-        <main className="pt-14 lg:pt-16 pb-24">
-          <div className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6">
-            <SectionSkeleton />
-            <SectionSkeleton />
-            <SectionSkeleton />
-          </div>
-        </main>
-      </div>
+      <AppShell onLogout={handleLogout} userName="">
+        <div className="space-y-6 pt-4">
+          <SectionSkeleton />
+          <SectionSkeleton />
+          <SectionSkeleton />
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} userName={userName} />
-      
-      <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-24">
-          <div className="px-4 lg:px-6 max-w-2xl mx-auto space-y-6">
-            
+    <>
+      <AppShell onLogout={handleLogout} userName={userName}>
+        <PageTransition>
+          <div className="space-y-6 max-w-2xl mx-auto lg:max-w-none">
             {/* Greeting */}
-            <header className="pt-4">
+            <header className="pt-2">
               <p className="text-muted-foreground text-sm">Olá,</p>
               <h1 className="text-xl font-semibold text-foreground">{userName}</h1>
             </header>
@@ -428,8 +422,8 @@ export default function Dashboard() {
             </CollapsibleSection>
 
           </div>
-        </main>
-      </PageTransition>
+        </PageTransition>
+      </AppShell>
 
       <MentorChatButton />
 
@@ -439,6 +433,6 @@ export default function Dashboard() {
         plan={selectedPlanForModal}
         onPlanStarted={handlePlanStarted}
       />
-    </div>
+    </>
   );
 }
