@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 import {
   Collapsible,
@@ -25,6 +23,18 @@ import {
 import { SearchableUserSelect } from './SearchableUserSelect';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { cn } from '@/lib/utils';
 
 interface Service {
   id: string;
@@ -78,6 +88,92 @@ interface VolunteerAvailability {
 
 interface ServiceScheduleBuilderProps {
   serviceId?: string;
+}
+
+// Draggable Schedule Component
+function DraggableSchedule({ 
+  schedule, 
+  volunteerName, 
+  statusBadge, 
+  onRemove 
+}: { 
+  schedule: Schedule; 
+  volunteerName: string; 
+  statusBadge: React.ReactNode; 
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: schedule.id,
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center justify-between p-2 bg-background rounded border transition-all",
+        isDragging && "opacity-50 shadow-lg"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+          {volunteerName.charAt(0).toUpperCase()}
+        </div>
+        <span className="font-medium text-sm">
+          {volunteerName}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        {statusBadge}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRemove}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Droppable Position Component
+function DroppablePosition({ 
+  position, 
+  isFilled, 
+  children 
+}: { 
+  position: Position; 
+  isFilled: boolean; 
+  children: React.ReactNode;
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: position.id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "p-4 rounded-lg border transition-all",
+        isFilled ? 'bg-green-50/50 border-green-200 dark:bg-green-900/10' : 'bg-background',
+        isOver && 'ring-2 ring-primary ring-offset-2 bg-primary/5'
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProps) {
@@ -340,6 +436,79 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     }
   };
 
+  // Drag and Drop state
+  const [activeSchedule, setActiveSchedule] = useState<Schedule | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const scheduleId = event.active.id as string;
+    const schedule = schedules.find(s => s.id === scheduleId);
+    setActiveSchedule(schedule || null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveSchedule(null);
+
+    if (!over) return;
+
+    const scheduleId = active.id as string;
+    const targetPositionId = over.id as string;
+    
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (!schedule || schedule.position_id === targetPositionId) return;
+
+    // Get target position info
+    const targetPosition = positions.find(p => p.id === targetPositionId);
+    if (!targetPosition) return;
+
+    // Check if volunteer is in the ministry for target position
+    const volunteerInMinistry = volunteers.some(
+      v => v.user_id === schedule.volunteer_id && v.ministry_id === targetPosition.ministry_id
+    );
+
+    if (!volunteerInMinistry) {
+      toast.error('Voluntário não pertence a este ministério');
+      return;
+    }
+
+    // Check if already scheduled in target position
+    const alreadyScheduled = schedules.some(
+      s => s.position_id === targetPositionId && s.volunteer_id === schedule.volunteer_id
+    );
+
+    if (alreadyScheduled) {
+      toast.error('Voluntário já está escalado nesta posição');
+      return;
+    }
+
+    // Update schedule
+    setSaving(true);
+    const { error } = await supabase
+      .from('schedules')
+      .update({ 
+        position_id: targetPositionId,
+        ministry_id: targetPosition.ministry_id 
+      })
+      .eq('id', scheduleId);
+
+    if (error) {
+      toast.error('Erro ao mover voluntário');
+      console.error(error);
+    } else {
+      toast.success('Voluntário movido com sucesso');
+      fetchSchedules();
+    }
+    setSaving(false);
+  };
+
   // Calculate ministries that have positions
   const ministriesWithPositions = useMemo(() => {
     return ministries.filter(m => positions.some(p => p.ministry_id === m.id));
@@ -422,7 +591,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         </Card>
       )}
 
-      {/* Ministries and Positions */}
+      {/* Ministries and Positions with Drag and Drop */}
       {ministriesWithPositions.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -434,115 +603,121 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {ministriesWithPositions.map((ministry) => {
-            const ministryPositions = getMinistryPositions(ministry.id);
-            const isExpanded = expandedMinistries.has(ministry.id);
-            const ministryScheduleCount = schedules.filter(s => s.ministry_id === ministry.id).length;
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="space-y-3">
+            {/* Drag instruction */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg">
+              <GripVertical className="h-4 w-4" />
+              <span>Arraste voluntários entre posições para reorganizar a escala</span>
+            </div>
 
-            return (
-              <Card key={ministry.id} className="overflow-hidden">
-                <Collapsible open={isExpanded} onOpenChange={() => toggleMinistry(ministry.id)}>
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          )}
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: ministry.cor }}
-                          />
-                          <CardTitle className="text-base font-medium">{ministry.nome}</CardTitle>
-                        </div>
-                        <Badge variant="secondary">
-                          {ministryScheduleCount}/{ministryPositions.reduce((sum, p) => sum + p.quantidade_minima, 0)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="pt-0 space-y-4">
-                      {ministryPositions.map((position) => {
-                        const positionSchedules = getPositionSchedules(position.id);
-                        const isFilled = positionSchedules.length >= position.quantidade_minima;
-                        const ministryVolunteers = getMinistryVolunteers(ministry.id);
+            {ministriesWithPositions.map((ministry) => {
+              const ministryPositions = getMinistryPositions(ministry.id);
+              const isExpanded = expandedMinistries.has(ministry.id);
+              const ministryScheduleCount = schedules.filter(s => s.ministry_id === ministry.id).length;
 
-                        return (
-                          <div
-                            key={position.id}
-                            className={`p-4 rounded-lg border ${
-                              isFilled ? 'bg-green-50/50 border-green-200 dark:bg-green-900/10' : 'bg-background'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{position.nome}</span>
-                                <Badge variant={isFilled ? 'default' : 'secondary'} className="text-xs">
-                                  {positionSchedules.length}/{position.quantidade_minima}
-                                </Badge>
-                                {!isFilled && (
-                                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                                )}
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openAddVolunteer(position)}
-                              >
-                                <UserPlus className="h-4 w-4 mr-1" />
-                                Escalar
-                              </Button>
-                            </div>
-
-                            {positionSchedules.length > 0 ? (
-                              <div className="space-y-2">
-                                {positionSchedules.map((schedule) => (
-                                  <div
-                                    key={schedule.id}
-                                    className="flex items-center justify-between p-2 bg-background rounded border"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
-                                        {getVolunteerName(schedule.volunteer_id).charAt(0).toUpperCase()}
-                                      </div>
-                                      <div>
-                                        <span className="font-medium text-sm">
-                                          {getVolunteerName(schedule.volunteer_id)}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {getStatusBadge(schedule.status)}
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleRemoveSchedule(schedule.id)}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+              return (
+                <Card key={ministry.id} className="overflow-hidden">
+                  <Collapsible open={isExpanded} onOpenChange={() => toggleMinistry(ministry.id)}>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
                             ) : (
-                              <p className="text-sm text-muted-foreground text-center py-2">
-                                Nenhum voluntário escalado
-                              </p>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             )}
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: ministry.cor }}
+                            />
+                            <CardTitle className="text-base font-medium">{ministry.nome}</CardTitle>
                           </div>
-                        );
-                      })}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </Card>
-            );
-          })}
-        </div>
+                          <Badge variant="secondary">
+                            {ministryScheduleCount}/{ministryPositions.reduce((sum, p) => sum + p.quantidade_minima, 0)}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 space-y-4">
+                        {ministryPositions.map((position) => {
+                          const positionSchedules = getPositionSchedules(position.id);
+                          const isFilled = positionSchedules.length >= position.quantidade_minima;
+
+                          return (
+                            <DroppablePosition
+                              key={position.id}
+                              position={position}
+                              isFilled={isFilled}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{position.nome}</span>
+                                  <Badge variant={isFilled ? 'default' : 'secondary'} className="text-xs">
+                                    {positionSchedules.length}/{position.quantidade_minima}
+                                  </Badge>
+                                  {!isFilled && (
+                                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                                  )}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openAddVolunteer(position)}
+                                >
+                                  <UserPlus className="h-4 w-4 mr-1" />
+                                  Escalar
+                                </Button>
+                              </div>
+
+                              {positionSchedules.length > 0 ? (
+                                <div className="space-y-2">
+                                  {positionSchedules.map((schedule) => (
+                                    <DraggableSchedule
+                                      key={schedule.id}
+                                      schedule={schedule}
+                                      volunteerName={getVolunteerName(schedule.volunteer_id)}
+                                      statusBadge={getStatusBadge(schedule.status)}
+                                      onRemove={() => handleRemoveSchedule(schedule.id)}
+                                    />
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground text-center py-2">
+                                  Nenhum voluntário escalado
+                                </p>
+                              )}
+                            </DroppablePosition>
+                          );
+                        })}
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
+              );
+            })}
+          </div>
+
+          <DragOverlay>
+            {activeSchedule && (
+              <div className="flex items-center gap-3 p-2 bg-background rounded border shadow-lg">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                  {getVolunteerName(activeSchedule.volunteer_id).charAt(0).toUpperCase()}
+                </div>
+                <span className="font-medium text-sm">
+                  {getVolunteerName(activeSchedule.volunteer_id)}
+                </span>
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
       )}
 
       {/* Dialog: Add Volunteer */}
