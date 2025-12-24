@@ -258,12 +258,12 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               </NavLink>
             )}
 
-            {/* Escalas - visible for all users */}
+            {/* Escalas - link to MySchedules for regular users, admin section for admins/leaders */}
             <NavLink
-              to="/admin?section=escalas"
+              to={isAdmin || isLiderMinisterial ? "/admin?section=escalas" : "/minhas-escalas"}
               className={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                location.pathname === '/admin' && location.search.includes('escalas')
+                (location.pathname === '/admin' && location.search.includes('escalas')) || location.pathname === '/minhas-escalas'
                   ? "bg-primary/10 text-primary" 
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
@@ -491,20 +491,20 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                 </div>
               )}
 
-              {/* Escalas for all users - outside Gestão section */}
-              {!isAdmin && !isDiscipulador && (
+              {/* Escalas for regular users - outside Gestão section */}
+              {!isAdmin && !isDiscipulador && !isLiderMinisterial && (
                 <div className="pt-2">
                   <NavLink
-                    to="/admin?section=escalas"
+                    to="/minhas-escalas"
                     className={cn(
                       "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                      location.pathname === '/admin' && location.search.includes('escalas')
+                      location.pathname === '/minhas-escalas'
                         ? "bg-primary/10 text-primary" 
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
                     <Calendar className="w-5 h-5" />
-                    <span>Escalas</span>
+                    <span>Minhas Escalas</span>
                   </NavLink>
                 </div>
               )}
