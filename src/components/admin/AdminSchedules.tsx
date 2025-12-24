@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit } from 'lucide-react';
+import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase } from 'lucide-react';
+import { AdminMinistryPositions } from './AdminMinistryPositions';
 import {
   Dialog,
   DialogContent,
@@ -305,6 +306,10 @@ export function AdminSchedules() {
             <Church className="h-4 w-4 mr-2" />
             Tipos de Culto
           </TabsTrigger>
+          <TabsTrigger value="posicoes" className="flex-1 sm:flex-initial">
+            <Briefcase className="h-4 w-4 mr-2" />
+            Posições
+          </TabsTrigger>
           <TabsTrigger value="agenda" className="flex-1 sm:flex-initial">
             <CalendarDays className="h-4 w-4 mr-2" />
             Agenda
@@ -379,6 +384,17 @@ export function AdminSchedules() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* Posições por Ministério */}
+        <TabsContent value="posicoes" className="mt-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Posições por Ministério</h3>
+            <p className="text-sm text-muted-foreground">
+              Configure as posições disponíveis em cada ministério para escalar voluntários
+            </p>
+          </div>
+          <AdminMinistryPositions />
         </TabsContent>
 
         {/* Agenda */}
