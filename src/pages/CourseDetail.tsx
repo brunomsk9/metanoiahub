@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Play, FileText, CheckSquare, Clock, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Play, FileText, CheckSquare, Clock, CheckCircle2 } from "lucide-react";
 
 interface Lesson {
   id: string;
@@ -122,41 +121,32 @@ export default function CourseDetail() {
   const progressPercent = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} />
-      
+    <AppShell 
+      headerTitle={course?.titulo || "Curso"} 
+      showBack 
+      backTo={course ? `/trilha/${course.track_id}` : "/trilhas"}
+      onLogout={handleLogout}
+    >
       <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-8">
-          <div className="px-4 lg:px-6 max-w-3xl mx-auto space-y-6">
-            {/* Back button */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => course && navigate(`/trilha/${course.track_id}`)}
-              className="mt-4 -ml-2"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Voltar
-            </Button>
-
-            {/* Header */}
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-4 w-96" />
-              </div>
-            ) : course && (
-              <header className="space-y-1">
-                <p className="text-xs text-muted-foreground">{course.track_titulo}</p>
-                <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
-                  {course.titulo}
-                </h1>
-                {course.descricao && (
-                  <p className="text-sm text-muted-foreground">{course.descricao}</p>
-                )}
-              </header>
-            )}
+        <div className="max-w-3xl mx-auto space-y-6">
+          {/* Header - visible on desktop */}
+          {loading ? (
+            <div className="hidden lg:block space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+          ) : course && (
+            <header className="hidden lg:block space-y-1">
+              <p className="text-xs text-muted-foreground">{course.track_titulo}</p>
+              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
+                {course.titulo}
+              </h1>
+              {course.descricao && (
+                <p className="text-sm text-muted-foreground">{course.descricao}</p>
+              )}
+            </header>
+          )}
 
             {/* Progress */}
             {!loading && lessons.length > 0 && (
@@ -230,17 +220,16 @@ export default function CourseDetail() {
               </div>
             )}
 
-            {!loading && lessons.length === 0 && (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-sm text-muted-foreground">Nenhuma aula encontrada neste curso</p>
-              </div>
-            )}
-          </div>
-        </main>
+          {!loading && lessons.length === 0 && (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-sm text-muted-foreground">Nenhuma aula encontrada neste curso</p>
+            </div>
+          )}
+        </div>
       </PageTransition>
 
       <MentorChatButton />
-    </div>
+    </AppShell>
   );
 }

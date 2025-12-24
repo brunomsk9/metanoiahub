@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchSOS } from "@/components/SearchSOS";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,21 +138,18 @@ export default function SOS() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} />
-      
+    <AppShell headerTitle="S.O.S. Discipulador" onLogout={handleLogout}>
       <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-8">
-          <div className="px-4 lg:px-6 max-w-3xl mx-auto">
-            {/* Header */}
-            <header className="pt-8 pb-8 text-center">
-              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
-                S.O.S. do Discipulador
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Recursos e orientações para ajudar seus discípulos em situações difíceis
-              </p>
-            </header>
+        <div className="max-w-3xl mx-auto">
+          {/* Header - visible on desktop */}
+          <header className="hidden lg:block pt-2 pb-8 text-center">
+            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
+              S.O.S. do Discipulador
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Recursos e orientações para ajudar seus discípulos em situações difíceis
+            </p>
+          </header>
 
             {/* Search */}
             <SearchSOS 
@@ -177,10 +174,9 @@ export default function SOS() {
               </div>
             )}
           </div>
-        </main>
-      </PageTransition>
+        </PageTransition>
 
-      <MentorChatButton />
-    </div>
+        <MentorChatButton />
+      </AppShell>
   );
 }

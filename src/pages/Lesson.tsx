@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CelebrationModal } from "@/components/CelebrationModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XPGainToast } from "@/components/XPGainToast";
+import { MobileNavigation } from "@/components/layout";
 
 const XP_PER_LESSON = 10;
 
