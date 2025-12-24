@@ -29,8 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { format, addDays, startOfWeek, endOfWeek, addWeeks, getDay, setHours, setMinutes } from 'date-fns';
+import { format, addDays, addWeeks, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { localDateTimeToUTC, utcToLocalDateTimeValue, localTimeToUTC } from '@/lib/timezone';
 
 const DIAS_SEMANA = [
   { value: 0, label: 'Domingo' },
@@ -198,7 +199,7 @@ export function AdminSchedules() {
     const data = {
       nome: serviceForm.nome,
       descricao: serviceForm.descricao || null,
-      data_hora: serviceForm.data_hora,
+      data_hora: localDateTimeToUTC(serviceForm.data_hora),
       is_special_event: serviceForm.is_special_event,
       service_type_id: serviceForm.service_type_id || null,
       church_id: churchId,
@@ -293,19 +294,19 @@ export function AdminSchedules() {
 
         // Generate for each week
         while (currentDate <= endDate) {
-          const [hours, minutes] = (serviceType.horario || '00:00').split(':').map(Number);
-          let serviceDate = setHours(currentDate, hours);
-          serviceDate = setMinutes(serviceDate, minutes);
+          // Use localTimeToUTC to properly convert the time
+          const serviceDateTime = localTimeToUTC(currentDate, serviceType.horario || '00:00');
+          const serviceDate = new Date(serviceDateTime);
 
-          const dateKey = `${serviceType.id}_${format(serviceDate, 'yyyy-MM-dd')}`;
+          const dateKey = `${serviceType.id}_${format(currentDate, 'yyyy-MM-dd')}`;
           
           // Only add if it doesn't already exist
           if (!existingSet.has(dateKey)) {
             const dayName = DIAS_SEMANA.find(d => d.value === serviceType.dia_semana)?.label || '';
             servicesToCreate.push({
-              nome: `${serviceType.nome} - ${format(serviceDate, 'dd/MM')}`,
+              nome: `${serviceType.nome} - ${format(currentDate, 'dd/MM')}`,
               descricao: serviceType.descricao,
-              data_hora: serviceDate.toISOString(),
+              data_hora: serviceDateTime,
               is_special_event: false,
               service_type_id: serviceType.id,
               church_id: churchId,
@@ -379,7 +380,7 @@ export function AdminSchedules() {
     setServiceForm({
       nome: s.nome,
       descricao: s.descricao || '',
-      data_hora: s.data_hora.slice(0, 16),
+      data_hora: utcToLocalDateTimeValue(s.data_hora),
       is_special_event: s.is_special_event,
       service_type_id: s.service_type_id || '',
     });
