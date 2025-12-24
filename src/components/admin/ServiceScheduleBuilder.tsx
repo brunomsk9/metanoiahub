@@ -1141,7 +1141,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                           {ministryItems.map((item, idx) => (
                             <div
                               key={`${item.position.id}-${item.volunteer.id}-${idx}`}
-                              className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
+                              className="flex items-center justify-between p-2 bg-muted/50 rounded-lg group"
                             >
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
@@ -1169,6 +1169,24 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                                     Não informado
                                   </Badge>
                                 )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => {
+                                    const itemToRemove = previewSchedules.findIndex(
+                                      (p, i) => 
+                                        p.ministry.id === item.ministry.id && 
+                                        p.position.id === item.position.id && 
+                                        p.volunteer.id === item.volunteer.id
+                                    );
+                                    if (itemToRemove !== -1) {
+                                      setPreviewSchedules(prev => prev.filter((_, i) => i !== itemToRemove));
+                                    }
+                                  }}
+                                >
+                                  <X className="h-4 w-4 text-destructive" />
+                                </Button>
                               </div>
                             </div>
                           ))}
