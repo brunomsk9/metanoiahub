@@ -550,6 +550,11 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         .map(a => a.volunteer_id);
 
       const preview: typeof previewSchedules = [];
+      
+      // Track volunteers already scheduled in this service (existing + being added to preview)
+      const volunteersAlreadyScheduledInService = new Set(
+        schedules.map(s => s.volunteer_id)
+      );
 
       // For each ministry with positions
       for (const ministry of ministriesWithPositions) {
@@ -572,8 +577,11 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
               if (!u.genero || u.genero !== position.genero_restrito) return false;
             }
             
+            // Exclude if already scheduled in this position
             if (existingSchedules.some(s => s.volunteer_id === u.id)) return false;
-            if (schedules.some(s => s.volunteer_id === u.id && s.position_id === position.id)) return false;
+            
+            // Exclude if already scheduled in ANY position for this service (prevent duplicates)
+            if (volunteersAlreadyScheduledInService.has(u.id)) return false;
             
             return true;
           });
@@ -598,6 +606,9 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
               isAvailable: availableVolunteers.includes(volunteer.id),
               recentCount: volunteersInRecentServices[volunteer.id] || 0,
             });
+            
+            // Mark this volunteer as scheduled to prevent duplicate assignment
+            volunteersAlreadyScheduledInService.add(volunteer.id);
           }
         }
       }
