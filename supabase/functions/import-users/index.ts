@@ -10,6 +10,7 @@ interface UserImport {
   email: string;
   nome: string;
   role: string;
+  genero?: string;
 }
 
 interface ImportResult {
@@ -139,14 +140,20 @@ serve(async (req) => {
 
         const userId = authData.user.id;
 
-        // Update profile with nome, church_id, set needs_password_change flag and mark onboarding as completed
+        // Validate genero if provided
+        const validGeneros = ['masculino', 'feminino'];
+        const genero = userData.genero?.toLowerCase().trim();
+        const validGenero = genero && validGeneros.includes(genero) ? genero : null;
+
+        // Update profile with nome, church_id, genero, set needs_password_change flag and mark onboarding as completed
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
           .update({ 
             nome: userData.nome, 
             needs_password_change: true,
             church_id: church_id,
-            onboarding_completed: true
+            onboarding_completed: true,
+            genero: validGenero
           })
           .eq('id', userId);
 

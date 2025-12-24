@@ -40,6 +40,7 @@ interface CreateUserModalProps {
 export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUserModalProps) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [genero, setGenero] = useState<string>('');
   const [roles, setRoles] = useState<AppRole[]>(['discipulo']);
   const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>('');
   const [discipuladores, setDiscipuladores] = useState<Discipulador[]>([]);
@@ -104,6 +105,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
   const resetForm = () => {
     setNome('');
     setEmail('');
+    setGenero('');
     setRoles(['discipulo']);
     setSelectedDiscipulador('');
   };
@@ -144,7 +146,8 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
           users: [{
             email: email.trim().toLowerCase(),
             nome: nome.trim(),
-            role: roles[0] || 'discipulo'
+            role: roles[0] || 'discipulo',
+            genero: genero || null
           }],
           church_id: churchId
         }
@@ -259,6 +262,23 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
               disabled={isLoading}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="genero">Sexo</Label>
+            <Select
+              value={genero}
+              onValueChange={setGenero}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o sexo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="masculino">Masculino</SelectItem>
+                <SelectItem value="feminino">Feminino</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-3">
