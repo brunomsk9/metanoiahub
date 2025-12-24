@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,22 +94,20 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-5 h-5 animate-spin text-primary" />
-      </div>
+      <AppShell headerTitle="Perfil">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} userName={profile.nome} />
-      
+    <AppShell headerTitle="Perfil" onLogout={handleLogout} userName={profile.nome}>
       <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-8">
-          <div className="px-4 lg:px-6 max-w-md mx-auto space-y-6">
-            
-            {/* Profile Header */}
-            <header className="pt-6 flex items-center gap-4">
+        <div className="max-w-md mx-auto space-y-6">
+          {/* Profile Header */}
+          <header className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-5 h-5 text-primary" />
               </div>
@@ -189,21 +187,20 @@ export default function Profile() {
             {/* Change Password Section */}
             <ChangePasswordSection />
 
-            {/* Tutorial Button */}
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate('/onboarding')}
-            >
-              <HelpCircle className="w-4 h-4 mr-2" />
-              Ver Tutorial
-            </Button>
-          </div>
-        </main>
+          {/* Tutorial Button */}
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => navigate('/onboarding')}
+          >
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Ver Tutorial
+          </Button>
+        </div>
       </PageTransition>
 
       <MentorChatButton />
-    </div>
+    </AppShell>
   );
 }
 

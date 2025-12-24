@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, BookOpen, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BookOpen, Clock } from "lucide-react";
 
 interface Course {
   id: string;
@@ -89,39 +88,30 @@ export default function TrackDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} />
-      
+    <AppShell 
+      headerTitle={track?.titulo || "Trilha"} 
+      showBack 
+      backTo="/trilhas" 
+      onLogout={handleLogout}
+    >
       <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-8">
-          <div className="px-4 lg:px-6 max-w-5xl mx-auto space-y-6">
-            {/* Back button */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/trilhas')}
-              className="mt-4 -ml-2"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Voltar
-            </Button>
-
-            {/* Header */}
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-4 w-96" />
-              </div>
-            ) : track && (
-              <header>
-                <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
-                  {track.titulo}
-                </h1>
-                {track.descricao && (
-                  <p className="text-sm text-muted-foreground mt-1">{track.descricao}</p>
-                )}
-              </header>
-            )}
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Header - visible on desktop */}
+          {loading ? (
+            <div className="hidden lg:block space-y-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+          ) : track && (
+            <header className="hidden lg:block">
+              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
+                {track.titulo}
+              </h1>
+              {track.descricao && (
+                <p className="text-sm text-muted-foreground mt-1">{track.descricao}</p>
+              )}
+            </header>
+          )}
 
             {/* Loading */}
             {loading && (
@@ -181,17 +171,16 @@ export default function TrackDetail() {
               </div>
             )}
 
-            {!loading && courses.length === 0 && (
-              <div className="text-center py-12">
-                <BookOpen className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-sm text-muted-foreground">Nenhum curso encontrado nesta trilha</p>
-              </div>
-            )}
-          </div>
-        </main>
+          {!loading && courses.length === 0 && (
+            <div className="text-center py-12">
+              <BookOpen className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-sm text-muted-foreground">Nenhum curso encontrado nesta trilha</p>
+            </div>
+          )}
+        </div>
       </PageTransition>
 
       <MentorChatButton />
-    </div>
+    </AppShell>
   );
 }
