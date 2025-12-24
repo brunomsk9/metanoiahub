@@ -55,6 +55,7 @@ interface Position {
   quantidade_minima: number;
   ministry_id: string;
   is_active: boolean;
+  genero_restrito: 'masculino' | 'feminino' | 'unissex' | null;
 }
 
 interface Volunteer {
@@ -66,6 +67,7 @@ interface Volunteer {
 interface UserProfile {
   id: string;
   nome: string;
+  genero: 'masculino' | 'feminino' | 'unissex' | null;
 }
 
 interface Schedule {
@@ -190,6 +192,8 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const [selectedServiceId, setSelectedServiceId] = useState<string>(serviceId || '');
   const [expandedMinistries, setExpandedMinistries] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [leaderMinistryIds, setLeaderMinistryIds] = useState<string[]>([]);
 
   // Dialog for adding volunteer to position
   const [isAddVolunteerOpen, setIsAddVolunteerOpen] = useState(false);
@@ -214,6 +218,26 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       setCurrentUserId(session.user.id);
+      
+      // Check if user is admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+      
+      const userRoles = roles?.map(r => r.role) || [];
+      setIsAdmin(userRoles.includes('admin') || userRoles.includes('super_admin'));
+      
+      // Get ministries where user is leader
+      if (churchId) {
+        const { data: leaderMinistries } = await supabase
+          .from('ministries')
+          .select('id')
+          .eq('church_id', churchId)
+          .or(`lider_principal_id.eq.${session.user.id},lider_secundario_id.eq.${session.user.id}`);
+        
+        setLeaderMinistryIds(leaderMinistries?.map(m => m.id) || []);
+      }
     }
   };
 
@@ -247,7 +271,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         .eq('church_id', churchId),
       supabase
         .from('profiles')
-        .select('id, nome')
+        .select('id, nome, genero')
         .eq('church_id', churchId)
         .order('nome'),
     ]);
@@ -307,11 +331,24 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     return schedules.filter(s => s.position_id === positionId);
   };
 
-  const getMinistryVolunteers = (ministryId: string) => {
+  const getMinistryVolunteers = (ministryId: string, positionGenderRestriction?: 'masculino' | 'feminino' | 'unissex' | null) => {
     const volunteerIds = volunteers
       .filter(v => v.ministry_id === ministryId)
       .map(v => v.user_id);
-    return users.filter(u => volunteerIds.includes(u.id));
+    
+    return users.filter(u => {
+      // Must be a volunteer in the ministry
+      if (!volunteerIds.includes(u.id)) return false;
+      
+      // If position has gender restriction, filter by gender
+      if (positionGenderRestriction && positionGenderRestriction !== 'unissex') {
+        // If user has no gender set, don't include them in restricted positions
+        if (!u.genero) return false;
+        if (u.genero !== positionGenderRestriction) return false;
+      }
+      
+      return true;
+    });
   };
 
   const getVolunteerName = (volunteerId: string) => {
@@ -392,6 +429,16 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     if (existing) {
       toast.error('Este voluntário já está escalado para esta posição');
       return;
+    }
+
+    // Check gender restriction
+    if (selectedPosition.genero_restrito && selectedPosition.genero_restrito !== 'unissex') {
+      const volunteer = users.find(u => u.id === selectedVolunteerId);
+      if (!volunteer?.genero || volunteer.genero !== selectedPosition.genero_restrito) {
+        const genderLabel = selectedPosition.genero_restrito === 'masculino' ? 'homens' : 'mulheres';
+        toast.error(`Esta posição é restrita para ${genderLabel}`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -479,6 +526,16 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       return;
     }
 
+    // Check gender restriction for target position
+    if (targetPosition.genero_restrito && targetPosition.genero_restrito !== 'unissex') {
+      const volunteer = users.find(u => u.id === schedule.volunteer_id);
+      if (!volunteer?.genero || volunteer.genero !== targetPosition.genero_restrito) {
+        const genderLabel = targetPosition.genero_restrito === 'masculino' ? 'homens' : 'mulheres';
+        toast.error(`Esta posição é restrita para ${genderLabel}`);
+        return;
+      }
+    }
+
     // Check if already scheduled in target position
     const alreadyScheduled = schedules.some(
       s => s.position_id === targetPositionId && s.volunteer_id === schedule.volunteer_id
@@ -509,10 +566,17 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     setSaving(false);
   };
 
-  // Calculate ministries that have positions
+  // Calculate ministries that have positions (filter for ministry leaders)
   const ministriesWithPositions = useMemo(() => {
-    return ministries.filter(m => positions.some(p => p.ministry_id === m.id));
-  }, [ministries, positions]);
+    let filteredMinistries = ministries.filter(m => positions.some(p => p.ministry_id === m.id));
+    
+    // If not admin, only show ministries where user is leader
+    if (!isAdmin && leaderMinistryIds.length > 0) {
+      filteredMinistries = filteredMinistries.filter(m => leaderMinistryIds.includes(m.id));
+    }
+    
+    return filteredMinistries;
+  }, [ministries, positions, isAdmin, leaderMinistryIds]);
 
   const selectedService = services.find(s => s.id === selectedServiceId);
 
@@ -658,11 +722,16 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                               isFilled={isFilled}
                             >
                               <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-medium">{position.nome}</span>
                                   <Badge variant={isFilled ? 'default' : 'secondary'} className="text-xs">
                                     {positionSchedules.length}/{position.quantidade_minima}
                                   </Badge>
+                                  {position.genero_restrito && position.genero_restrito !== 'unissex' && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {position.genero_restrito === 'masculino' ? '♂' : '♀'}
+                                    </Badge>
+                                  )}
                                   {!isFilled && (
                                     <AlertCircle className="h-4 w-4 text-amber-500" />
                                   )}
@@ -727,7 +796,14 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
             <DialogTitle>Escalar Voluntário</DialogTitle>
             <DialogDescription>
               {selectedPosition && (
-                <>Posição: <strong>{selectedPosition.nome}</strong></>
+                <div className="flex items-center gap-2">
+                  <span>Posição: <strong>{selectedPosition.nome}</strong></span>
+                  {selectedPosition.genero_restrito && selectedPosition.genero_restrito !== 'unissex' && (
+                    <Badge variant="outline" className="text-xs">
+                      {selectedPosition.genero_restrito === 'masculino' ? '♂ Homens' : '♀ Mulheres'}
+                    </Badge>
+                  )}
+                </div>
               )}
             </DialogDescription>
           </DialogHeader>
@@ -737,7 +813,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
               {selectedPosition && (
                 <>
                   <SearchableUserSelect
-                    users={getMinistryVolunteers(selectedPosition.ministry_id)}
+                    users={getMinistryVolunteers(selectedPosition.ministry_id, selectedPosition.genero_restrito)}
                     value={selectedVolunteerId}
                     onValueChange={setSelectedVolunteerId}
                     placeholder="Buscar voluntário..."
@@ -788,7 +864,10 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                 </>
               )}
               <p className="text-xs text-muted-foreground">
-                Mostrando apenas voluntários do ministério
+                {selectedPosition?.genero_restrito && selectedPosition.genero_restrito !== 'unissex' 
+                  ? `Mostrando apenas voluntários ${selectedPosition.genero_restrito === 'masculino' ? 'homens' : 'mulheres'} do ministério`
+                  : 'Mostrando apenas voluntários do ministério'
+                }
               </p>
             </div>
             
