@@ -193,6 +193,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const [expandedMinistries, setExpandedMinistries] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLiderMinisterial, setIsLiderMinisterial] = useState(false);
   const [leaderMinistryIds, setLeaderMinistryIds] = useState<string[]>([]);
 
   // Dialog for adding volunteer to position
@@ -227,6 +228,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       
       const userRoles = roles?.map(r => r.role) || [];
       setIsAdmin(userRoles.includes('admin') || userRoles.includes('super_admin'));
+      setIsLiderMinisterial(userRoles.includes('lider_ministerial'));
       
       // Get ministries where user is leader
       if (churchId) {
@@ -570,13 +572,16 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const ministriesWithPositions = useMemo(() => {
     let filteredMinistries = ministries.filter(m => positions.some(p => p.ministry_id === m.id));
     
-    // If not admin, only show ministries where user is leader
-    if (!isAdmin && leaderMinistryIds.length > 0) {
+    // If not admin but is a ministry leader, only show ministries where user is leader
+    if (!isAdmin && isLiderMinisterial && leaderMinistryIds.length > 0) {
       filteredMinistries = filteredMinistries.filter(m => leaderMinistryIds.includes(m.id));
+    } else if (!isAdmin && isLiderMinisterial && leaderMinistryIds.length === 0) {
+      // Is a ministry leader role but not leading any ministry
+      filteredMinistries = [];
     }
     
     return filteredMinistries;
-  }, [ministries, positions, isAdmin, leaderMinistryIds]);
+  }, [ministries, positions, isAdmin, isLiderMinisterial, leaderMinistryIds]);
 
   const selectedService = services.find(s => s.id === selectedServiceId);
 
