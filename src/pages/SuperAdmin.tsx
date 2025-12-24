@@ -112,6 +112,7 @@ interface UserData {
   church_name?: string;
   roles: string[];
   created_at: string;
+  genero: string | null;
 }
 
 export default function SuperAdmin() {
@@ -142,6 +143,7 @@ export default function SuperAdmin() {
     email: '',
     telefone: '',
     church_id: '',
+    genero: '',
     roles: [] as string[],
   });
   const [savingRole, setSavingRole] = useState(false);
@@ -200,7 +202,7 @@ export default function SuperAdmin() {
   const loadUsers = async () => {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, nome, telefone, church_id, created_at')
+      .select('id, nome, telefone, church_id, created_at, genero')
       .order('nome');
 
     if (profilesError) {
@@ -243,6 +245,7 @@ export default function SuperAdmin() {
       church_name: profile.church_id ? churchMap.get(profile.church_id) || 'Igreja desconhecida' : 'Sem igreja',
       roles: rolesMap.get(profile.id) || ['discipulo'],
       created_at: profile.created_at,
+      genero: profile.genero,
     }));
 
     setUsers(usersWithData);
@@ -306,6 +309,7 @@ export default function SuperAdmin() {
       email: user.email || '',
       telefone: user.telefone || '',
       church_id: user.church_id || '',
+      genero: user.genero || '',
       roles: [...user.roles],
     });
     setIsUserDialogOpen(true);
@@ -383,12 +387,14 @@ export default function SuperAdmin() {
     
     setSavingRole(true);
 
+    const generoValue = userFormData.genero as 'masculino' | 'feminino' | 'unissex' | null;
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ 
         nome: userFormData.nome,
         telefone: userFormData.telefone || null,
-        church_id: userFormData.church_id || null 
+        church_id: userFormData.church_id || null,
+        genero: generoValue || null 
       })
       .eq('id', selectedUser.id);
 
@@ -1034,27 +1040,49 @@ export default function SuperAdmin() {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium flex items-center gap-2">
-                          <Church className="h-4 w-4" />
-                          Igreja
-                        </Label>
-                        <Select 
-                          value={userFormData.church_id || "none"} 
-                          onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value === "none" ? "" : value })}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Selecione uma igreja" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Sem igreja</SelectItem>
-                            {churches.map((church) => (
-                              <SelectItem key={church.id} value={church.id}>
-                                {church.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Church className="h-4 w-4" />
+                            Igreja
+                          </Label>
+                          <Select 
+                            value={userFormData.church_id || "none"} 
+                            onValueChange={(value) => setUserFormData({ ...userFormData, church_id: value === "none" ? "" : value })}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Selecione uma igreja" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sem igreja</SelectItem>
+                              {churches.map((church) => (
+                                <SelectItem key={church.id} value={church.id}>
+                                  {church.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Sexo
+                          </Label>
+                          <Select 
+                            value={userFormData.genero || "none"} 
+                            onValueChange={(value) => setUserFormData({ ...userFormData, genero: value === "none" ? "" : value })}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Selecione o sexo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Não informado</SelectItem>
+                              <SelectItem value="masculino">Masculino</SelectItem>
+                              <SelectItem value="feminino">Feminino</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
 
