@@ -1,9 +1,21 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { 
+  format, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  isSameDay, 
+  isSameMonth, 
+  addMonths, 
+  subMonths,
+  startOfWeek,
+  endOfWeek,
+  isToday
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, MapPin, Check, X, Clock, Users } from "lucide-react";
+import { Calendar, Check, X, Clock, Users, ChevronLeft, ChevronRight, List, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,9 +26,35 @@ interface VolunteerSchedulesProps {
   userId: string;
 }
 
+type Schedule = {
+  id: string;
+  status: string;
+  notes: string | null;
+  service: {
+    id: string;
+    nome: string;
+    data_hora: string;
+    descricao: string | null;
+    is_special_event: boolean;
+  } | null;
+  position: {
+    id: string;
+    nome: string;
+  } | null;
+  ministry: {
+    id: string;
+    nome: string;
+    cor: string | null;
+    icone: string | null;
+  } | null;
+};
+
 export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
   const queryClient = useQueryClient();
+  const [view, setView] = useState<"list" | "calendar">("calendar");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { data: schedules, isLoading } = useQuery({
     queryKey: ["volunteer-schedules", userId],
@@ -33,7 +71,7 @@ export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Schedule[];
     },
     enabled: !!userId,
   });
@@ -64,10 +102,41 @@ export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
   });
 
   const now = new Date();
+
+  // Group schedules by date for calendar view
+  const schedulesByDate = useMemo(() => {
+    const map = new Map<string, Schedule[]>();
+    schedules?.forEach((schedule) => {
+      if (schedule.service?.data_hora) {
+        const dateKey = format(new Date(schedule.service.data_hora), "yyyy-MM-dd");
+        const existing = map.get(dateKey) || [];
+        map.set(dateKey, [...existing, schedule]);
+      }
+    });
+    return map;
+  }, [schedules]);
+
+  // Calendar days
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const calendarStart = startOfWeek(monthStart, { locale: ptBR });
+    const calendarEnd = endOfWeek(monthEnd, { locale: ptBR });
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  }, [currentMonth]);
+
+  // Filtered schedules for list view
   const filteredSchedules = schedules?.filter((schedule) => {
     const serviceDate = new Date(schedule.service?.data_hora || "");
     return filter === "upcoming" ? serviceDate >= now : serviceDate < now;
   });
+
+  // Schedules for selected date
+  const selectedDateSchedules = useMemo(() => {
+    if (!selectedDate) return [];
+    const dateKey = format(selectedDate, "yyyy-MM-dd");
+    return schedulesByDate.get(dateKey) || [];
+  }, [selectedDate, schedulesByDate]);
 
   const pendingCount = schedules?.filter(s => s.status === "pending").length || 0;
 
@@ -91,150 +160,306 @@ export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
 
   return (
     <div className="space-y-4">
-      {/* Tabs */}
+      {/* View Toggle */}
       <div className="flex gap-2">
         <Button
-          variant={filter === "upcoming" ? "default" : "outline"}
+          variant={view === "calendar" ? "default" : "outline"}
           size="sm"
-          onClick={() => setFilter("upcoming")}
+          onClick={() => setView("calendar")}
           className="flex-1"
         >
-          Próximas
-          {pendingCount > 0 && filter !== "upcoming" && (
+          <CalendarDays className="w-4 h-4 mr-1" />
+          Calendário
+        </Button>
+        <Button
+          variant={view === "list" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setView("list")}
+          className="flex-1"
+        >
+          <List className="w-4 h-4 mr-1" />
+          Lista
+          {pendingCount > 0 && (
             <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
               {pendingCount}
             </Badge>
           )}
         </Button>
-        <Button
-          variant={filter === "past" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setFilter("past")}
-          className="flex-1"
-        >
-          Anteriores
-        </Button>
       </div>
 
-      {/* Schedules List */}
-      <div className="space-y-3">
-        {filteredSchedules?.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground text-sm">
-            {filter === "upcoming" 
-              ? "Nenhuma escala próxima" 
-              : "Nenhuma escala anterior"}
+      {view === "calendar" ? (
+        <div className="space-y-4">
+          {/* Month Navigation */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <h3 className="text-sm font-medium text-foreground capitalize">
+              {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
-        ) : (
-          filteredSchedules?.map((schedule) => {
-            const service = schedule.service;
-            const position = schedule.position;
-            const ministry = schedule.ministry;
-            const serviceDate = service ? new Date(service.data_hora) : null;
-            const isPast = serviceDate ? serviceDate < now : false;
-            const isPending = schedule.status === "pending" && !isPast;
 
-            return (
-              <div
-                key={schedule.id}
-                className={cn(
-                  "p-4 rounded-lg border transition-all",
-                  isPending && "border-amber-500/50 bg-amber-500/5",
-                  schedule.status === "confirmed" && "border-green-500/30 bg-green-500/5",
-                  schedule.status === "declined" && "border-destructive/30 bg-destructive/5 opacity-60",
-                  !isPending && schedule.status === "pending" && "border-border bg-card"
-                )}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {service?.is_special_event && (
-                        <Badge variant="secondary" className="text-[10px]">
-                          Especial
-                        </Badge>
-                      )}
-                      <h4 className="font-medium text-foreground truncate">
-                        {service?.nome || "Culto"}
-                      </h4>
-                    </div>
-                    {serviceDate && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>
-                          {format(serviceDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-                        </span>
-                        <Clock className="w-3.5 h-3.5 ml-1" />
-                        <span>{format(serviceDate, "HH:mm")}</span>
-                      </div>
-                    )}
-                  </div>
-                  <StatusBadge status={schedule.status} isPast={isPast} />
-                </div>
-
-                {/* Position & Ministry */}
-                <div className="flex items-center gap-2 mb-3">
-                  {ministry && (
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs"
-                      style={{ 
-                        borderColor: ministry.cor || undefined,
-                        color: ministry.cor || undefined 
-                      }}
-                    >
-                      <Users className="w-3 h-3 mr-1" />
-                      {ministry.nome}
-                    </Badge>
-                  )}
-                  {position && (
-                    <Badge variant="secondary" className="text-xs">
-                      {position.nome}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Actions for pending schedules */}
-                {isPending && (
-                  <div className="flex gap-2 pt-2 border-t border-border/50">
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => updateStatusMutation.mutate({ 
-                        scheduleId: schedule.id, 
-                        status: "confirmed" 
-                      })}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      Confirmar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => updateStatusMutation.mutate({ 
-                        scheduleId: schedule.id, 
-                        status: "declined" 
-                      })}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Recusar
-                    </Button>
-                  </div>
-                )}
-
-                {/* Notes */}
-                {schedule.notes && (
-                  <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">
-                    {schedule.notes}
-                  </p>
-                )}
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {/* Weekday Headers */}
+            {["D", "S", "T", "Q", "Q", "S", "S"].map((day, i) => (
+              <div key={i} className="text-center text-xs font-medium text-muted-foreground py-2">
+                {day}
               </div>
-            );
-          })
+            ))}
+
+            {/* Days */}
+            {calendarDays.map((day) => {
+              const dateKey = format(day, "yyyy-MM-dd");
+              const daySchedules = schedulesByDate.get(dateKey) || [];
+              const hasSchedules = daySchedules.length > 0;
+              const isCurrentMonth = isSameMonth(day, currentMonth);
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
+              const hasPending = daySchedules.some(s => s.status === "pending");
+              const hasConfirmed = daySchedules.some(s => s.status === "confirmed");
+              const hasDeclined = daySchedules.every(s => s.status === "declined") && hasSchedules;
+
+              return (
+                <button
+                  key={dateKey}
+                  onClick={() => setSelectedDate(hasSchedules ? day : null)}
+                  disabled={!hasSchedules}
+                  className={cn(
+                    "relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all",
+                    !isCurrentMonth && "text-muted-foreground/40",
+                    isCurrentMonth && !hasSchedules && "text-muted-foreground",
+                    hasSchedules && "cursor-pointer hover:bg-muted",
+                    isSelected && "bg-primary text-primary-foreground hover:bg-primary",
+                    isToday(day) && !isSelected && "ring-1 ring-primary",
+                    !hasSchedules && "cursor-default"
+                  )}
+                >
+                  <span>{format(day, "d")}</span>
+                  {hasSchedules && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {hasPending && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      )}
+                      {hasConfirmed && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                      )}
+                      {hasDeclined && !hasPending && !hasConfirmed && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                      )}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span>Pendente</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>Confirmado</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-destructive" />
+              <span>Recusado</span>
+            </div>
+          </div>
+
+          {/* Selected Date Details */}
+          {selectedDate && selectedDateSchedules.length > 0 && (
+            <div className="space-y-3 pt-3 border-t border-border">
+              <h4 className="text-sm font-medium text-foreground">
+                {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+              </h4>
+              {selectedDateSchedules.map((schedule) => (
+                <ScheduleCard
+                  key={schedule.id}
+                  schedule={schedule}
+                  now={now}
+                  onConfirm={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "confirmed" })}
+                  onDecline={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "declined" })}
+                  isUpdating={updateStatusMutation.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* List View Tabs */}
+          <div className="flex gap-2">
+            <Button
+              variant={filter === "upcoming" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setFilter("upcoming")}
+              className="flex-1"
+            >
+              Próximas
+            </Button>
+            <Button
+              variant={filter === "past" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setFilter("past")}
+              className="flex-1"
+            >
+              Anteriores
+            </Button>
+          </div>
+
+          {/* Schedules List */}
+          <div className="space-y-3">
+            {filteredSchedules?.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                {filter === "upcoming" 
+                  ? "Nenhuma escala próxima" 
+                  : "Nenhuma escala anterior"}
+              </div>
+            ) : (
+              filteredSchedules?.map((schedule) => (
+                <ScheduleCard
+                  key={schedule.id}
+                  schedule={schedule}
+                  now={now}
+                  showDate
+                  onConfirm={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "confirmed" })}
+                  onDecline={() => updateStatusMutation.mutate({ scheduleId: schedule.id, status: "declined" })}
+                  isUpdating={updateStatusMutation.isPending}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+interface ScheduleCardProps {
+  schedule: Schedule;
+  now: Date;
+  showDate?: boolean;
+  onConfirm: () => void;
+  onDecline: () => void;
+  isUpdating: boolean;
+}
+
+function ScheduleCard({ schedule, now, showDate, onConfirm, onDecline, isUpdating }: ScheduleCardProps) {
+  const service = schedule.service;
+  const position = schedule.position;
+  const ministry = schedule.ministry;
+  const serviceDate = service ? new Date(service.data_hora) : null;
+  const isPast = serviceDate ? serviceDate < now : false;
+  const isPending = schedule.status === "pending" && !isPast;
+
+  return (
+    <div
+      className={cn(
+        "p-4 rounded-lg border transition-all",
+        isPending && "border-amber-500/50 bg-amber-500/5",
+        schedule.status === "confirmed" && "border-green-500/30 bg-green-500/5",
+        schedule.status === "declined" && "border-destructive/30 bg-destructive/5 opacity-60",
+        !isPending && schedule.status === "pending" && "border-border bg-card"
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            {service?.is_special_event && (
+              <Badge variant="secondary" className="text-[10px]">
+                Especial
+              </Badge>
+            )}
+            <h4 className="font-medium text-foreground truncate">
+              {service?.nome || "Culto"}
+            </h4>
+          </div>
+          {serviceDate && showDate && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>
+                {format(serviceDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+              </span>
+            </div>
+          )}
+          {serviceDate && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{format(serviceDate, "HH:mm")}</span>
+            </div>
+          )}
+        </div>
+        <StatusBadge status={schedule.status} isPast={isPast} />
+      </div>
+
+      {/* Position & Ministry */}
+      <div className="flex items-center gap-2 mb-3">
+        {ministry && (
+          <Badge 
+            variant="outline" 
+            className="text-xs"
+            style={{ 
+              borderColor: ministry.cor || undefined,
+              color: ministry.cor || undefined 
+            }}
+          >
+            <Users className="w-3 h-3 mr-1" />
+            {ministry.nome}
+          </Badge>
+        )}
+        {position && (
+          <Badge variant="secondary" className="text-xs">
+            {position.nome}
+          </Badge>
         )}
       </div>
+
+      {/* Actions for pending schedules */}
+      {isPending && (
+        <div className="flex gap-2 pt-2 border-t border-border/50">
+          <Button
+            size="sm"
+            className="flex-1"
+            onClick={onConfirm}
+            disabled={isUpdating}
+          >
+            <Check className="w-4 h-4 mr-1" />
+            Confirmar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1"
+            onClick={onDecline}
+            disabled={isUpdating}
+          >
+            <X className="w-4 h-4 mr-1" />
+            Recusar
+          </Button>
+        </div>
+      )}
+
+      {/* Notes */}
+      {schedule.notes && (
+        <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">
+          {schedule.notes}
+        </p>
+      )}
     </div>
   );
 }
