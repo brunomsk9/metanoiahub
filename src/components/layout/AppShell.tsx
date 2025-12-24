@@ -34,19 +34,19 @@ export function AppShell({
       <DesktopSidebar />
 
       {/* Mobile Header with hamburger menu */}
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <AppHeader title={headerTitle} showBack={showBack} backTo={backTo} />
       </div>
 
       {/* Main Content */}
       <main
         className={cn(
-          "pt-14 lg:pt-16 pb-6",
-          "lg:ml-56", // Space for desktop sidebar on left
+          "pt-14 md:pt-16 pb-6",
+          "md:ml-56", // Space for desktop sidebar on left
           className
         )}
       >
-        <div className="px-4 lg:px-6 max-w-2xl mx-auto lg:max-w-5xl lg:py-6">
+        <div className="px-4 md:px-6 max-w-2xl mx-auto md:max-w-5xl md:py-6">
           {children}
         </div>
       </main>

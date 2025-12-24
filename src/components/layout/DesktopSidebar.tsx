@@ -127,7 +127,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
   );
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-56 flex-col bg-card border-r border-border/50">
+    <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-56 flex-col bg-card border-r border-border/50">
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         <NavItem
