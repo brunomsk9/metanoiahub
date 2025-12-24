@@ -1,0 +1,521 @@
+import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { Loader2, Plus, Search, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUserChurchId } from '@/hooks/useUserChurchId';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { SearchableUserSelect } from './SearchableUserSelect';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface Service {
+  id: string;
+  nome: string;
+  data_hora: string;
+  is_special_event: boolean;
+}
+
+interface Ministry {
+  id: string;
+  nome: string;
+  cor: string;
+}
+
+interface Position {
+  id: string;
+  nome: string;
+  quantidade_minima: number;
+  ministry_id: string;
+  is_active: boolean;
+}
+
+interface Volunteer {
+  id: string;
+  user_id: string;
+  ministry_id: string;
+}
+
+interface UserProfile {
+  id: string;
+  nome: string;
+}
+
+interface Schedule {
+  id: string;
+  service_id: string;
+  ministry_id: string;
+  position_id: string;
+  volunteer_id: string;
+  status: string;
+  confirmed_at: string | null;
+}
+
+interface ServiceScheduleBuilderProps {
+  serviceId?: string;
+}
+
+export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProps) {
+  const { churchId, loading: loadingChurch } = useUserChurchId();
+  const [services, setServices] = useState<Service[]>([]);
+  const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>(serviceId || '');
+  const [expandedMinistries, setExpandedMinistries] = useState<Set<string>>(new Set());
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  // Dialog for adding volunteer to position
+  const [isAddVolunteerOpen, setIsAddVolunteerOpen] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [selectedVolunteerId, setSelectedVolunteerId] = useState('');
+
+  useEffect(() => {
+    if (churchId) {
+      fetchData();
+      getCurrentUser();
+    }
+  }, [churchId]);
+
+  useEffect(() => {
+    if (selectedServiceId) {
+      fetchSchedules();
+    }
+  }, [selectedServiceId]);
+
+  const getCurrentUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setCurrentUserId(session.user.id);
+    }
+  };
+
+  const fetchData = async () => {
+    if (!churchId) return;
+    setLoading(true);
+
+    const [servicesRes, ministriesRes, positionsRes, volunteersRes, usersRes] = await Promise.all([
+      supabase
+        .from('services')
+        .select('id, nome, data_hora, is_special_event')
+        .eq('church_id', churchId)
+        .gte('data_hora', new Date().toISOString())
+        .order('data_hora', { ascending: true })
+        .limit(20),
+      supabase
+        .from('ministries')
+        .select('id, nome, cor')
+        .eq('church_id', churchId)
+        .eq('is_active', true)
+        .order('nome'),
+      supabase
+        .from('ministry_positions')
+        .select('*')
+        .eq('church_id', churchId)
+        .eq('is_active', true)
+        .order('ordem'),
+      supabase
+        .from('ministry_volunteers')
+        .select('id, user_id, ministry_id')
+        .eq('church_id', churchId),
+      supabase
+        .from('profiles')
+        .select('id, nome')
+        .eq('church_id', churchId)
+        .order('nome'),
+    ]);
+
+    if (!servicesRes.error) setServices(servicesRes.data || []);
+    if (!ministriesRes.error) {
+      setMinistries(ministriesRes.data || []);
+      setExpandedMinistries(new Set((ministriesRes.data || []).map(m => m.id)));
+    }
+    if (!positionsRes.error) setPositions(positionsRes.data || []);
+    if (!volunteersRes.error) setVolunteers(volunteersRes.data || []);
+    if (!usersRes.error) setUsers(usersRes.data || []);
+
+    // Select first service by default
+    if (servicesRes.data && servicesRes.data.length > 0 && !selectedServiceId) {
+      setSelectedServiceId(servicesRes.data[0].id);
+    }
+
+    setLoading(false);
+  };
+
+  const fetchSchedules = async () => {
+    if (!selectedServiceId) return;
+
+    const { data, error } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('service_id', selectedServiceId);
+
+    if (!error) {
+      setSchedules(data || []);
+    }
+  };
+
+  const getMinistryPositions = (ministryId: string) => {
+    return positions.filter(p => p.ministry_id === ministryId);
+  };
+
+  const getPositionSchedules = (positionId: string) => {
+    return schedules.filter(s => s.position_id === positionId);
+  };
+
+  const getMinistryVolunteers = (ministryId: string) => {
+    const volunteerIds = volunteers
+      .filter(v => v.ministry_id === ministryId)
+      .map(v => v.user_id);
+    return users.filter(u => volunteerIds.includes(u.id));
+  };
+
+  const getVolunteerName = (volunteerId: string) => {
+    return users.find(u => u.id === volunteerId)?.nome || 'Desconhecido';
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-green-500/20 text-green-700 border-green-300">Confirmado</Badge>;
+      case 'declined':
+        return <Badge className="bg-red-500/20 text-red-700 border-red-300">Recusado</Badge>;
+      case 'pending':
+      default:
+        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-300">Pendente</Badge>;
+    }
+  };
+
+  const toggleMinistry = (ministryId: string) => {
+    const newExpanded = new Set(expandedMinistries);
+    if (newExpanded.has(ministryId)) {
+      newExpanded.delete(ministryId);
+    } else {
+      newExpanded.add(ministryId);
+    }
+    setExpandedMinistries(newExpanded);
+  };
+
+  const openAddVolunteer = (position: Position) => {
+    setSelectedPosition(position);
+    setSelectedVolunteerId('');
+    setIsAddVolunteerOpen(true);
+  };
+
+  const handleAddVolunteer = async () => {
+    if (!selectedPosition || !selectedVolunteerId || !selectedServiceId || !churchId) {
+      toast.error('Selecione um voluntário');
+      return;
+    }
+
+    // Check if already scheduled
+    const existing = schedules.find(
+      s => s.position_id === selectedPosition.id && s.volunteer_id === selectedVolunteerId
+    );
+    if (existing) {
+      toast.error('Este voluntário já está escalado para esta posição');
+      return;
+    }
+
+    setSaving(true);
+
+    const { error } = await supabase.from('schedules').insert({
+      service_id: selectedServiceId,
+      ministry_id: selectedPosition.ministry_id,
+      position_id: selectedPosition.id,
+      volunteer_id: selectedVolunteerId,
+      church_id: churchId,
+      created_by: currentUserId,
+      status: 'pending',
+    });
+
+    if (error) {
+      toast.error('Erro ao escalar voluntário');
+      console.error(error);
+    } else {
+      toast.success('Voluntário escalado com sucesso');
+      setIsAddVolunteerOpen(false);
+      fetchSchedules();
+    }
+
+    setSaving(false);
+  };
+
+  const handleRemoveSchedule = async (scheduleId: string) => {
+    const { error } = await supabase.from('schedules').delete().eq('id', scheduleId);
+    if (error) {
+      toast.error('Erro ao remover da escala');
+    } else {
+      toast.success('Removido da escala');
+      fetchSchedules();
+    }
+  };
+
+  // Calculate ministries that have positions
+  const ministriesWithPositions = useMemo(() => {
+    return ministries.filter(m => positions.some(p => p.ministry_id === m.id));
+  }, [ministries, positions]);
+
+  const selectedService = services.find(s => s.id === selectedServiceId);
+
+  if (loadingChurch || loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <Calendar className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground">Nenhum culto agendado</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Cadastre cultos na aba "Agenda" primeiro
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Service Selector */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="flex-1">
+          <Label className="text-sm text-muted-foreground mb-2 block">Selecione o Culto/Evento</Label>
+          <div className="flex flex-wrap gap-2">
+            {services.slice(0, 5).map((service) => (
+              <Button
+                key={service.id}
+                variant={selectedServiceId === service.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedServiceId(service.id)}
+                className="flex-shrink-0"
+              >
+                <Calendar className="h-3 w-3 mr-1" />
+                {format(new Date(service.data_hora), 'dd/MM')} - {service.nome}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Service Info */}
+      {selectedService && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-4">
+              <div className="text-center min-w-[60px]">
+                <div className="text-2xl font-bold text-primary">
+                  {format(new Date(selectedService.data_hora), 'dd')}
+                </div>
+                <div className="text-xs text-muted-foreground uppercase">
+                  {format(new Date(selectedService.data_hora), 'MMM', { locale: ptBR })}
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{selectedService.nome}</h3>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {format(new Date(selectedService.data_hora), 'EEEE, HH:mm', { locale: ptBR })}
+                </div>
+              </div>
+              <div className="ml-auto">
+                <Badge variant="outline" className="text-sm">
+                  {schedules.length} escalado{schedules.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Ministries and Positions */}
+      {ministriesWithPositions.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhuma posição cadastrada</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Cadastre posições na aba "Posições" primeiro
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {ministriesWithPositions.map((ministry) => {
+            const ministryPositions = getMinistryPositions(ministry.id);
+            const isExpanded = expandedMinistries.has(ministry.id);
+            const ministryScheduleCount = schedules.filter(s => s.ministry_id === ministry.id).length;
+
+            return (
+              <Card key={ministry.id} className="overflow-hidden">
+                <Collapsible open={isExpanded} onOpenChange={() => toggleMinistry(ministry.id)}>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: ministry.cor }}
+                          />
+                          <CardTitle className="text-base font-medium">{ministry.nome}</CardTitle>
+                        </div>
+                        <Badge variant="secondary">
+                          {ministryScheduleCount}/{ministryPositions.reduce((sum, p) => sum + p.quantidade_minima, 0)}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0 space-y-4">
+                      {ministryPositions.map((position) => {
+                        const positionSchedules = getPositionSchedules(position.id);
+                        const isFilled = positionSchedules.length >= position.quantidade_minima;
+                        const ministryVolunteers = getMinistryVolunteers(ministry.id);
+
+                        return (
+                          <div
+                            key={position.id}
+                            className={`p-4 rounded-lg border ${
+                              isFilled ? 'bg-green-50/50 border-green-200 dark:bg-green-900/10' : 'bg-background'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{position.nome}</span>
+                                <Badge variant={isFilled ? 'default' : 'secondary'} className="text-xs">
+                                  {positionSchedules.length}/{position.quantidade_minima}
+                                </Badge>
+                                {!isFilled && (
+                                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openAddVolunteer(position)}
+                              >
+                                <UserPlus className="h-4 w-4 mr-1" />
+                                Escalar
+                              </Button>
+                            </div>
+
+                            {positionSchedules.length > 0 ? (
+                              <div className="space-y-2">
+                                {positionSchedules.map((schedule) => (
+                                  <div
+                                    key={schedule.id}
+                                    className="flex items-center justify-between p-2 bg-background rounded border"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                                        {getVolunteerName(schedule.volunteer_id).charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium text-sm">
+                                          {getVolunteerName(schedule.volunteer_id)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {getStatusBadge(schedule.status)}
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleRemoveSchedule(schedule.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground text-center py-2">
+                                Nenhum voluntário escalado
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Dialog: Add Volunteer */}
+      <Dialog open={isAddVolunteerOpen} onOpenChange={setIsAddVolunteerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Escalar Voluntário</DialogTitle>
+            <DialogDescription>
+              {selectedPosition && (
+                <>Posição: <strong>{selectedPosition.nome}</strong></>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Selecione o Voluntário</Label>
+              {selectedPosition && (
+                <SearchableUserSelect
+                  users={getMinistryVolunteers(selectedPosition.ministry_id)}
+                  value={selectedVolunteerId}
+                  onValueChange={setSelectedVolunteerId}
+                  placeholder="Buscar voluntário..."
+                  excludeIds={getPositionSchedules(selectedPosition.id).map(s => s.volunteer_id)}
+                />
+              )}
+              <p className="text-xs text-muted-foreground">
+                Mostrando apenas voluntários do ministério
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddVolunteerOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddVolunteer} disabled={saving || !selectedVolunteerId}>
+              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Escalar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

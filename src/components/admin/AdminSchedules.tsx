@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase } from 'lucide-react';
+import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList } from 'lucide-react';
 import { AdminMinistryPositions } from './AdminMinistryPositions';
+import { ServiceScheduleBuilder } from './ServiceScheduleBuilder';
 import {
   Dialog,
   DialogContent,
@@ -64,7 +65,7 @@ interface Service {
 
 export function AdminSchedules() {
   const { churchId, loading: loadingChurch } = useUserChurchId();
-  const [activeTab, setActiveTab] = useState('cultos');
+  const [activeTab, setActiveTab] = useState('escalar');
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -301,7 +302,15 @@ export function AdminSchedules() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full sm:w-auto">
+        <TabsList className="w-full sm:w-auto flex-wrap">
+          <TabsTrigger value="escalar" className="flex-1 sm:flex-initial">
+            <ClipboardList className="h-4 w-4 mr-2" />
+            Escalar
+          </TabsTrigger>
+          <TabsTrigger value="agenda" className="flex-1 sm:flex-initial">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Agenda
+          </TabsTrigger>
           <TabsTrigger value="cultos" className="flex-1 sm:flex-initial">
             <Church className="h-4 w-4 mr-2" />
             Tipos de Culto
@@ -310,11 +319,18 @@ export function AdminSchedules() {
             <Briefcase className="h-4 w-4 mr-2" />
             Posições
           </TabsTrigger>
-          <TabsTrigger value="agenda" className="flex-1 sm:flex-initial">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            Agenda
-          </TabsTrigger>
         </TabsList>
+
+        {/* Escalar Voluntários */}
+        <TabsContent value="escalar" className="mt-6">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">Escalar Voluntários</h3>
+            <p className="text-sm text-muted-foreground">
+              Monte a escala de voluntários para cada culto/evento
+            </p>
+          </div>
+          <ServiceScheduleBuilder />
+        </TabsContent>
 
         {/* Tipos de Culto */}
         <TabsContent value="cultos" className="mt-6">
