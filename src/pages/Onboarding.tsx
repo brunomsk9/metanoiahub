@@ -300,9 +300,10 @@ const Onboarding = () => {
                   <Button
                     variant="link"
                     onClick={skipOnboarding}
+                    disabled={isCompleting}
                     className="mt-4 text-muted-foreground"
                   >
-                    Pular tutorial
+                    {isCompleting ? "Salvando..." : "Pular tutorial"}
                   </Button>
                 )}
               </CardContent>
