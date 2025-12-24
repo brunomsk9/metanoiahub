@@ -488,60 +488,62 @@ export function AdminSchedules() {
 
       {/* Dialog: Service Type */}
       <Dialog open={isServiceTypeDialogOpen} onOpenChange={(open) => { setIsServiceTypeDialogOpen(open); if (!open) resetServiceTypeForm(); }}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{editingServiceType ? 'Editar' : 'Novo'} Tipo de Culto</DialogTitle>
             <DialogDescription>
               Configure os detalhes do tipo de culto ou evento
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome *</Label>
-              <Input
-                placeholder="Ex: Culto de Domingo"
-                value={serviceTypeForm.nome}
-                onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, nome: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Textarea
-                placeholder="Descrição opcional..."
-                value={serviceTypeForm.descricao}
-                onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, descricao: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Dia da Semana</Label>
-                <Select
-                  value={serviceTypeForm.dia_semana}
-                  onValueChange={(value) => setServiceTypeForm({ ...serviceTypeForm, dia_semana: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DIAS_SEMANA.map((dia) => (
-                      <SelectItem key={dia.value} value={dia.value.toString()}>
-                        {dia.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Horário</Label>
+                <Label>Nome *</Label>
                 <Input
-                  type="time"
-                  value={serviceTypeForm.horario}
-                  onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, horario: e.target.value })}
+                  placeholder="Ex: Culto de Domingo"
+                  value={serviceTypeForm.nome}
+                  onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, nome: e.target.value })}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Textarea
+                  placeholder="Descrição opcional..."
+                  value={serviceTypeForm.descricao}
+                  onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, descricao: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Dia da Semana</Label>
+                  <Select
+                    value={serviceTypeForm.dia_semana}
+                    onValueChange={(value) => setServiceTypeForm({ ...serviceTypeForm, dia_semana: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {DIAS_SEMANA.map((dia) => (
+                        <SelectItem key={dia.value} value={dia.value.toString()}>
+                          {dia.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário</Label>
+                  <Input
+                    type="time"
+                    value={serviceTypeForm.horario}
+                    onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, horario: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsServiceTypeDialogOpen(false)}>
               Cancelar
             </Button>
@@ -555,66 +557,68 @@ export function AdminSchedules() {
 
       {/* Dialog: Service */}
       <Dialog open={isServiceDialogOpen} onOpenChange={(open) => { setIsServiceDialogOpen(open); if (!open) resetServiceForm(); }}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{editingService ? 'Editar' : 'Novo'} Culto/Evento</DialogTitle>
             <DialogDescription>
               Agende um novo culto ou evento
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Tipo de Culto</Label>
-              <Select
-                value={serviceForm.service_type_id}
-                onValueChange={(value) => {
-                  const st = serviceTypes.find(s => s.id === value);
-                  setServiceForm({ 
-                    ...serviceForm, 
-                    service_type_id: value,
-                    nome: st?.nome || serviceForm.nome,
-                  });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um tipo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Evento Especial (sem tipo)</SelectItem>
-                  {serviceTypes.filter(st => st.is_active).map((st) => (
-                    <SelectItem key={st.id} value={st.id}>
-                      {st.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Tipo de Culto</Label>
+                <Select
+                  value={serviceForm.service_type_id}
+                  onValueChange={(value) => {
+                    const st = serviceTypes.find(s => s.id === value);
+                    setServiceForm({ 
+                      ...serviceForm, 
+                      service_type_id: value,
+                      nome: st?.nome || serviceForm.nome,
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um tipo..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="__none__">Evento Especial (sem tipo)</SelectItem>
+                    {serviceTypes.filter(st => st.is_active).map((st) => (
+                      <SelectItem key={st.id} value={st.id}>
+                        {st.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Nome *</Label>
+                <Input
+                  placeholder="Ex: Culto de Domingo - 15/12"
+                  value={serviceForm.nome}
+                  onChange={(e) => setServiceForm({ ...serviceForm, nome: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Data e Hora *</Label>
+                <Input
+                  type="datetime-local"
+                  value={serviceForm.data_hora}
+                  onChange={(e) => setServiceForm({ ...serviceForm, data_hora: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Textarea
+                  placeholder="Descrição opcional..."
+                  value={serviceForm.descricao}
+                  onChange={(e) => setServiceForm({ ...serviceForm, descricao: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Nome *</Label>
-              <Input
-                placeholder="Ex: Culto de Domingo - 15/12"
-                value={serviceForm.nome}
-                onChange={(e) => setServiceForm({ ...serviceForm, nome: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Data e Hora *</Label>
-              <Input
-                type="datetime-local"
-                value={serviceForm.data_hora}
-                onChange={(e) => setServiceForm({ ...serviceForm, data_hora: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Textarea
-                placeholder="Descrição opcional..."
-                value={serviceForm.descricao}
-                onChange={(e) => setServiceForm({ ...serviceForm, descricao: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsServiceDialogOpen(false)}>
               Cancelar
             </Button>

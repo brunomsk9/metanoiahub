@@ -395,8 +395,8 @@ export function AdminMinistryPositions() {
 
       {/* Dialog: Position */}
       <Dialog open={isPositionDialogOpen} onOpenChange={(open) => { setIsPositionDialogOpen(open); if (!open) resetPositionForm(); }}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{editingPosition ? 'Editar' : 'Nova'} Posição</DialogTitle>
             <DialogDescription>
               {selectedMinistryId && (
@@ -404,61 +404,63 @@ export function AdminMinistryPositions() {
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome da Posição *</Label>
-              <Input
-                placeholder="Ex: Vocal, Guitarra, Recepcionista..."
-                value={positionForm.nome}
-                onChange={(e) => setPositionForm({ ...positionForm, nome: e.target.value })}
-              />
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Nome da Posição *</Label>
+                <Input
+                  placeholder="Ex: Vocal, Guitarra, Recepcionista..."
+                  value={positionForm.nome}
+                  onChange={(e) => setPositionForm({ ...positionForm, nome: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Textarea
+                  placeholder="Descrição opcional da função..."
+                  value={positionForm.descricao}
+                  onChange={(e) => setPositionForm({ ...positionForm, descricao: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Quantidade Mínima</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={positionForm.quantidade_minima}
+                  onChange={(e) => setPositionForm({ ...positionForm, quantidade_minima: parseInt(e.target.value) || 1 })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Quantas pessoas no mínimo são necessárias nesta posição por culto
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Restrição de Gênero</Label>
+                <Select
+                  value={positionForm.genero_restrito}
+                  onValueChange={(value: GenderType) => setPositionForm({ ...positionForm, genero_restrito: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {GENDER_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          {option.icon}
+                          {option.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Define se a posição é exclusiva para homens, mulheres ou ambos
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Textarea
-                placeholder="Descrição opcional da função..."
-                value={positionForm.descricao}
-                onChange={(e) => setPositionForm({ ...positionForm, descricao: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Quantidade Mínima</Label>
-              <Input
-                type="number"
-                min={1}
-                value={positionForm.quantidade_minima}
-                onChange={(e) => setPositionForm({ ...positionForm, quantidade_minima: parseInt(e.target.value) || 1 })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Quantas pessoas no mínimo são necessárias nesta posição por culto
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Restrição de Gênero</Label>
-              <Select
-                value={positionForm.genero_restrito}
-                onValueChange={(value: GenderType) => setPositionForm({ ...positionForm, genero_restrito: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENDER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-2">
-                        {option.icon}
-                        {option.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Define se a posição é exclusiva para homens, mulheres ou ambos
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsPositionDialogOpen(false)}>
               Cancelar
             </Button>
