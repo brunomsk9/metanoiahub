@@ -1298,6 +1298,61 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteer_availability: {
+        Row: {
+          church_id: string
+          created_at: string
+          id: string
+          is_available: boolean
+          notes: string | null
+          service_id: string
+          updated_at: string
+          volunteer_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          service_id: string
+          updated_at?: string
+          volunteer_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          service_id?: string
+          updated_at?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_availability_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_availability_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_availability_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_checklist_items: {
         Row: {
           ativo: boolean

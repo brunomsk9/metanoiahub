@@ -46,7 +46,7 @@ async function fetchUserSession() {
 
 async function fetchDashboardData(userId: string) {
   const [profileRes, tracksRes, plansRes, progressRes, baseTrackRes, baseCompletedRes, presencialRes, rolesRes] = await Promise.all([
-    supabase.from('profiles').select('nome, current_streak, xp_points, onboarding_completed').eq('id', userId).maybeSingle(),
+    supabase.from('profiles').select('nome, current_streak, xp_points, onboarding_completed, church_id').eq('id', userId).maybeSingle(),
     supabase.from('tracks').select(`id, titulo, descricao, cover_image, courses(count)`).order('ordem').limit(4),
     supabase.from('reading_plans').select('*').order('duracao_dias', { ascending: false }),
     supabase.from('user_reading_progress').select('*').eq('user_id', userId),
@@ -57,7 +57,7 @@ async function fetchDashboardData(userId: string) {
   ]);
 
   return {
-    profile: profileRes.data as UserProfile | null,
+    profile: profileRes.data as (UserProfile & { church_id?: string }) | null,
     tracks: tracksRes.data,
     plans: plansRes.data,
     progress: progressRes.data,
@@ -223,5 +223,6 @@ export function useDashboardData() {
     otherPlans,
     plansInProgress,
     getDurationLabel,
+    churchId: dashboardData?.profile?.church_id,
   };
 }

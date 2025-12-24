@@ -57,6 +57,7 @@ export default function Dashboard() {
     otherPlans,
     plansInProgress,
     getDurationLabel,
+    churchId,
   } = useDashboardData();
 
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<ReadingPlanWithProgress | null>(null);
@@ -214,7 +215,7 @@ export default function Dashboard() {
                 icon={<CalendarDays className="w-4 h-4" />}
                 defaultOpen={false}
               >
-                <VolunteerSchedules userId={userId} />
+                <VolunteerSchedules userId={userId} churchId={churchId} />
               </CollapsibleSection>
             )}
 

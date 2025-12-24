@@ -15,15 +15,18 @@ import {
   isToday
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Check, X, Clock, Users, ChevronLeft, ChevronRight, List, CalendarDays } from "lucide-react";
+import { Calendar, Check, X, Clock, Users, ChevronLeft, ChevronRight, List, CalendarDays, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { VolunteerAvailability } from "./VolunteerAvailability";
 
 interface VolunteerSchedulesProps {
   userId: string;
+  churchId?: string;
 }
 
 type Schedule = {
@@ -49,13 +52,13 @@ type Schedule = {
   } | null;
 };
 
-export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
+export function VolunteerSchedules({ userId, churchId }: VolunteerSchedulesProps) {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<"schedules" | "availability">("schedules");
   const [view, setView] = useState<"list" | "calendar">("calendar");
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
   const { data: schedules, isLoading } = useQuery({
     queryKey: ["volunteer-schedules", userId],
     queryFn: async () => {
@@ -159,33 +162,55 @@ export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* View Toggle */}
-      <div className="flex gap-2">
-        <Button
-          variant={view === "calendar" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("calendar")}
-          className="flex-1"
-        >
-          <CalendarDays className="w-4 h-4 mr-1" />
-          Calendário
-        </Button>
-        <Button
-          variant={view === "list" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setView("list")}
-          className="flex-1"
-        >
-          <List className="w-4 h-4 mr-1" />
-          Lista
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "schedules" | "availability")} className="space-y-4">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="schedules" className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4" />
+          Minhas Escalas
           {pendingCount > 0 && (
-            <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+            <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-[10px]">
               {pendingCount}
             </Badge>
           )}
-        </Button>
-      </div>
+        </TabsTrigger>
+        <TabsTrigger value="availability" className="flex items-center gap-2">
+          <HandHeart className="w-4 h-4" />
+          Disponibilidade
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="availability" className="mt-4">
+        {churchId ? (
+          <VolunteerAvailability userId={userId} churchId={churchId} />
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">
+            <p className="text-sm">Não foi possível carregar a disponibilidade</p>
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent value="schedules" className="mt-4 space-y-4">
+        {/* View Toggle */}
+        <div className="flex gap-2">
+          <Button
+            variant={view === "calendar" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setView("calendar")}
+            className="flex-1"
+          >
+            <CalendarDays className="w-4 h-4 mr-1" />
+            Calendário
+          </Button>
+          <Button
+            variant={view === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setView("list")}
+            className="flex-1"
+          >
+            <List className="w-4 h-4 mr-1" />
+            Lista
+          </Button>
+        </div>
 
       {view === "calendar" ? (
         <div className="space-y-4">
@@ -345,7 +370,8 @@ export function VolunteerSchedules({ userId }: VolunteerSchedulesProps) {
           </div>
         </>
       )}
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }
 

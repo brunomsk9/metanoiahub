@@ -68,6 +68,14 @@ interface Schedule {
   confirmed_at: string | null;
 }
 
+interface VolunteerAvailability {
+  id: string;
+  volunteer_id: string;
+  service_id: string;
+  is_available: boolean;
+  notes: string | null;
+}
+
 interface ServiceScheduleBuilderProps {
   serviceId?: string;
 }
@@ -80,6 +88,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [availability, setAvailability] = useState<VolunteerAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string>(serviceId || '');
@@ -101,6 +110,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   useEffect(() => {
     if (selectedServiceId) {
       fetchSchedules();
+      fetchAvailability();
     }
   }, [selectedServiceId]);
 
@@ -174,6 +184,23 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     if (!error) {
       setSchedules(data || []);
     }
+  };
+
+  const fetchAvailability = async () => {
+    if (!selectedServiceId) return;
+
+    const { data, error } = await supabase
+      .from('volunteer_availability')
+      .select('*')
+      .eq('service_id', selectedServiceId);
+
+    if (!error) {
+      setAvailability(data || []);
+    }
+  };
+
+  const getVolunteerAvailability = (volunteerId: string): VolunteerAvailability | undefined => {
+    return availability.find(a => a.volunteer_id === volunteerId);
   };
 
   const getMinistryPositions = (ministryId: string) => {
@@ -492,18 +519,83 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
             <div className="space-y-2">
               <Label>Selecione o Voluntário</Label>
               {selectedPosition && (
-                <SearchableUserSelect
-                  users={getMinistryVolunteers(selectedPosition.ministry_id)}
-                  value={selectedVolunteerId}
-                  onValueChange={setSelectedVolunteerId}
-                  placeholder="Buscar voluntário..."
-                  excludeIds={getPositionSchedules(selectedPosition.id).map(s => s.volunteer_id)}
-                />
+                <>
+                  <SearchableUserSelect
+                    users={getMinistryVolunteers(selectedPosition.ministry_id)}
+                    value={selectedVolunteerId}
+                    onValueChange={setSelectedVolunteerId}
+                    placeholder="Buscar voluntário..."
+                    excludeIds={getPositionSchedules(selectedPosition.id).map(s => s.volunteer_id)}
+                  />
+                  
+                  {/* Show availability info for selected volunteer */}
+                  {selectedVolunteerId && (() => {
+                    const volAvail = getVolunteerAvailability(selectedVolunteerId);
+                    if (volAvail) {
+                      return (
+                        <div className={`p-3 rounded-lg border mt-2 ${
+                          volAvail.is_available 
+                            ? 'bg-green-500/10 border-green-500/30' 
+                            : 'bg-destructive/10 border-destructive/30'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            {volAvail.is_available ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <X className="w-4 h-4 text-destructive" />
+                            )}
+                            <span className={`text-sm font-medium ${
+                              volAvail.is_available ? 'text-green-700' : 'text-destructive'
+                            }`}>
+                              {volAvail.is_available ? 'Disponível' : 'Indisponível'}
+                            </span>
+                          </div>
+                          {volAvail.notes && (
+                            <p className="text-xs text-muted-foreground mt-1 italic">
+                              "{volAvail.notes}"
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="p-3 rounded-lg border bg-amber-500/10 border-amber-500/30 mt-2">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-600" />
+                          <span className="text-sm font-medium text-amber-700">
+                            Disponibilidade não informada
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
               )}
               <p className="text-xs text-muted-foreground">
                 Mostrando apenas voluntários do ministério
               </p>
             </div>
+            
+            {/* Availability legend */}
+            {selectedPosition && (
+              <div className="pt-2 border-t">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Legenda de disponibilidade:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-700">
+                    <Check className="w-3 h-3 mr-1" />
+                    Disponível
+                  </Badge>
+                  <Badge variant="outline" className="bg-destructive/10 border-destructive/30 text-destructive">
+                    <X className="w-3 h-3 mr-1" />
+                    Indisponível
+                  </Badge>
+                  <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-700">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    Não informado
+                  </Badge>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddVolunteerOpen(false)}>
