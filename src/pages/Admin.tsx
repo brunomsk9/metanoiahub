@@ -51,6 +51,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
+  const [isLiderMinisterial, setIsLiderMinisterial] = useState(false);
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
 
   useEffect(() => {
@@ -81,16 +82,22 @@ export default function Admin() {
     const userRoles = roles?.map(r => r.role) || [];
     const userIsAdmin = userRoles.includes('admin');
     const userIsDiscipulador = userRoles.includes('discipulador');
+    const userIsLiderMinisterial = userRoles.includes('lider_ministerial');
     
     setIsAdmin(userIsAdmin);
     setIsDiscipulador(userIsDiscipulador);
+    setIsLiderMinisterial(userIsLiderMinisterial);
     
     // Check URL param first, then default based on role
     const sectionParam = searchParams.get('section');
     if (sectionParam === 'recursos') {
       setActiveSection('resources');
+    } else if (userIsAdmin) {
+      setActiveSection('dashboard');
+    } else if (userIsLiderMinisterial) {
+      setActiveSection('schedules');
     } else {
-      setActiveSection(userIsAdmin ? 'dashboard' : 'discipleship');
+      setActiveSection('discipleship');
     }
     setLoading(false);
   };
@@ -108,7 +115,7 @@ export default function Admin() {
     );
   }
 
-  if (!isAdmin && !isDiscipulador) {
+  if (!isAdmin && !isDiscipulador && !isLiderMinisterial) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center space-y-4">
@@ -183,17 +190,32 @@ export default function Admin() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">
-            {isAdmin ? 'Gerenciar Conteúdo' : 'Discipulado'}
+            {isAdmin ? 'Gerenciar Conteúdo' : isLiderMinisterial ? 'Escalas Ministeriais' : 'Discipulado'}
           </h1>
           <p className="text-muted-foreground mt-1">
             {isAdmin 
               ? 'Adicione e edite trilhas, cursos, lições e recursos' 
-              : 'Acompanhe o progresso dos seus discípulos'}
+              : isLiderMinisterial 
+                ? 'Gerencie as escalas do seu ministério'
+                : 'Acompanhe o progresso dos seus discípulos'}
           </p>
         </div>
 
         {/* Navigation */}
         <div className="flex flex-wrap gap-2 mb-6">
+          {/* Líder Ministerial Navigation */}
+          {isLiderMinisterial && !isAdmin && (
+            <Button
+              variant={activeSection === 'schedules' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveSection('schedules')}
+              className="gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Escalas</span>
+            </Button>
+          )}
+
           {isAdmin && (
             <>
               <Button
