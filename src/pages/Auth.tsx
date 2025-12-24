@@ -15,7 +15,8 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setChurchId } = useChurch();
+  const churchContext = useChurch();
+  const setChurchId = churchContext?.setChurchId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +50,7 @@ export default function Auth() {
         const isSuperAdmin = roles?.some(r => r.role === 'super_admin');
         
         // Set church context from user's profile (not from selection)
-        if (profile?.church_id) {
+        if (profile?.church_id && setChurchId) {
           setChurchId(profile.church_id);
         } else if (!isSuperAdmin) {
           // Regular user without church - shouldn't happen but handle it
