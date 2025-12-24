@@ -624,6 +624,7 @@ export type Database = {
           church_id: string
           created_at: string
           descricao: string | null
+          genero_restrito: Database["public"]["Enums"]["gender_type"] | null
           id: string
           is_active: boolean
           ministry_id: string
@@ -635,6 +636,7 @@ export type Database = {
           church_id: string
           created_at?: string
           descricao?: string | null
+          genero_restrito?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           is_active?: boolean
           ministry_id: string
@@ -646,6 +648,7 @@ export type Database = {
           church_id?: string
           created_at?: string
           descricao?: string | null
+          genero_restrito?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           is_active?: boolean
           ministry_id?: string
@@ -703,6 +706,7 @@ export type Database = {
           church_id: string | null
           created_at: string
           current_streak: number
+          genero: Database["public"]["Enums"]["gender_type"] | null
           id: string
           needs_password_change: boolean
           nome: string
@@ -717,6 +721,7 @@ export type Database = {
           church_id?: string | null
           created_at?: string
           current_streak?: number
+          genero?: Database["public"]["Enums"]["gender_type"] | null
           id: string
           needs_password_change?: boolean
           nome?: string
@@ -731,6 +736,7 @@ export type Database = {
           church_id?: string | null
           created_at?: string
           current_streak?: number
+          genero?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           needs_password_change?: boolean
           nome?: string
@@ -1442,6 +1448,7 @@ export type Database = {
         | "super_admin"
         | "church_admin"
         | "lider_ministerial"
+      gender_type: "masculino" | "feminino" | "unissex"
       lesson_type: "video" | "texto" | "checklist_interativo"
       meeting_type: "individual" | "celula"
       resource_category:
@@ -1587,6 +1594,7 @@ export const Constants = {
         "church_admin",
         "lider_ministerial",
       ],
+      gender_type: ["masculino", "feminino", "unissex"],
       lesson_type: ["video", "texto", "checklist_interativo"],
       meeting_type: ["individual", "celula"],
       resource_category: [
