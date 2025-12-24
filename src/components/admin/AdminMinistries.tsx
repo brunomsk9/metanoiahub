@@ -390,14 +390,14 @@ export function AdminMinistries() {
                       Líder Principal
                     </Label>
                     <Select
-                      value={formData.lider_principal_id}
-                      onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value })}
+                      value={formData.lider_principal_id || "__none__"}
+                      onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value === "__none__" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                        <SelectItem value="__none__">Nenhum</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.nome}
@@ -412,14 +412,14 @@ export function AdminMinistries() {
                       Líder Secundário
                     </Label>
                     <Select
-                      value={formData.lider_secundario_id}
-                      onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value })}
+                      value={formData.lider_secundario_id || "__none__"}
+                      onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value === "__none__" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                        <SelectItem value="__none__">Nenhum</SelectItem>
                         {users.filter(u => u.id !== formData.lider_principal_id).map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.nome}
@@ -577,14 +577,14 @@ export function AdminMinistries() {
                   Líder Principal
                 </Label>
                 <Select
-                  value={formData.lider_principal_id}
-                  onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value })}
+                  value={formData.lider_principal_id || "__none__"}
+                  onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value === "__none__" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.nome}
@@ -599,14 +599,14 @@ export function AdminMinistries() {
                   Líder Secundário
                 </Label>
                 <Select
-                  value={formData.lider_secundario_id}
-                  onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value })}
+                  value={formData.lider_secundario_id || "__none__"}
+                  onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value === "__none__" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="__none__">Nenhum</SelectItem>
                     {users.filter(u => u.id !== formData.lider_principal_id).map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.nome}
