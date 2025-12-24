@@ -577,6 +577,75 @@ export type Database = {
           },
         ]
       }
+      ministries: {
+        Row: {
+          church_id: string
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          is_active: boolean
+          lider_principal_id: string | null
+          lider_secundario_id: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          is_active?: boolean
+          lider_principal_id?: string | null
+          lider_secundario_id?: string | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          is_active?: boolean
+          lider_principal_id?: string | null
+          lider_secundario_id?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ministry_volunteers: {
+        Row: {
+          church_id: string
+          created_at: string
+          funcao: string | null
+          id: string
+          ministry_id: string
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          funcao?: string | null
+          id?: string
+          ministry_id: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          funcao?: string | null
+          id?: string
+          ministry_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1096,6 +1165,11 @@ export type Database = {
       }
       is_discipulador_of: {
         Args: { _discipulador_id: string; _discipulo_id: string }
+        Returns: boolean
+      }
+      is_lider_ministerial: { Args: { _user_id: string }; Returns: boolean }
+      is_ministry_leader: {
+        Args: { _ministry_id: string; _user_id: string }
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
