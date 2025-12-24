@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,21 +109,18 @@ export default function Library() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} />
-      
+    <AppShell headerTitle="Biblioteca" onLogout={handleLogout}>
       <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-8">
-          <div className="px-4 lg:px-6 max-w-5xl mx-auto">
-            {/* Header */}
-            <header className="pt-8 pb-6 text-center">
-              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
-                Biblioteca
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Livros, músicas e pregações para edificar sua fé
-              </p>
-            </header>
+        <div className="max-w-5xl mx-auto">
+          {/* Header - visible on desktop */}
+          <header className="hidden lg:block pt-2 pb-6 text-center">
+            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
+              Biblioteca
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Livros, músicas e pregações para edificar sua fé
+            </p>
+          </header>
 
             {/* Search */}
             <div className="relative max-w-md mx-auto mb-6">
@@ -195,11 +192,10 @@ export default function Library() {
               ))}
             </Tabs>
           </div>
-        </main>
-      </PageTransition>
+        </PageTransition>
 
-      <MentorChatButton />
-    </div>
+        <MentorChatButton />
+      </AppShell>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { TrackCard } from "@/components/ContinueWatching";
 import { PageTransition } from "@/components/PageTransition";
@@ -102,19 +102,16 @@ export default function Tracks() {
     : tracks.filter(t => t.categoria === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar onLogout={handleLogout} />
-      
+    <AppShell headerTitle="Trilhas" onLogout={handleLogout}>
       <PageTransition>
-        <main className="pt-14 lg:pt-16 pb-8">
-          <div className="px-4 lg:px-6 max-w-5xl mx-auto space-y-6">
-            {/* Header */}
-            <header className="pt-6">
-              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
-                Trilhas
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">Sua jornada de aprendizado</p>
-            </header>
+        <div className="space-y-6">
+          {/* Header - visible on desktop */}
+          <header className="hidden lg:block pt-2">
+            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
+              Trilhas
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">Sua jornada de aprendizado</p>
+          </header>
 
             {/* Filters */}
             <div className="flex flex-wrap gap-1.5">
@@ -166,13 +163,12 @@ export default function Tracks() {
               </div>
             )}
 
-            {!loading && filteredTracks.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-sm text-muted-foreground">Nenhuma trilha encontrada</p>
-              </div>
-            )}
-          </div>
-        </main>
+          {!loading && filteredTracks.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-sm text-muted-foreground">Nenhuma trilha encontrada</p>
+            </div>
+          )}
+        </div>
       </PageTransition>
 
       <MentorChatButton />
@@ -182,6 +178,6 @@ export default function Tracks() {
         onClose={() => setShowCelebration(false)}
         trackTitle={baseTrackTitle}
       />
-    </div>
+    </AppShell>
   );
 }
