@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Menu,
   GraduationCap,
+  Calendar,
   CalendarPlus,
   BookMarked,
   Settings,
@@ -53,10 +54,11 @@ const learningItems = [
 ];
 
 // Cache for user roles to avoid repeated fetches
-let cachedRoles: { isAdmin: boolean; isDiscipulador: boolean; isSuperAdmin: boolean; userId: string | null } = {
+let cachedRoles: { isAdmin: boolean; isDiscipulador: boolean; isSuperAdmin: boolean; isLiderMinisterial: boolean; userId: string | null } = {
   isAdmin: false,
   isDiscipulador: false,
   isSuperAdmin: false,
+  isLiderMinisterial: false,
   userId: null
 };
 
@@ -64,6 +66,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
   const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
   const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
   const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
+  const [isLiderMinisterial, setIsLiderMinisterial] = useState(cachedRoles.isLiderMinisterial);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { church } = useChurch();
@@ -84,6 +87,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
         setIsAdmin(cachedRoles.isAdmin);
         setIsDiscipulador(cachedRoles.isDiscipulador);
         setIsSuperAdmin(cachedRoles.isSuperAdmin);
+        setIsLiderMinisterial(cachedRoles.isLiderMinisterial);
         return;
       }
 
@@ -96,13 +100,15 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
       const admin = userRoles.includes('admin');
       const discipulador = userRoles.includes('discipulador');
       const superAdmin = userRoles.includes('super_admin');
+      const liderMinisterial = userRoles.includes('lider_ministerial');
       
       // Cache the roles
-      cachedRoles = { isAdmin: admin, isDiscipulador: discipulador, isSuperAdmin: superAdmin, userId: session.user.id };
+      cachedRoles = { isAdmin: admin, isDiscipulador: discipulador, isSuperAdmin: superAdmin, isLiderMinisterial: liderMinisterial, userId: session.user.id };
       
       setIsAdmin(admin);
       setIsDiscipulador(discipulador);
       setIsSuperAdmin(superAdmin);
+      setIsLiderMinisterial(liderMinisterial);
     }
   }, []);
 
@@ -249,6 +255,22 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               >
                 <CalendarPlus className="w-4 h-4" />
                 <span>Novo Encontro</span>
+              </NavLink>
+            )}
+
+            {/* Escalas - visible for admin and lider_ministerial */}
+            {(isAdmin || isLiderMinisterial) && (
+              <NavLink
+                to="/admin?section=escalas"
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  location.pathname === '/admin' && location.search.includes('escalas')
+                    ? "bg-primary/10 text-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Escalas</span>
               </NavLink>
             )}
           </nav>
@@ -452,6 +474,22 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                       <span>Novo Encontro</span>
                     </NavLink>
                   )}
+
+                  {/* Escalas - visible for admin and lider_ministerial */}
+                  {(isAdmin || isLiderMinisterial) && (
+                    <NavLink
+                      to="/admin?section=escalas"
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
+                        location.pathname === '/admin' && location.search.includes('escalas')
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Calendar className="w-5 h-5" />
+                      <span>Escalas</span>
+                    </NavLink>
+                  )}
                 </div>
               )}
 
@@ -484,7 +522,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               <div className="px-3 py-2 border-b border-border">
                 <p className="text-sm font-medium text-foreground truncate">{userName || 'Usuário'}</p>
                 <p className="text-xs text-muted-foreground">
-                  {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Administrador' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
+                  {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Administrador' : isLiderMinisterial ? 'Líder Ministerial' : isDiscipulador ? 'Discipulador' : 'Discípulo'}
                 </p>
               </div>
               <DropdownMenuItem asChild>
