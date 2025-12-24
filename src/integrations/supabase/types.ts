@@ -619,6 +619,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ministry_positions: {
+        Row: {
+          church_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          is_active: boolean
+          ministry_id: string
+          nome: string
+          ordem: number
+          quantidade_minima: number
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          ministry_id: string
+          nome: string
+          ordem?: number
+          quantidade_minima?: number
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_active?: boolean
+          ministry_id?: string
+          nome?: string
+          ordem?: number
+          quantidade_minima?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ministry_positions_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ministry_positions_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ministry_volunteers: {
         Row: {
           church_id: string
@@ -872,6 +923,188 @@ export type Database = {
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedules: {
+        Row: {
+          church_id: string
+          confirmed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          ministry_id: string
+          notes: string | null
+          position_id: string
+          service_id: string
+          status: string
+          updated_at: string
+          volunteer_id: string
+        }
+        Insert: {
+          church_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          ministry_id: string
+          notes?: string | null
+          position_id: string
+          service_id: string
+          status?: string
+          updated_at?: string
+          volunteer_id: string
+        }
+        Update: {
+          church_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          ministry_id?: string
+          notes?: string | null
+          position_id?: string
+          service_id?: string
+          status?: string
+          updated_at?: string
+          volunteer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedules_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "ministry_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_volunteer_id_fkey"
+            columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_types: {
+        Row: {
+          church_id: string
+          created_at: string
+          descricao: string | null
+          dia_semana: number | null
+          horario: string | null
+          id: string
+          is_active: boolean
+          is_recurring: boolean
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          descricao?: string | null
+          dia_semana?: number | null
+          horario?: string | null
+          id?: string
+          is_active?: boolean
+          is_recurring?: boolean
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          descricao?: string | null
+          dia_semana?: number | null
+          horario?: string | null
+          id?: string
+          is_active?: boolean
+          is_recurring?: boolean
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_types_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          church_id: string
+          created_at: string
+          data_hora: string
+          descricao: string | null
+          id: string
+          is_special_event: boolean
+          nome: string
+          service_type_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          data_hora: string
+          descricao?: string | null
+          id?: string
+          is_special_event?: boolean
+          nome: string
+          service_type_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          data_hora?: string
+          descricao?: string | null
+          id?: string
+          is_special_event?: boolean
+          nome?: string
+          service_type_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_service_type_id_fkey"
+            columns: ["service_type_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
             referencedColumns: ["id"]
           },
         ]

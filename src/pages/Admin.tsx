@@ -16,8 +16,9 @@ import { AdminHabits } from '@/components/admin/AdminHabits';
 import { AdminReports } from '@/components/admin/AdminReports';
 import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
 import { AdminMinistries } from '@/components/admin/AdminMinistries';
+import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -29,7 +30,7 @@ import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 import { Building2 } from 'lucide-react';
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
@@ -147,6 +148,7 @@ export default function Admin() {
       case 'presentation': return <PresentationPdfGenerator />;
       case 'reports': return <AdminReports />;
       case 'ministries': return <AdminMinistries />;
+      case 'schedules': return <AdminSchedules />;
       default: return null;
     }
   };
@@ -272,6 +274,16 @@ export default function Admin() {
               >
                 <Building2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Rede Ministerial</span>
+              </Button>
+
+              <Button
+                variant={activeSection === 'schedules' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('schedules')}
+                className="gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Escalas</span>
               </Button>
             </>
           )}
