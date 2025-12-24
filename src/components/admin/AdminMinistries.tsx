@@ -75,6 +75,7 @@ export function AdminMinistries() {
   const [isVolunteerDialogOpen, setIsVolunteerDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [volunteerSearch, setVolunteerSearch] = useState('');
+  const [currentVolunteerSearch, setCurrentVolunteerSearch] = useState('');
   
   // Form states
   const [formData, setFormData] = useState({
@@ -602,37 +603,51 @@ export function AdminMinistries() {
               <TabsTrigger value="current" className="flex-1">Atuais</TabsTrigger>
               <TabsTrigger value="add" className="flex-1">Adicionar</TabsTrigger>
             </TabsList>
-            <TabsContent value="current" className="mt-4">
-              <ScrollArea className="h-[300px]">
+            <TabsContent value="current" className="mt-4 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar voluntário por nome..."
+                  className="pl-9"
+                  value={currentVolunteerSearch}
+                  onChange={(e) => setCurrentVolunteerSearch(e.target.value)}
+                />
+              </div>
+              <ScrollArea className="h-[260px]">
                 {selectedMinistry && getMinistryVolunteers(selectedMinistry.id).length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     Nenhum voluntário neste ministério
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {selectedMinistry && getMinistryVolunteers(selectedMinistry.id).map((volunteer) => {
-                      const user = users.find(u => u.id === volunteer.user_id);
-                      return (
-                        <div
-                          key={volunteer.id}
-                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
-                              {user?.nome?.charAt(0).toUpperCase() || '?'}
-                            </div>
-                            <span className="font-medium">{user?.nome || 'Desconhecido'}</span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveVolunteer(volunteer.id)}
+                    {selectedMinistry && getMinistryVolunteers(selectedMinistry.id)
+                      .filter((volunteer) => {
+                        const user = users.find(u => u.id === volunteer.user_id);
+                        return user?.nome.toLowerCase().includes(currentVolunteerSearch.toLowerCase());
+                      })
+                      .map((volunteer) => {
+                        const user = users.find(u => u.id === volunteer.user_id);
+                        return (
+                          <div
+                            key={volunteer.id}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      );
-                    })}
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                                {user?.nome?.charAt(0).toUpperCase() || '?'}
+                              </div>
+                              <span className="font-medium">{user?.nome || 'Desconhecido'}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveVolunteer(volunteer.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </ScrollArea>
