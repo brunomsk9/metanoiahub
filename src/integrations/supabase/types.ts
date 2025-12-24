@@ -1208,6 +1208,7 @@ export type Database = {
         | "admin"
         | "super_admin"
         | "church_admin"
+        | "lider_ministerial"
       lesson_type: "video" | "texto" | "checklist_interativo"
       meeting_type: "individual" | "celula"
       resource_category:
@@ -1351,6 +1352,7 @@ export const Constants = {
         "admin",
         "super_admin",
         "church_admin",
+        "lider_ministerial",
       ],
       lesson_type: ["video", "texto", "checklist_interativo"],
       meeting_type: ["individual", "celula"],
