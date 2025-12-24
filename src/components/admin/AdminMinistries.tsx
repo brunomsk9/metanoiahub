@@ -74,6 +74,7 @@ export function AdminMinistries() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isVolunteerDialogOpen, setIsVolunteerDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [volunteerSearch, setVolunteerSearch] = useState('');
   
   // Form states
   const [formData, setFormData] = useState({
@@ -636,14 +637,25 @@ export function AdminMinistries() {
                 )}
               </ScrollArea>
             </TabsContent>
-            <TabsContent value="add" className="mt-4">
-              <ScrollArea className="h-[300px]">
+            <TabsContent value="add" className="mt-4 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar usuário por nome..."
+                  className="pl-9"
+                  value={volunteerSearch}
+                  onChange={(e) => setVolunteerSearch(e.target.value)}
+                />
+              </div>
+              <ScrollArea className="h-[260px]">
                 <div className="space-y-2">
                   {users
                     .filter(user => {
                       if (!selectedMinistry) return false;
                       const ministryVols = getMinistryVolunteers(selectedMinistry.id);
-                      return !ministryVols.some(v => v.user_id === user.id);
+                      const isNotVolunteer = !ministryVols.some(v => v.user_id === user.id);
+                      const matchesSearch = user.nome.toLowerCase().includes(volunteerSearch.toLowerCase());
+                      return isNotVolunteer && matchesSearch;
                     })
                     .map((user) => (
                       <div
