@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2 } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -213,6 +213,11 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     recentCount: number;
   }[]>([]);
   const [isConfirmingAutoSchedule, setIsConfirmingAutoSchedule] = useState(false);
+  const [replacingItem, setReplacingItem] = useState<{
+    index: number;
+    ministry: Ministry;
+    position: Position;
+  } | null>(null);
 
   useEffect(() => {
     if (churchId) {
@@ -1097,7 +1102,10 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       </Dialog>
 
       {/* Dialog: Auto-Schedule Preview */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+      <Dialog open={isPreviewOpen} onOpenChange={(open) => {
+        setIsPreviewOpen(open);
+        if (!open) setReplacingItem(null);
+      }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1138,58 +1146,172 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="py-2 space-y-2">
-                          {ministryItems.map((item, idx) => (
-                            <div
-                              key={`${item.position.id}-${item.volunteer.id}-${idx}`}
-                              className="flex items-center justify-between p-2 bg-muted/50 rounded-lg group"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
-                                  {item.volunteer.nome.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                  <p className="font-medium text-sm">{item.volunteer.nome}</p>
-                                  <p className="text-xs text-muted-foreground">{item.position.nome}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {item.recentCount > 0 && (
-                                  <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-700">
-                                    {item.recentCount}x recente
-                                  </Badge>
+                          {ministryItems.map((item, idx) => {
+                            const itemIndex = previewSchedules.findIndex(
+                              p => p.ministry.id === item.ministry.id && 
+                                   p.position.id === item.position.id && 
+                                   p.volunteer.id === item.volunteer.id
+                            );
+                            const isReplacing = replacingItem?.index === itemIndex;
+                            
+                            // Get eligible volunteers for replacement
+                            const eligibleForReplacement = users.filter(u => {
+                              const ministryVolunteerIds = volunteers
+                                .filter(v => v.ministry_id === item.ministry.id)
+                                .map(v => v.user_id);
+                              
+                              if (!ministryVolunteerIds.includes(u.id)) return false;
+                              
+                              if (item.position.genero_restrito && item.position.genero_restrito !== 'unissex') {
+                                if (!u.genero || u.genero !== item.position.genero_restrito) return false;
+                              }
+                              
+                              // Exclude current volunteer and those already in preview for this position
+                              if (u.id === item.volunteer.id) return false;
+                              if (previewSchedules.some(p => p.position.id === item.position.id && p.volunteer.id === u.id)) return false;
+                              // Exclude those already scheduled
+                              if (schedules.some(s => s.position_id === item.position.id && s.volunteer_id === u.id)) return false;
+                              
+                              return true;
+                            });
+                            
+                            return (
+                              <div
+                                key={`${item.position.id}-${item.volunteer.id}-${idx}`}
+                                className={cn(
+                                  "p-2 bg-muted/50 rounded-lg group",
+                                  isReplacing && "ring-2 ring-primary"
                                 )}
-                                {item.isAvailable ? (
-                                  <Badge className="bg-green-500/20 text-green-700 border-green-300">
-                                    <Check className="w-3 h-3 mr-1" />
-                                    Disponível
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-700">
-                                    <AlertCircle className="w-3 h-3 mr-1" />
-                                    Não informado
-                                  </Badge>
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                                      {item.volunteer.nome.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-sm">{item.volunteer.nome}</p>
+                                      <p className="text-xs text-muted-foreground">{item.position.nome}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {item.recentCount > 0 && (
+                                      <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-700">
+                                        {item.recentCount}x recente
+                                      </Badge>
+                                    )}
+                                    {item.isAvailable ? (
+                                      <Badge className="bg-green-500/20 text-green-700 border-green-300">
+                                        <Check className="w-3 h-3 mr-1" />
+                                        Disponível
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-700">
+                                        <AlertCircle className="w-3 h-3 mr-1" />
+                                        Não informado
+                                      </Badge>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Substituir voluntário"
+                                      onClick={() => {
+                                        if (isReplacing) {
+                                          setReplacingItem(null);
+                                        } else {
+                                          setReplacingItem({
+                                            index: itemIndex,
+                                            ministry: item.ministry,
+                                            position: item.position,
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <RefreshCw className={cn("h-4 w-4", isReplacing ? "text-primary" : "text-muted-foreground")} />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Remover do escalonamento"
+                                      onClick={() => {
+                                        if (itemIndex !== -1) {
+                                          setPreviewSchedules(prev => prev.filter((_, i) => i !== itemIndex));
+                                          if (replacingItem?.index === itemIndex) {
+                                            setReplacingItem(null);
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      <X className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                {/* Replacement selector */}
+                                {isReplacing && (
+                                  <div className="mt-3 p-3 bg-background rounded-lg border space-y-2">
+                                    <Label className="text-xs">Selecione o substituto:</Label>
+                                    {eligibleForReplacement.length === 0 ? (
+                                      <p className="text-xs text-muted-foreground">
+                                        Nenhum voluntário disponível para substituição
+                                      </p>
+                                    ) : (
+                                      <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                                        {eligibleForReplacement.map(vol => {
+                                          const volAvail = availability.find(a => a.volunteer_id === vol.id);
+                                          const isAvailable = volAvail?.is_available ?? false;
+                                          
+                                          return (
+                                            <Button
+                                              key={vol.id}
+                                              variant="outline"
+                                              size="sm"
+                                              className={cn(
+                                                "justify-start text-xs h-auto py-2",
+                                                isAvailable && "border-green-300 bg-green-500/10"
+                                              )}
+                                              onClick={() => {
+                                                // Replace the volunteer in preview
+                                                setPreviewSchedules(prev => prev.map((p, i) => {
+                                                  if (i === itemIndex) {
+                                                    return {
+                                                      ...p,
+                                                      volunteer: vol,
+                                                      isAvailable,
+                                                      recentCount: 0, // Reset since it's a new selection
+                                                    };
+                                                  }
+                                                  return p;
+                                                }));
+                                                setReplacingItem(null);
+                                              }}
+                                            >
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                                                  {vol.nome.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className="truncate">{vol.nome}</span>
+                                                {isAvailable && <Check className="h-3 w-3 text-green-600 ml-auto" />}
+                                              </div>
+                                            </Button>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="w-full text-xs"
+                                      onClick={() => setReplacingItem(null)}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                  </div>
                                 )}
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => {
-                                    const itemToRemove = previewSchedules.findIndex(
-                                      (p, i) => 
-                                        p.ministry.id === item.ministry.id && 
-                                        p.position.id === item.position.id && 
-                                        p.volunteer.id === item.volunteer.id
-                                    );
-                                    if (itemToRemove !== -1) {
-                                      setPreviewSchedules(prev => prev.filter((_, i) => i !== itemToRemove));
-                                    }
-                                  }}
-                                >
-                                  <X className="h-4 w-4 text-destructive" />
-                                </Button>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </CardContent>
                       </Card>
                     );
