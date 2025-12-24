@@ -3,14 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, Users, UserCheck, Shield, Search, Upload, UserPlus } from 'lucide-react';
+import { Loader2, Users, UserCheck, Shield, Search, Upload, UserPlus, Building2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Database } from '@/integrations/supabase/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminUserImport } from './AdminUserImport';
 import { CreateUserModal } from './CreateUserModal';
 
-type AppRole = Database['public']['Enums']['app_role'];
+type AppRole = Database['public']['Enums']['app_role'] | 'lider_ministerial';
 
 interface UserWithRoles {
   id: string;
@@ -77,7 +77,7 @@ export function AdminUsers() {
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', role);
+        .eq('role', role as Database['public']['Enums']['app_role']);
 
       if (error) {
         toast.error('Erro ao remover role');
@@ -94,7 +94,7 @@ export function AdminUsers() {
       // Add role
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, role });
+        .insert({ user_id: userId, role: role as Database['public']['Enums']['app_role'] });
 
       if (error) {
         if (error.code === '23505') {
@@ -124,6 +124,7 @@ export function AdminUsers() {
     switch (role) {
       case 'admin': return <Shield className="h-4 w-4" />;
       case 'discipulador': return <UserCheck className="h-4 w-4" />;
+      case 'lider_ministerial': return <Building2 className="h-4 w-4" />;
       default: return <Users className="h-4 w-4" />;
     }
   };
@@ -132,15 +133,17 @@ export function AdminUsers() {
     switch (role) {
       case 'admin': return 'Admin';
       case 'discipulador': return 'Discipulador';
+      case 'lider_ministerial': return 'Líder Ministerial';
       default: return 'Discípulo';
     }
   };
 
   const getRoleColor = (role: AppRole) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-700';
-      case 'discipulador': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-green-100 text-green-700';
+      case 'admin': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'discipulador': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'lider_ministerial': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+      default: return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
     }
   };
 
@@ -208,6 +211,7 @@ export function AdminUsers() {
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Roles Atuais</th>
                     <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discípulo</th>
                     <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discipulador</th>
+                    <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Líder Min.</th>
                     <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Admin</th>
                   </tr>
                 </thead>
@@ -255,6 +259,13 @@ export function AdminUsers() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <Checkbox
+                          checked={user.roles.includes('lider_ministerial')}
+                          onCheckedChange={() => toggleRole(user.id, 'lider_ministerial', user.roles.includes('lider_ministerial'))}
+                          disabled={saving === user.id}
+                        />
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <Checkbox
                           checked={user.roles.includes('admin')}
                           onCheckedChange={() => toggleRole(user.id, 'admin', user.roles.includes('admin'))}
                           disabled={saving === user.id}
@@ -278,6 +289,10 @@ export function AdminUsers() {
             <li className="flex items-center gap-2">
               <UserCheck className="h-4 w-4 text-blue-500" />
               <strong>Discipulador:</strong> Acesso às trilhas e cursos para discipuladores
+            </li>
+            <li className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-purple-500" />
+              <strong>Líder Ministerial:</strong> Gerencia ministérios e voluntários
             </li>
             <li className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-red-500" />

@@ -15,6 +15,7 @@ import { AdminAISettings } from '@/components/admin/AdminAISettings';
 import { AdminHabits } from '@/components/admin/AdminHabits';
 import { AdminReports } from '@/components/admin/AdminReports';
 import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
+import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { PageTransition } from '@/components/PageTransition';
 import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,8 +27,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+import { Building2 } from 'lucide-react';
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
@@ -144,6 +146,7 @@ export default function Admin() {
       case 'habits': return <AdminHabits />;
       case 'presentation': return <PresentationPdfGenerator />;
       case 'reports': return <AdminReports />;
+      case 'ministries': return <AdminMinistries />;
       default: return null;
     }
   };
@@ -259,6 +262,16 @@ export default function Admin() {
               >
                 <PieChart className="h-4 w-4" />
                 <span className="hidden sm:inline">Relatórios</span>
+              </Button>
+
+              <Button
+                variant={activeSection === 'ministries' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('ministries')}
+                className="gap-2"
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Rede Ministerial</span>
               </Button>
             </>
           )}
