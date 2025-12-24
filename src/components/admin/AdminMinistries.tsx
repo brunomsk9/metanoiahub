@@ -627,6 +627,9 @@ export function AdminMinistries() {
                       })
                       .map((volunteer) => {
                         const user = users.find(u => u.id === volunteer.user_id);
+                        const isLiderPrincipal = selectedMinistry?.lider_principal_id === volunteer.user_id;
+                        const isLiderSecundario = selectedMinistry?.lider_secundario_id === volunteer.user_id;
+                        const isLeader = isLiderPrincipal || isLiderSecundario;
                         return (
                           <div
                             key={volunteer.id}
@@ -636,14 +639,30 @@ export function AdminMinistries() {
                               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
                                 {user?.nome?.charAt(0).toUpperCase() || '?'}
                               </div>
-                              <span className="font-medium">{user?.nome || 'Desconhecido'}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{user?.nome || 'Desconhecido'}</span>
+                                {isLiderPrincipal && (
+                                  <Badge variant="default" className="bg-amber-500 hover:bg-amber-600 text-xs gap-1">
+                                    <Crown className="h-3 w-3" />
+                                    Líder
+                                  </Badge>
+                                )}
+                                {isLiderSecundario && (
+                                  <Badge variant="secondary" className="bg-blue-500 hover:bg-blue-600 text-white text-xs gap-1">
+                                    <User className="h-3 w-3" />
+                                    Vice-líder
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleRemoveVolunteer(volunteer.id)}
+                              disabled={isLeader}
+                              title={isLeader ? 'Remova a função de líder primeiro' : 'Remover voluntário'}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className={`h-4 w-4 ${isLeader ? 'text-muted-foreground' : 'text-destructive'}`} />
                             </Button>
                           </div>
                         );
