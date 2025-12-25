@@ -1,14 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Users, User, ChevronDown, ChevronRight, Search, ZoomIn, ZoomOut, Maximize2, Filter } from 'lucide-react';
+import { Loader2, Users, User, ChevronDown, ChevronRight, Search, ZoomIn, ZoomOut, Maximize2, Filter, Download, Image, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { cn } from '@/lib/utils';
-
+import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 interface Profile {
   id: string;
   nome: string;
@@ -43,6 +46,8 @@ export function DiscipleshipOrganogram({ isAdmin = false, currentUserId }: Disci
   const [search, setSearch] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [zoom, setZoom] = useState(100);
+  const [exporting, setExporting] = useState(false);
+  const organogramRef = useRef<HTMLDivElement>(null);
   // For non-admins, auto-select their own tree
   const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>(isAdmin ? 'all' : (currentUserId || 'all'));
 
@@ -192,6 +197,83 @@ export function DiscipleshipOrganogram({ isAdmin = false, currentUserId }: Disci
     setExpandedNodes(new Set());
   };
 
+  const exportAsImage = async () => {
+    if (!organogramRef.current) return;
+    
+    setExporting(true);
+    try {
+      // Temporarily expand all nodes for export
+      const allIds = new Set<string>();
+      const collectIds = (nodes: TreeNode[]) => {
+        nodes.forEach(n => {
+          allIds.add(n.id);
+          collectIds(n.disciples);
+        });
+      };
+      collectIds(tree);
+      setExpandedNodes(allIds);
+      
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const canvas = await html2canvas(organogramRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+      });
+      
+      const link = document.createElement('a');
+      link.download = `organograma-discipulado-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      toast.success('Organograma exportado como imagem!');
+    } catch (error) {
+      console.error('Error exporting image:', error);
+      toast.error('Erro ao exportar imagem');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportAsPDF = async () => {
+    if (!organogramRef.current) return;
+    
+    setExporting(true);
+    try {
+      // Temporarily expand all nodes for export
+      const allIds = new Set<string>();
+      const collectIds = (nodes: TreeNode[]) => {
+        nodes.forEach(n => {
+          allIds.add(n.id);
+          collectIds(n.disciples);
+        });
+      };
+      collectIds(tree);
+      setExpandedNodes(allIds);
+      
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const opt = {
+        margin: 10,
+        filename: `organograma-discipulado-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+      
+      await html2pdf().set(opt).from(organogramRef.current).save();
+      
+      toast.success('Organograma exportado como PDF!');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Erro ao exportar PDF');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Filter nodes based on search
   const filterTree = (nodes: TreeNode[], searchTerm: string): TreeNode[] => {
     if (!searchTerm) return nodes;
@@ -330,6 +412,30 @@ export function DiscipleshipOrganogram({ isAdmin = false, currentUserId }: Disci
             Visualize a hierarquia de discipuladores e discípulos
           </p>
         </div>
+        
+        {/* Export Button */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" disabled={exporting || filteredTree.length === 0}>
+              {exporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={exportAsImage}>
+              <Image className="h-4 w-4 mr-2" />
+              Exportar como Imagem (PNG)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportAsPDF}>
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar como PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Stats */}
@@ -414,7 +520,7 @@ export function DiscipleshipOrganogram({ isAdmin = false, currentUserId }: Disci
       </div>
 
       {/* Tree View */}
-      <div className="bg-card border border-border rounded-lg">
+      <div className="bg-card border border-border rounded-lg" ref={organogramRef}>
         <ScrollArea className="h-[500px]">
           <div 
             className="p-4"
