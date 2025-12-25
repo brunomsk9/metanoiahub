@@ -30,7 +30,12 @@ interface TreeNode {
   discipleCount: number;
 }
 
-export function DiscipleshipOrganogram() {
+interface DiscipleshipOrganogramProps {
+  isAdmin?: boolean;
+  currentUserId?: string;
+}
+
+export function DiscipleshipOrganogram({ isAdmin = false, currentUserId }: DiscipleshipOrganogramProps) {
   const { churchId, loading: loadingChurch } = useUserChurchId();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [relationships, setRelationships] = useState<DiscipleshipRelationship[]>([]);
@@ -38,7 +43,8 @@ export function DiscipleshipOrganogram() {
   const [search, setSearch] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [zoom, setZoom] = useState(100);
-  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>('all');
+  // For non-admins, auto-select their own tree
+  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>(isAdmin ? 'all' : (currentUserId || 'all'));
 
   useEffect(() => {
     if (churchId) {
@@ -345,23 +351,25 @@ export function DiscipleshipOrganogram() {
       {/* Controls */}
       <div className="flex flex-col gap-3 bg-card border border-border rounded-lg p-4">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          {/* Filter by Discipulador */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
-              <SelectTrigger className="w-full sm:w-[220px]">
-                <SelectValue placeholder="Filtrar por discipulador" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os discipuladores</SelectItem>
-                {discipuladores.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filter by Discipulador - only for admins */}
+          {isAdmin && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
+                <SelectTrigger className="w-full sm:w-[220px]">
+                  <SelectValue placeholder="Filtrar por discipulador" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os discipuladores</SelectItem>
+                  {discipuladores.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Search */}
           <div className="relative flex-1 w-full sm:max-w-xs">
