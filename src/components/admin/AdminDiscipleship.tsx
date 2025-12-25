@@ -685,12 +685,10 @@ export function AdminDiscipleship() {
               <Users className="w-4 h-4" />
               Relacionamentos
             </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="organogram" className="gap-2">
-                <GitBranch className="w-4 h-4" />
-                Organograma
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="organogram" className="gap-2">
+              <GitBranch className="w-4 h-4" />
+              Organograma
+            </TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="history" className="gap-2">
                 <History className="w-4 h-4" />
@@ -1199,11 +1197,9 @@ export function AdminDiscipleship() {
       </Card>
       </TabsContent>
 
-      {isAdmin && (
-        <TabsContent value="organogram">
-          <DiscipleshipOrganogram />
-        </TabsContent>
-      )}
+      <TabsContent value="organogram">
+        <DiscipleshipOrganogram isAdmin={isAdmin} currentUserId={currentUserId} />
+      </TabsContent>
 
       {isAdmin && (
         <TabsContent value="history">
