@@ -9,8 +9,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Database, Table as TableIcon, Download, Play, AlertTriangle, 
   RefreshCw, Search, Loader2, Copy, Check, Trash2, Plus, Edit,
-  X, Save
+  X, Save, Filter, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -101,6 +102,27 @@ interface EditingCell {
   rowId: unknown;
 }
 
+type FilterOperator = 'equals' | 'contains' | 'starts_with' | 'ends_with' | 'gt' | 'lt' | 'gte' | 'lte' | 'is_null' | 'is_not_null';
+
+interface ColumnFilter {
+  column: string;
+  operator: FilterOperator;
+  value: string;
+}
+
+const FILTER_OPERATORS: { value: FilterOperator; label: string; needsValue: boolean }[] = [
+  { value: 'equals', label: 'Igual a', needsValue: true },
+  { value: 'contains', label: 'Contém', needsValue: true },
+  { value: 'starts_with', label: 'Começa com', needsValue: true },
+  { value: 'ends_with', label: 'Termina com', needsValue: true },
+  { value: 'gt', label: 'Maior que', needsValue: true },
+  { value: 'lt', label: 'Menor que', needsValue: true },
+  { value: 'gte', label: 'Maior ou igual', needsValue: true },
+  { value: 'lte', label: 'Menor ou igual', needsValue: true },
+  { value: 'is_null', label: 'É nulo', needsValue: false },
+  { value: 'is_not_null', label: 'Não é nulo', needsValue: false },
+];
+
 export function DatabaseExplorer() {
   const { toast } = useToast();
   const [selectedTable, setSelectedTable] = useState<TableName>('profiles');
@@ -142,6 +164,11 @@ export function DatabaseExplorer() {
   const [showInsertDialog, setShowInsertDialog] = useState(false);
   const [newRowData, setNewRowData] = useState<Record<string, string>>({});
   const [insertingRow, setInsertingRow] = useState(false);
+  
+  // Column filters state
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const [tempFilter, setTempFilter] = useState<ColumnFilter>({ column: '', operator: 'contains', value: '' });
 
   useEffect(() => {
     loadTableData();
@@ -762,12 +789,91 @@ export function DatabaseExplorer() {
     }
   };
 
-  const filteredRows = tableData?.rows.filter(row => {
-    if (!searchTerm) return true;
-    return Object.values(row).some(val => 
-      formatCellValue(val).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }) || [];
+  // Apply column filters to rows
+  const applyColumnFilters = (rows: Record<string, unknown>[]): Record<string, unknown>[] => {
+    return rows.filter(row => {
+      // First apply global search
+      if (searchTerm) {
+        const matchesSearch = Object.values(row).some(val => 
+          formatCellValue(val).toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        if (!matchesSearch) return false;
+      }
+
+      // Then apply each column filter
+      for (const filter of columnFilters) {
+        const cellValue = row[filter.column];
+        const stringValue = formatCellValue(cellValue).toLowerCase();
+        const filterValue = filter.value.toLowerCase();
+
+        switch (filter.operator) {
+          case 'equals':
+            if (stringValue !== filterValue) return false;
+            break;
+          case 'contains':
+            if (!stringValue.includes(filterValue)) return false;
+            break;
+          case 'starts_with':
+            if (!stringValue.startsWith(filterValue)) return false;
+            break;
+          case 'ends_with':
+            if (!stringValue.endsWith(filterValue)) return false;
+            break;
+          case 'gt':
+            if (Number(cellValue) <= Number(filter.value)) return false;
+            break;
+          case 'lt':
+            if (Number(cellValue) >= Number(filter.value)) return false;
+            break;
+          case 'gte':
+            if (Number(cellValue) < Number(filter.value)) return false;
+            break;
+          case 'lte':
+            if (Number(cellValue) > Number(filter.value)) return false;
+            break;
+          case 'is_null':
+            if (cellValue !== null && cellValue !== undefined) return false;
+            break;
+          case 'is_not_null':
+            if (cellValue === null || cellValue === undefined) return false;
+            break;
+        }
+      }
+      return true;
+    });
+  };
+
+  const addFilter = () => {
+    if (!tempFilter.column) return;
+    const operator = FILTER_OPERATORS.find(op => op.value === tempFilter.operator);
+    if (operator?.needsValue && !tempFilter.value) return;
+
+    setColumnFilters(prev => [...prev, { ...tempFilter }]);
+    setTempFilter({ column: '', operator: 'contains', value: '' });
+  };
+
+  const removeFilter = (index: number) => {
+    setColumnFilters(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAllFilters = () => {
+    setColumnFilters([]);
+    setSearchTerm('');
+  };
+
+  const getFilterLabel = (filter: ColumnFilter): string => {
+    const operator = FILTER_OPERATORS.find(op => op.value === filter.operator);
+    if (operator?.needsValue) {
+      return `${filter.column} ${operator.label.toLowerCase()} "${filter.value}"`;
+    }
+    return `${filter.column} ${operator?.label.toLowerCase()}`;
+  };
+
+  const getColumnFilterCount = (column: string): number => {
+    return columnFilters.filter(f => f.column === column).length;
+  };
+
+  const filteredRows = tableData ? applyColumnFilters(tableData.rows) : [];
 
   const totalPages = tableData ? Math.ceil(tableData.count / pageSize) : 0;
 
@@ -832,7 +938,7 @@ export function DatabaseExplorer() {
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
-                  <Select value={selectedTable} onValueChange={(v) => { setSelectedTable(v as TableName); setPage(0); }}>
+                  <Select value={selectedTable} onValueChange={(v) => { setSelectedTable(v as TableName); setPage(0); setColumnFilters([]); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma tabela" />
                     </SelectTrigger>
@@ -854,12 +960,123 @@ export function DatabaseExplorer() {
                     className="pl-10"
                   />
                 </div>
+                <Button 
+                  variant={showFiltersPanel ? "default" : "outline"} 
+                  size="sm" 
+                  onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+                  className="gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filtros
+                  {columnFilters.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                      {columnFilters.length}
+                    </Badge>
+                  )}
+                  {showFiltersPanel ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
               </div>
+
+              {/* Advanced Filters Panel */}
+              {showFiltersPanel && tableData && (
+                <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <Filter className="h-4 w-4" />
+                      Filtros Avançados
+                    </h4>
+                    {(columnFilters.length > 0 || searchTerm) && (
+                      <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-destructive hover:text-destructive">
+                        <X className="h-4 w-4 mr-1" />
+                        Limpar todos
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Add new filter */}
+                  <div className="flex flex-wrap gap-2 items-end">
+                    <div className="flex-1 min-w-[150px]">
+                      <Label className="text-xs text-muted-foreground">Coluna</Label>
+                      <Select 
+                        value={tempFilter.column} 
+                        onValueChange={(v) => setTempFilter(prev => ({ ...prev, column: v }))}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Selecionar coluna" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tableData.columns.map(col => (
+                            <SelectItem key={col} value={col}>{col}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1 min-w-[150px]">
+                      <Label className="text-xs text-muted-foreground">Operador</Label>
+                      <Select 
+                        value={tempFilter.operator} 
+                        onValueChange={(v) => setTempFilter(prev => ({ ...prev, operator: v as FilterOperator }))}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FILTER_OPERATORS.map(op => (
+                            <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {FILTER_OPERATORS.find(op => op.value === tempFilter.operator)?.needsValue && (
+                      <div className="flex-1 min-w-[150px]">
+                        <Label className="text-xs text-muted-foreground">Valor</Label>
+                        <Input 
+                          value={tempFilter.value}
+                          onChange={(e) => setTempFilter(prev => ({ ...prev, value: e.target.value }))}
+                          placeholder="Digite o valor"
+                          className="h-9"
+                          onKeyDown={(e) => e.key === 'Enter' && addFilter()}
+                        />
+                      </div>
+                    )}
+                    <Button size="sm" onClick={addFilter} disabled={!tempFilter.column}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
+
+                  {/* Active filters */}
+                  {columnFilters.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {columnFilters.map((filter, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="gap-1 pr-1 py-1"
+                        >
+                          <span className="text-xs">{getFilterLabel(filter)}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 hover:bg-destructive/20"
+                            onClick={() => removeFilter(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {tableData && (
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">
                     {tableData.count} registro(s) • Mostrando {filteredRows.length} de {tableData.rows.length}
+                    {(columnFilters.length > 0 || searchTerm) && (
+                      <span className="text-primary ml-1">(filtrado)</span>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <Edit className="h-3 w-3" />
@@ -890,11 +1107,94 @@ export function DatabaseExplorer() {
                               <span className="text-xs">Ações</span>
                             </div>
                           </TableHead>
-                          {tableData.columns.map((col) => (
-                            <TableHead key={col} className="whitespace-nowrap bg-muted/50 sticky top-0">
-                              {col}
-                            </TableHead>
-                          ))}
+                          {tableData.columns.map((col) => {
+                            const filterCount = getColumnFilterCount(col);
+                            return (
+                              <TableHead key={col} className="whitespace-nowrap bg-muted/50 sticky top-0">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="flex items-center gap-1 hover:text-primary transition-colors text-left w-full">
+                                      <span>{col}</span>
+                                      <Filter className={`h-3 w-3 ${filterCount > 0 ? 'text-primary' : 'text-muted-foreground opacity-50'}`} />
+                                      {filterCount > 0 && (
+                                        <Badge variant="default" className="h-4 px-1 text-[10px]">
+                                          {filterCount}
+                                        </Badge>
+                                      )}
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-64 p-3" align="start">
+                                    <div className="space-y-3">
+                                      <h4 className="text-sm font-medium">Filtrar por {col}</h4>
+                                      <div className="space-y-2">
+                                        <Select 
+                                          value={tempFilter.column === col ? tempFilter.operator : 'contains'}
+                                          onValueChange={(v) => setTempFilter({ column: col, operator: v as FilterOperator, value: tempFilter.column === col ? tempFilter.value : '' })}
+                                        >
+                                          <SelectTrigger className="h-8 text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {FILTER_OPERATORS.map(op => (
+                                              <SelectItem key={op.value} value={op.value} className="text-xs">{op.label}</SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        {FILTER_OPERATORS.find(op => op.value === (tempFilter.column === col ? tempFilter.operator : 'contains'))?.needsValue && (
+                                          <Input 
+                                            value={tempFilter.column === col ? tempFilter.value : ''}
+                                            onChange={(e) => setTempFilter({ column: col, operator: tempFilter.column === col ? tempFilter.operator : 'contains', value: e.target.value })}
+                                            placeholder="Valor"
+                                            className="h-8 text-xs"
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                setTempFilter(prev => ({ ...prev, column: col }));
+                                                setTimeout(() => addFilter(), 0);
+                                              }
+                                            }}
+                                          />
+                                        )}
+                                        <Button 
+                                          size="sm" 
+                                          className="w-full h-8 text-xs"
+                                          onClick={() => {
+                                            const currentOperator = tempFilter.column === col ? tempFilter.operator : 'contains';
+                                            const currentValue = tempFilter.column === col ? tempFilter.value : '';
+                                            setTempFilter({ column: col, operator: currentOperator, value: currentValue });
+                                            setTimeout(() => addFilter(), 0);
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Aplicar Filtro
+                                        </Button>
+                                      </div>
+                                      {/* Show existing filters for this column */}
+                                      {columnFilters.filter(f => f.column === col).length > 0 && (
+                                        <div className="border-t pt-2 space-y-1">
+                                          <span className="text-xs text-muted-foreground">Filtros ativos:</span>
+                                          {columnFilters.map((filter, index) => 
+                                            filter.column === col && (
+                                              <div key={index} className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1">
+                                                <span className="truncate">{getFilterLabel(filter)}</span>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-4 w-4 hover:bg-destructive/20"
+                                                  onClick={() => removeFilter(index)}
+                                                >
+                                                  <X className="h-3 w-3" />
+                                                </Button>
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </TableHead>
+                            );
+                          })}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
