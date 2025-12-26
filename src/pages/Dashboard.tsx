@@ -208,7 +208,7 @@ export default function Dashboard() {
               <CollapsibleSection 
                 title="Playbooks" 
                 icon={<FileText className="w-4 h-4" />}
-                defaultOpen={false}
+                defaultOpen={true}
               >
                 <VolunteerPlaybooks userId={userId} churchId={churchId} />
               </CollapsibleSection>
