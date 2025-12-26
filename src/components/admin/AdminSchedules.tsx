@@ -85,6 +85,8 @@ export function AdminSchedules() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   
+  const [ministrySearch, setMinistrySearch] = useState('');
+  
   // Dialog states
   const [isServiceTypeDialogOpen, setIsServiceTypeDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
@@ -849,54 +851,75 @@ export function AdminSchedules() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 gap-2">
-                    {ministries.map((ministry) => {
-                      const isSelected = serviceTypeForm.selectedMinistries.includes(ministry.id);
-                      return (
-                        <div
-                          key={ministry.id}
-                          onClick={() => {
-                            const newSelected = isSelected
-                              ? serviceTypeForm.selectedMinistries.filter(id => id !== ministry.id)
-                              : [...serviceTypeForm.selectedMinistries, ministry.id];
-                            setServiceTypeForm({ ...serviceTypeForm, selectedMinistries: newSelected });
-                          }}
-                          className={`
-                            flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200
-                            ${isSelected 
-                              ? 'bg-primary/5 border-primary shadow-sm' 
-                              : 'bg-card border-transparent hover:border-muted-foreground/20 hover:bg-muted/30'
-                            }
-                          `}
-                        >
-                          <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: `${ministry.cor || 'hsl(var(--primary))'}20` }}
-                          >
-                            <div 
-                              className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-sm">{ministry.nome}</span>
-                          </div>
-                          <div className={`
-                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
-                            ${isSelected 
-                              ? 'border-primary bg-primary' 
-                              : 'border-muted-foreground/30'
-                            }
-                          `}>
-                            {isSelected && (
-                              <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-3">
+                    {/* Search input for ministries */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar ministério..."
+                        value={ministrySearch}
+                        onChange={(e) => setMinistrySearch(e.target.value)}
+                        className="pl-9 h-10"
+                      />
+                    </div>
+                    
+                    {/* Filtered ministries list */}
+                    <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto">
+                      {ministries
+                        .filter(m => m.nome.toLowerCase().includes(ministrySearch.toLowerCase()))
+                        .map((ministry) => {
+                          const isSelected = serviceTypeForm.selectedMinistries.includes(ministry.id);
+                          return (
+                            <div
+                              key={ministry.id}
+                              onClick={() => {
+                                const newSelected = isSelected
+                                  ? serviceTypeForm.selectedMinistries.filter(id => id !== ministry.id)
+                                  : [...serviceTypeForm.selectedMinistries, ministry.id];
+                                setServiceTypeForm({ ...serviceTypeForm, selectedMinistries: newSelected });
+                              }}
+                              className={`
+                                flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200
+                                ${isSelected 
+                                  ? 'bg-primary/5 border-primary shadow-sm' 
+                                  : 'bg-card border-transparent hover:border-muted-foreground/20 hover:bg-muted/30'
+                                }
+                              `}
+                            >
+                              <div 
+                                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: `${ministry.cor || 'hsl(var(--primary))'}20` }}
+                              >
+                                <div 
+                                  className="w-4 h-4 rounded-full"
+                                  style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium text-sm">{ministry.nome}</span>
+                              </div>
+                              <div className={`
+                                w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                                ${isSelected 
+                                  ? 'border-primary bg-primary' 
+                                  : 'border-muted-foreground/30'
+                                }
+                              `}>
+                                {isSelected && (
+                                  <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      {ministries.filter(m => m.nome.toLowerCase().includes(ministrySearch.toLowerCase())).length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Nenhum ministério encontrado para "{ministrySearch}"
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
