@@ -344,8 +344,8 @@ export default function Admin() {
                 <span className="hidden sm:inline">Discipulado</span>
               </Button>
               
-              {/* Recursos button for discipuladores who aren't admins */}
-              {!isAdmin && (
+              {/* Recursos button for discipuladores who aren't admins or lider ministerial */}
+              {!isAdmin && !isLiderMinisterial && (
                 <Button
                   variant={activeSection === 'resources' ? 'default' : 'outline'}
                   size="sm"
