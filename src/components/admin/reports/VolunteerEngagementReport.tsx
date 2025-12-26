@@ -69,7 +69,7 @@ export function VolunteerEngagementReport() {
       if (!churchId) return;
 
       // Fetch schedules with service and ministry data
-      const { data: schedulesData } = await supabase
+      const { data: schedulesData, error: schedulesError } = await supabase
         .from('schedules')
         .select(`
           id,
@@ -77,17 +77,22 @@ export function VolunteerEngagementReport() {
           status,
           ministry_id,
           created_at,
-          services!inner(data_hora, nome)
+          services(data_hora, nome)
         `)
         .eq('church_id', churchId);
 
-      let schedules = schedulesData || [];
+      if (schedulesError) {
+        console.error('Error fetching schedules:', schedulesError);
+      }
+
+      let schedules = (schedulesData || []).filter(s => s.services !== null);
 
       // Filter by period based on service date
       if (periodStart) {
-        schedules = schedules.filter(s => 
-          new Date((s.services as any).data_hora) >= periodStart
-        );
+        schedules = schedules.filter(s => {
+          const serviceDate = (s.services as any)?.data_hora;
+          return serviceDate && new Date(serviceDate) >= periodStart;
+        });
       }
 
       // Fetch volunteer profiles
