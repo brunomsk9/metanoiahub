@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Users, Trash2, Edit, UserPlus, Crown, User, Building2, Palette } from 'lucide-react';
+import { Loader2, Plus, Search, Users, Trash2, Edit, UserPlus, Crown, User, Building2, Palette, Settings2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
+import { useUserRoles } from '@/hooks/useUserRoles';
+import { AdminMinistryPositions } from './AdminMinistryPositions';
 
 interface Ministry {
   id: string;
@@ -64,6 +66,7 @@ const COLORS = [
 
 export function AdminMinistries() {
   const { churchId, loading: loadingChurch } = useUserChurchId();
+  const { isAdmin, isLiderMinisterial, userId } = useUserRoles();
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [volunteers, setVolunteers] = useState<MinistryVolunteer[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -76,6 +79,8 @@ export function AdminMinistries() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [volunteerSearch, setVolunteerSearch] = useState('');
   const [currentVolunteerSearch, setCurrentVolunteerSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'ministries' | 'positions'>('ministries');
+  const [userLeaderMinistries, setUserLeaderMinistries] = useState<string[]>([]);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -109,6 +114,14 @@ export function AdminMinistries() {
       console.error(ministriesError);
     } else {
       setMinistries(ministriesData || []);
+      
+      // Identify ministries where current user is a leader
+      if (userId) {
+        const leaderOf = (ministriesData || [])
+          .filter(m => m.lider_principal_id === userId || m.lider_secundario_id === userId)
+          .map(m => m.id);
+        setUserLeaderMinistries(leaderOf);
+      }
     }
 
     // Fetch all users for selection
@@ -297,6 +310,16 @@ export function AdminMinistries() {
     m.nome.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Filter ministries for non-admin users to only show ones they lead
+  const displayMinistries = isAdmin 
+    ? filteredMinistries 
+    : filteredMinistries.filter(m => userLeaderMinistries.includes(m.id));
+
+  // Check if user can manage a specific ministry
+  const canManageMinistry = (ministry: Ministry) => {
+    return isAdmin || ministry.lider_principal_id === userId || ministry.lider_secundario_id === userId;
+  };
+
   if (loading || loadingChurch) {
     return (
       <div className="flex justify-center py-12">
@@ -319,7 +342,117 @@ export function AdminMinistries() {
           </p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
+          {isAdmin && (
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2" onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Novo Ministério</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Ministério</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados do novo ministério
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Nome *</Label>
+                    <Input
+                      placeholder="Ex: Louvor, Mídia, Recepção..."
+                      value={formData.nome}
+                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Descrição</Label>
+                    <Textarea
+                      placeholder="Descreva o ministério..."
+                      value={formData.descricao}
+                      onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Cor
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {COLORS.map((color) => (
+                        <button
+                          key={color.value}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, cor: color.value })}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                            formData.cor === color.value ? 'border-foreground scale-110' : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                          title={color.label}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Crown className="h-4 w-4 text-amber-500" />
+                        Líder Principal
+                      </Label>
+                      <SearchableUserSelect
+                        users={users}
+                        value={formData.lider_principal_id}
+                        onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value })}
+                        placeholder="Buscar líder..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-500" />
+                        Líder Secundário
+                      </Label>
+                      <SearchableUserSelect
+                        users={users}
+                        value={formData.lider_secundario_id}
+                        onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value })}
+                        placeholder="Buscar líder..."
+                        excludeIds={formData.lider_principal_id ? [formData.lider_principal_id] : []}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleCreateMinistry} disabled={saving}>
+                    {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Criar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs for Ministries and Positions */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'ministries' | 'positions')}>
+        <TabsList>
+          <TabsTrigger value="ministries" className="gap-2">
+            <Building2 className="h-4 w-4" />
+            Ministérios
+          </TabsTrigger>
+          <TabsTrigger value="positions" className="gap-2">
+            <Settings2 className="h-4 w-4" />
+            Posições/Funções
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ministries" className="mt-6">
+          {/* Search */}
+          <div className="relative max-w-sm mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar ministério..."
@@ -328,178 +461,95 @@ export function AdminMinistries() {
               className="pl-9"
             />
           </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2" onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Novo Ministério</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Ministério</DialogTitle>
-                <DialogDescription>
-                  Preencha os dados do novo ministério
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Nome *</Label>
-                  <Input
-                    placeholder="Ex: Louvor, Mídia, Recepção..."
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Descrição</Label>
-                  <Textarea
-                    placeholder="Descreva o ministério..."
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Palette className="h-4 w-4" />
-                    Cor
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {COLORS.map((color) => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, cor: color.value })}
-                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                          formData.cor === color.value ? 'border-foreground scale-110' : 'border-transparent'
-                        }`}
-                        style={{ backgroundColor: color.value }}
-                        title={color.label}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-amber-500" />
-                      Líder Principal
-                    </Label>
-                    <SearchableUserSelect
-                      users={users}
-                      value={formData.lider_principal_id}
-                      onValueChange={(value) => setFormData({ ...formData, lider_principal_id: value })}
-                      placeholder="Buscar líder..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-blue-500" />
-                      Líder Secundário
-                    </Label>
-                    <SearchableUserSelect
-                      users={users}
-                      value={formData.lider_secundario_id}
-                      onValueChange={(value) => setFormData({ ...formData, lider_secundario_id: value })}
-                      placeholder="Buscar líder..."
-                      excludeIds={formData.lider_principal_id ? [formData.lider_principal_id] : []}
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateMinistry} disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Criar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+          {displayMinistries.length === 0 ? (
+            <div className="text-center py-12 bg-card rounded-lg border border-border">
+              <Building2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {search ? 'Nenhum ministério encontrado.' : isAdmin ? 'Nenhum ministério cadastrado ainda.' : 'Você não lidera nenhum ministério.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {displayMinistries.map((ministry) => {
+                const ministryVolunteers = getMinistryVolunteers(ministry.id);
+                const liderPrincipal = getLeaderName(ministry.lider_principal_id);
+                const liderSecundario = getLeaderName(ministry.lider_secundario_id);
+                const canManage = canManageMinistry(ministry);
 
-      {/* Ministries Grid */}
-      {filteredMinistries.length === 0 ? (
-        <div className="text-center py-12 bg-card rounded-lg border border-border">
-          <Building2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            {search ? 'Nenhum ministério encontrado.' : 'Nenhum ministério cadastrado ainda.'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMinistries.map((ministry) => {
-            const ministryVolunteers = getMinistryVolunteers(ministry.id);
-            const liderPrincipal = getLeaderName(ministry.lider_principal_id);
-            const liderSecundario = getLeaderName(ministry.lider_secundario_id);
-
-            return (
-              <Card key={ministry.id} className="overflow-hidden">
-                <div className="h-2" style={{ backgroundColor: ministry.cor }} />
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{ministry.nome}</CardTitle>
-                      {ministry.descricao && (
-                        <CardDescription className="mt-1 line-clamp-2">
-                          {ministry.descricao}
-                        </CardDescription>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(ministry)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteMinistry(ministry)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Leaders */}
-                  <div className="space-y-2">
-                    {liderPrincipal && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Crown className="h-4 w-4 text-amber-500" />
-                        <span className="text-muted-foreground">Líder:</span>
-                        <span className="font-medium">{liderPrincipal}</span>
+                return (
+                  <Card key={ministry.id} className="overflow-hidden">
+                    <div className="h-2" style={{ backgroundColor: ministry.cor }} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{ministry.nome}</CardTitle>
+                          {ministry.descricao && (
+                            <CardDescription className="mt-1 line-clamp-2">
+                              {ministry.descricao}
+                            </CardDescription>
+                          )}
+                        </div>
+                        {canManage && (
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(ministry)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            {isAdmin && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteMinistry(ministry)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {liderSecundario && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <User className="h-4 w-4 text-blue-500" />
-                        <span className="text-muted-foreground">Vice-líder:</span>
-                        <span className="font-medium">{liderSecundario}</span>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Leaders */}
+                      <div className="space-y-2">
+                        {liderPrincipal && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Crown className="h-4 w-4 text-amber-500" />
+                            <span className="text-muted-foreground">Líder:</span>
+                            <span className="font-medium">{liderPrincipal}</span>
+                          </div>
+                        )}
+                        {liderSecundario && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="h-4 w-4 text-blue-500" />
+                            <span className="text-muted-foreground">Vice-líder:</span>
+                            <span className="font-medium">{liderSecundario}</span>
+                          </div>
+                        )}
+                        {!liderPrincipal && !liderSecundario && (
+                          <p className="text-sm text-muted-foreground italic">Sem líderes definidos</p>
+                        )}
                       </div>
-                    )}
-                    {!liderPrincipal && !liderSecundario && (
-                      <p className="text-sm text-muted-foreground italic">Sem líderes definidos</p>
-                    )}
-                  </div>
 
-                  {/* Volunteers */}
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        {ministryVolunteers.length} voluntário(s)
-                      </span>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => openVolunteerDialog(ministry)}>
-                      <UserPlus className="h-4 w-4 mr-1" />
-                      Gerenciar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                      {/* Volunteers */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            {ministryVolunteers.length} voluntário(s)
+                          </span>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => openVolunteerDialog(ministry)}>
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Gerenciar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="positions" className="mt-6">
+          <AdminMinistryPositions filterMinistryIds={isAdmin ? undefined : userLeaderMinistries} />
+        </TabsContent>
+      </Tabs>
 
       {/* Edit Ministry Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
