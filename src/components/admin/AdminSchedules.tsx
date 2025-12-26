@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList, Wand2, List } from 'lucide-react';
+import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList, Wand2, List, History, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { AdminMinistryPositions } from './AdminMinistryPositions';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { ServiceScheduleBuilder } from './ServiceScheduleBuilder';
 import { AdminCalendarView } from './AdminCalendarView';
 import {
@@ -73,14 +74,197 @@ interface Service {
   church_id: string;
 }
 
+interface ScheduleHistoryProps {
+  schedules: any[];
+  services: Service[];
+  ministries: Ministry[];
+  filterMinistryIds?: string[];
+}
+
+function ScheduleHistory({ schedules, services, ministries, filterMinistryIds }: ScheduleHistoryProps) {
+  const [selectedMinistry, setSelectedMinistry] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Filter schedules for past services and by ministry
+  const filteredSchedules = schedules.filter(schedule => {
+    // Filter by ministry if filterMinistryIds is provided (for leaders)
+    if (filterMinistryIds && filterMinistryIds.length > 0 && !filterMinistryIds.includes(schedule.ministry_id)) {
+      return false;
+    }
+    
+    // Filter by selected ministry
+    if (selectedMinistry !== 'all' && schedule.ministry_id !== selectedMinistry) {
+      return false;
+    }
+    
+    // Filter by status
+    if (statusFilter !== 'all' && schedule.status !== statusFilter) {
+      return false;
+    }
+    
+    // Only show schedules for past services
+    const serviceDate = schedule.service?.data_hora ? new Date(schedule.service.data_hora) : null;
+    if (!serviceDate || serviceDate > new Date()) {
+      return false;
+    }
+    
+    return true;
+  }).sort((a, b) => {
+    const dateA = a.service?.data_hora ? new Date(a.service.data_hora) : new Date(0);
+    const dateB = b.service?.data_hora ? new Date(b.service.data_hora) : new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  // Get available ministries for filter
+  const availableMinistries = filterMinistryIds 
+    ? ministries.filter(m => filterMinistryIds.includes(m.id))
+    : ministries;
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'declined':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmado';
+      case 'declined':
+        return 'Recusado';
+      default:
+        return 'Pendente';
+    }
+  };
+
+  if (filteredSchedules.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <History className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground">Nenhum histórico de escalas encontrado</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Group schedules by service
+  const groupedByService: Record<string, any[]> = {};
+  filteredSchedules.forEach(schedule => {
+    const serviceId = schedule.service_id;
+    if (!groupedByService[serviceId]) {
+      groupedByService[serviceId] = [];
+    }
+    groupedByService[serviceId].push(schedule);
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        {availableMinistries.length > 1 && (
+          <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filtrar por ministério" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Todos os ministérios</SelectItem>
+              {availableMinistries.map(ministry => (
+                <SelectItem key={ministry.id} value={ministry.id}>
+                  {ministry.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="confirmed">Confirmados</SelectItem>
+            <SelectItem value="declined">Recusados</SelectItem>
+            <SelectItem value="pending">Pendentes</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Schedule History List */}
+      <div className="space-y-4">
+        {Object.entries(groupedByService).map(([serviceId, serviceSchedules]) => {
+          const service = serviceSchedules[0]?.service;
+          if (!service) return null;
+          
+          return (
+            <Card key={serviceId}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">{service.nome}</CardTitle>
+                    <CardDescription className="flex items-center gap-2 mt-1">
+                      <CalendarDays className="h-3 w-3" />
+                      {format(new Date(service.data_hora), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      <Clock className="h-3 w-3 ml-2" />
+                      {format(new Date(service.data_hora), 'HH:mm')}
+                    </CardDescription>
+                  </div>
+                  <Badge variant="secondary">
+                    {serviceSchedules.length} voluntário(s)
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {serviceSchedules.map(schedule => (
+                    <div 
+                      key={schedule.id} 
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: schedule.ministry?.cor || 'hsl(var(--primary))' }}
+                        />
+                        <div>
+                          <p className="font-medium text-sm">{schedule.volunteer?.nome || 'Voluntário'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {schedule.ministry?.nome} • {schedule.position?.nome}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(schedule.status)}
+                        <span className="text-sm text-muted-foreground">{getStatusLabel(schedule.status)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AdminSchedules() {
   const { churchId, loading: loadingChurch } = useUserChurchId();
+  const { isLiderMinisterial, isAdmin, userId } = useUserRoles();
   const [activeTab, setActiveTab] = useState('escalar');
   const [agendaView, setAgendaView] = useState<'calendar' | 'list'>('calendar');
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [allSchedules, setAllSchedules] = useState<any[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const [userLeaderMinistries, setUserLeaderMinistries] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -143,12 +327,13 @@ export function AdminSchedules() {
           *,
           volunteer:profiles(nome),
           position:ministry_positions(nome),
-          ministry:ministries(nome, cor)
+          ministry:ministries(nome, cor),
+          service:services(nome, data_hora)
         `)
         .eq('church_id', churchId),
       supabase
         .from('ministries')
-        .select('id, nome, cor, icone')
+        .select('id, nome, cor, icone, lider_principal_id, lider_secundario_id')
         .eq('church_id', churchId)
         .eq('is_active', true)
         .order('nome'),
@@ -176,6 +361,14 @@ export function AdminSchedules() {
         m => ministriesWithPositions.has(m.id)
       );
       setMinistries(filteredMinistries);
+      
+      // Set ministries where the user is a leader
+      if (userId) {
+        const leaderMinistries = (ministriesRes.data || [])
+          .filter(m => m.lider_principal_id === userId || m.lider_secundario_id === userId)
+          .map(m => m.id);
+        setUserLeaderMinistries(leaderMinistries);
+      }
     }
 
     if (serviceTypesRes.error) {
@@ -517,6 +710,12 @@ export function AdminSchedules() {
             <CalendarDays className="h-4 w-4 mr-2" />
             Agenda
           </TabsTrigger>
+          {(isLiderMinisterial || isAdmin) && (
+            <TabsTrigger value="historico" className="flex-1 sm:flex-initial">
+              <History className="h-4 w-4 mr-2" />
+              Histórico
+            </TabsTrigger>
+          )}
           <TabsTrigger value="cultos" className="flex-1 sm:flex-initial">
             <Church className="h-4 w-4 mr-2" />
             Tipos de Culto
@@ -629,6 +828,27 @@ export function AdminSchedules() {
             </div>
           )}
         </TabsContent>
+
+        {/* Histórico de Escalas */}
+        {(isLiderMinisterial || isAdmin) && (
+          <TabsContent value="historico" className="mt-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Histórico de Escalas</h3>
+              <p className="text-sm text-muted-foreground">
+                {isAdmin 
+                  ? 'Visualize o histórico de todas as escalas'
+                  : 'Visualize o histórico de escalas dos seus ministérios'
+                }
+              </p>
+            </div>
+            <ScheduleHistory 
+              schedules={allSchedules} 
+              services={services}
+              ministries={ministries}
+              filterMinistryIds={isAdmin ? undefined : userLeaderMinistries}
+            />
+          </TabsContent>
+        )}
 
         {/* Posições por Ministério */}
         <TabsContent value="posicoes" className="mt-6">
