@@ -890,6 +890,7 @@ export type Database = {
           id: string
           imagem_capa: string | null
           link_externo: string | null
+          ministry_id: string | null
           tags: string[] | null
           titulo: string
           url_pdf: string | null
@@ -904,6 +905,7 @@ export type Database = {
           id?: string
           imagem_capa?: string | null
           link_externo?: string | null
+          ministry_id?: string | null
           tags?: string[] | null
           titulo: string
           url_pdf?: string | null
@@ -918,6 +920,7 @@ export type Database = {
           id?: string
           imagem_capa?: string | null
           link_externo?: string | null
+          ministry_id?: string | null
           tags?: string[] | null
           titulo?: string
           url_pdf?: string | null
@@ -929,6 +932,13 @@ export type Database = {
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
             referencedColumns: ["id"]
           },
         ]
@@ -1514,6 +1524,7 @@ export type Database = {
         | "livro"
         | "musica"
         | "pregacao"
+        | "playbook"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1660,6 +1671,7 @@ export const Constants = {
         "livro",
         "musica",
         "pregacao",
+        "playbook",
       ],
     },
   },
