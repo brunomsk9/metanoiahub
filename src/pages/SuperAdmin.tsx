@@ -119,6 +119,7 @@ interface UserData {
   is_novo_convertido: boolean | null;
   is_batizado: boolean | null;
   batizou_na_igreja: boolean | null;
+  data_batismo: string | null;
 }
 
 export default function SuperAdmin() {
@@ -155,6 +156,7 @@ export default function SuperAdmin() {
     is_novo_convertido: false,
     is_batizado: false,
     batizou_na_igreja: false,
+    data_batismo: '',
   });
   const [savingRole, setSavingRole] = useState(false);
 
@@ -212,7 +214,7 @@ export default function SuperAdmin() {
   const loadUsers = async () => {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, nome, telefone, church_id, created_at, genero, is_transferido, is_novo_convertido, is_batizado, batizou_na_igreja')
+      .select('id, nome, telefone, church_id, created_at, genero, is_transferido, is_novo_convertido, is_batizado, batizou_na_igreja, data_batismo')
       .order('nome');
 
     if (profilesError) {
@@ -260,6 +262,7 @@ export default function SuperAdmin() {
       is_novo_convertido: profile.is_novo_convertido,
       is_batizado: profile.is_batizado,
       batizou_na_igreja: profile.batizou_na_igreja,
+      data_batismo: profile.data_batismo,
     }));
 
     setUsers(usersWithData);
@@ -329,6 +332,7 @@ export default function SuperAdmin() {
       is_novo_convertido: user.is_novo_convertido || false,
       is_batizado: user.is_batizado || false,
       batizou_na_igreja: user.batizou_na_igreja || false,
+      data_batismo: user.data_batismo || '',
     });
     setIsUserDialogOpen(true);
   };
@@ -416,7 +420,8 @@ export default function SuperAdmin() {
         is_transferido: userFormData.is_transferido,
         is_novo_convertido: userFormData.is_novo_convertido,
         is_batizado: userFormData.is_batizado,
-        batizou_na_igreja: userFormData.batizou_na_igreja
+        batizou_na_igreja: userFormData.batizou_na_igreja,
+        data_batismo: userFormData.batizou_na_igreja && userFormData.data_batismo ? userFormData.data_batismo : null
       })
       .eq('id', selectedUser.id);
 
@@ -1146,13 +1151,31 @@ export default function SuperAdmin() {
                             <Checkbox
                               id="edit-batizouNaIgreja"
                               checked={userFormData.batizou_na_igreja}
-                              onCheckedChange={(checked) => setUserFormData({ ...userFormData, batizou_na_igreja: checked as boolean })}
+                              onCheckedChange={(checked) => {
+                                setUserFormData({ 
+                                  ...userFormData, 
+                                  batizou_na_igreja: checked as boolean,
+                                  data_batismo: checked ? userFormData.data_batismo : ''
+                                });
+                              }}
                             />
                             <label htmlFor="edit-batizouNaIgreja" className="text-sm cursor-pointer">
-                              Batizou na Igreja
+                              Batizou na CN
                             </label>
                           </div>
                         </div>
+                        {userFormData.batizou_na_igreja && (
+                          <div className="mt-2">
+                            <Label htmlFor="edit-dataBatismo" className="text-sm">Data do Batismo</Label>
+                            <Input
+                              id="edit-dataBatismo"
+                              type="date"
+                              value={userFormData.data_batismo}
+                              onChange={(e) => setUserFormData({ ...userFormData, data_batismo: e.target.value })}
+                              className="mt-1"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
 

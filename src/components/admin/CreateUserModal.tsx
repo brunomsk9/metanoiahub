@@ -45,6 +45,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
   const [isNovoConvertido, setIsNovoConvertido] = useState(false);
   const [isBatizado, setIsBatizado] = useState(false);
   const [batizouNaIgreja, setBatizouNaIgreja] = useState(false);
+  const [dataBatismo, setDataBatismo] = useState<string>('');
   const [roles, setRoles] = useState<AppRole[]>(['discipulo']);
   const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>('');
   const [discipuladores, setDiscipuladores] = useState<Discipulador[]>([]);
@@ -114,6 +115,7 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
     setIsNovoConvertido(false);
     setIsBatizado(false);
     setBatizouNaIgreja(false);
+    setDataBatismo('');
     setRoles(['discipulo']);
     setSelectedDiscipulador('');
   };
@@ -159,7 +161,8 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
             is_transferido: isTransferido,
             is_novo_convertido: isNovoConvertido,
             is_batizado: isBatizado,
-            batizou_na_igreja: batizouNaIgreja
+            batizou_na_igreja: batizouNaIgreja,
+            data_batismo: batizouNaIgreja && dataBatismo ? dataBatismo : null
           }],
           church_id: churchId
         }
@@ -333,14 +336,30 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
                 <Checkbox
                   id="batizouNaIgreja"
                   checked={batizouNaIgreja}
-                  onCheckedChange={(checked) => setBatizouNaIgreja(checked as boolean)}
+                  onCheckedChange={(checked) => {
+                    setBatizouNaIgreja(checked as boolean);
+                    if (!checked) setDataBatismo('');
+                  }}
                   disabled={isLoading}
                 />
                 <label htmlFor="batizouNaIgreja" className="text-sm cursor-pointer">
-                  Batizou na Igreja
+                  Batizou na CN
                 </label>
               </div>
             </div>
+            {batizouNaIgreja && (
+              <div className="mt-2">
+                <Label htmlFor="dataBatismo" className="text-sm">Data do Batismo</Label>
+                <Input
+                  id="dataBatismo"
+                  type="date"
+                  value={dataBatismo}
+                  onChange={(e) => setDataBatismo(e.target.value)}
+                  disabled={isLoading}
+                  className="mt-1"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">

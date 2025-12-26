@@ -15,6 +15,7 @@ interface UserImport {
   is_novo_convertido?: boolean;
   is_batizado?: boolean;
   batizou_na_igreja?: boolean;
+  data_batismo?: string;
 }
 
 interface ImportResult {
@@ -161,7 +162,8 @@ serve(async (req) => {
             is_transferido: userData.is_transferido || false,
             is_novo_convertido: userData.is_novo_convertido || false,
             is_batizado: userData.is_batizado || false,
-            batizou_na_igreja: userData.batizou_na_igreja || false
+            batizou_na_igreja: userData.batizou_na_igreja || false,
+            data_batismo: userData.batizou_na_igreja && userData.data_batismo ? userData.data_batismo : null
           })
           .eq('id', userId);
 

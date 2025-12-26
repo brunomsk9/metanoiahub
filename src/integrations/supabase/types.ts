@@ -707,6 +707,7 @@ export type Database = {
           church_id: string | null
           created_at: string
           current_streak: number
+          data_batismo: string | null
           genero: Database["public"]["Enums"]["gender_type"] | null
           id: string
           is_batizado: boolean | null
@@ -726,6 +727,7 @@ export type Database = {
           church_id?: string | null
           created_at?: string
           current_streak?: number
+          data_batismo?: string | null
           genero?: Database["public"]["Enums"]["gender_type"] | null
           id: string
           is_batizado?: boolean | null
@@ -745,6 +747,7 @@ export type Database = {
           church_id?: string | null
           created_at?: string
           current_streak?: number
+          data_batismo?: string | null
           genero?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           is_batizado?: boolean | null

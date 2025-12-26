@@ -24,6 +24,7 @@ interface UserRow {
   is_novo_convertido?: boolean;
   is_batizado?: boolean;
   batizou_na_igreja?: boolean;
+  data_batismo?: string;
 }
 
 interface ImportResult {
@@ -103,7 +104,8 @@ export function AdminUserImport() {
     const transferidoIdx = headers.findIndex(h => h === 'transferido' || h === 'is_transferido');
     const novoConvertidoIdx = headers.findIndex(h => h === 'novo_convertido' || h === 'is_novo_convertido' || h === 'novo convertido');
     const batizadoIdx = headers.findIndex(h => h === 'batizado' || h === 'is_batizado');
-    const batizouNaIgrejaIdx = headers.findIndex(h => h === 'batizou_na_igreja' || h === 'batizou na igreja');
+    const batizouNaIgrejaIdx = headers.findIndex(h => h === 'batizou_na_cn' || h === 'batizou_na_igreja' || h === 'batizou na cn');
+    const dataBatismoIdx = headers.findIndex(h => h === 'data_batismo' || h === 'data batismo');
 
     if (emailIdx === -1 || nomeIdx === -1) {
       toast.error("CSV deve conter colunas 'email' e 'nome'");
@@ -133,7 +135,8 @@ export function AdminUserImport() {
           is_transferido: transferidoIdx !== -1 ? parseBooleanValue(values[transferidoIdx]) : false,
           is_novo_convertido: novoConvertidoIdx !== -1 ? parseBooleanValue(values[novoConvertidoIdx]) : false,
           is_batizado: batizadoIdx !== -1 ? parseBooleanValue(values[batizadoIdx]) : false,
-          batizou_na_igreja: batizouNaIgrejaIdx !== -1 ? parseBooleanValue(values[batizouNaIgrejaIdx]) : false
+          batizou_na_igreja: batizouNaIgrejaIdx !== -1 ? parseBooleanValue(values[batizouNaIgrejaIdx]) : false,
+          data_batismo: dataBatismoIdx !== -1 && values[dataBatismoIdx] ? values[dataBatismoIdx] : undefined
         });
       }
     }
@@ -242,7 +245,7 @@ export function AdminUserImport() {
   };
 
   const downloadTemplate = () => {
-    const template = "email,nome,role,genero,transferido,novo_convertido,batizado,batizou_na_igreja\njohn@example.com,John Doe,discipulo,masculino,nao,sim,nao,nao\njane@example.com,Jane Smith,discipulador,feminino,sim,nao,sim,sim";
+    const template = "email,nome,role,genero,transferido,novo_convertido,batizado,batizou_na_cn,data_batismo\njohn@example.com,John Doe,discipulo,masculino,nao,sim,nao,nao,\njane@example.com,Jane Smith,discipulador,feminino,sim,nao,sim,sim,2024-03-15";
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -338,7 +341,7 @@ export function AdminUserImport() {
         <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-4" />
         <p className="text-foreground font-medium">Clique para selecionar arquivo CSV</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Colunas: email, nome, role, genero, transferido, novo_convertido, batizado, batizou_na_igreja
+          Colunas: email, nome, role, genero, transferido, novo_convertido, batizado, batizou_na_cn, data_batismo
         </p>
       </div>
 
@@ -397,7 +400,9 @@ export function AdminUserImport() {
                             <span className="px-1.5 py-0.5 rounded text-xs bg-purple-500/10 text-purple-600">Bat</span>
                           )}
                           {user.batizou_na_igreja && (
-                            <span className="px-1.5 py-0.5 rounded text-xs bg-amber-500/10 text-amber-600">BatIgr</span>
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-amber-500/10 text-amber-600">
+                              BatCN{user.data_batismo ? ` ${user.data_batismo}` : ''}
+                            </span>
                           )}
                           {!user.is_transferido && !user.is_novo_convertido && !user.is_batizado && !user.batizou_na_igreja && (
                             <span className="text-muted-foreground text-xs">-</span>
