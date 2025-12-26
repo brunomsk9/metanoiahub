@@ -43,6 +43,13 @@ const DIAS_SEMANA = [
   { value: 6, label: 'Sábado' },
 ];
 
+interface Ministry {
+  id: string;
+  nome: string;
+  cor: string | null;
+  icone: string | null;
+}
+
 interface ServiceType {
   id: string;
   nome: string;
@@ -52,6 +59,7 @@ interface ServiceType {
   is_recurring: boolean;
   is_active: boolean;
   church_id: string;
+  ministries?: Ministry[];
 }
 
 interface Service {
@@ -72,6 +80,7 @@ export function AdminSchedules() {
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [allSchedules, setAllSchedules] = useState<any[]>([]);
+  const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -92,6 +101,7 @@ export function AdminSchedules() {
     dia_semana: '',
     horario: '',
     is_recurring: true,
+    selectedMinistries: [] as string[],
   });
   
   const [serviceForm, setServiceForm] = useState({
@@ -112,7 +122,7 @@ export function AdminSchedules() {
     if (!churchId) return;
     setLoading(true);
 
-    const [serviceTypesRes, servicesRes, schedulesRes] = await Promise.all([
+    const [serviceTypesRes, servicesRes, schedulesRes, ministriesRes, serviceTypeMinistriesRes] = await Promise.all([
       supabase
         .from('service_types')
         .select('*')
@@ -134,12 +144,36 @@ export function AdminSchedules() {
           ministry:ministries(nome, cor)
         `)
         .eq('church_id', churchId),
+      supabase
+        .from('ministries')
+        .select('id, nome, cor, icone')
+        .eq('church_id', churchId)
+        .eq('is_active', true)
+        .order('nome'),
+      supabase
+        .from('service_type_ministries')
+        .select('service_type_id, ministry_id, ministry:ministries(id, nome, cor, icone)')
+        .eq('church_id', churchId),
     ]);
+
+    if (ministriesRes.error) {
+      console.error('Error fetching ministries:', ministriesRes.error);
+    } else {
+      setMinistries(ministriesRes.data || []);
+    }
 
     if (serviceTypesRes.error) {
       toast.error('Erro ao carregar tipos de culto');
     } else {
-      setServiceTypes(serviceTypesRes.data || []);
+      // Attach ministries to service types
+      const serviceTypesWithMinistries = (serviceTypesRes.data || []).map(st => ({
+        ...st,
+        ministries: (serviceTypeMinistriesRes.data || [])
+          .filter(stm => stm.service_type_id === st.id)
+          .map(stm => stm.ministry as unknown as Ministry)
+          .filter(Boolean),
+      }));
+      setServiceTypes(serviceTypesWithMinistries);
     }
 
     if (servicesRes.error) {
@@ -172,18 +206,56 @@ export function AdminSchedules() {
       church_id: churchId,
     };
 
-    const { error } = editingServiceType
-      ? await supabase.from('service_types').update(data).eq('id', editingServiceType.id)
-      : await supabase.from('service_types').insert(data);
+    let serviceTypeId = editingServiceType?.id;
 
-    if (error) {
-      toast.error('Erro ao salvar tipo de culto');
+    if (editingServiceType) {
+      const { error } = await supabase.from('service_types').update(data).eq('id', editingServiceType.id);
+      if (error) {
+        toast.error('Erro ao salvar tipo de culto');
+        setSaving(false);
+        return;
+      }
     } else {
-      toast.success(editingServiceType ? 'Tipo de culto atualizado' : 'Tipo de culto criado');
-      setIsServiceTypeDialogOpen(false);
-      resetServiceTypeForm();
-      fetchData();
+      const { data: newServiceType, error } = await supabase.from('service_types').insert(data).select('id').single();
+      if (error || !newServiceType) {
+        toast.error('Erro ao salvar tipo de culto');
+        setSaving(false);
+        return;
+      }
+      serviceTypeId = newServiceType.id;
     }
+
+    // Update ministries relationship
+    if (serviceTypeId) {
+      // Delete existing ministries for this service type
+      await supabase
+        .from('service_type_ministries')
+        .delete()
+        .eq('service_type_id', serviceTypeId);
+
+      // Insert new ministries
+      if (serviceTypeForm.selectedMinistries.length > 0) {
+        const ministriesToInsert = serviceTypeForm.selectedMinistries.map(ministryId => ({
+          service_type_id: serviceTypeId,
+          ministry_id: ministryId,
+          church_id: churchId,
+        }));
+
+        const { error: ministriesError } = await supabase
+          .from('service_type_ministries')
+          .insert(ministriesToInsert);
+
+        if (ministriesError) {
+          console.error('Error saving ministries:', ministriesError);
+          toast.error('Erro ao salvar ministérios');
+        }
+      }
+    }
+
+    toast.success(editingServiceType ? 'Tipo de culto atualizado' : 'Tipo de culto criado');
+    setIsServiceTypeDialogOpen(false);
+    resetServiceTypeForm();
+    fetchData();
 
     setSaving(false);
   };
@@ -348,6 +420,7 @@ export function AdminSchedules() {
       dia_semana: '',
       horario: '',
       is_recurring: true,
+      selectedMinistries: [],
     });
     setEditingServiceType(null);
   };
@@ -371,6 +444,7 @@ export function AdminSchedules() {
       dia_semana: st.dia_semana?.toString() || '',
       horario: st.horario || '',
       is_recurring: st.is_recurring,
+      selectedMinistries: st.ministries?.map(m => m.id) || [],
     });
     setIsServiceTypeDialogOpen(true);
   };
@@ -503,7 +577,7 @@ export function AdminSchedules() {
                     {st.descricao && (
                       <p className="text-sm text-muted-foreground line-clamp-2">{st.descricao}</p>
                     )}
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <Badge variant={st.is_recurring ? 'default' : 'secondary'}>
                         {st.is_recurring ? 'Recorrente' : 'Único'}
                       </Badge>
@@ -511,6 +585,28 @@ export function AdminSchedules() {
                         {st.is_active ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </div>
+                    {st.ministries && st.ministries.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          Ministérios participantes
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {st.ministries.map((ministry) => (
+                            <span 
+                              key={ministry.id}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-muted"
+                            >
+                              <span 
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
+                              />
+                              {ministry.nome}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -695,6 +791,57 @@ export function AdminSchedules() {
                     onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, horario: e.target.value })}
                   />
                 </div>
+              </div>
+              
+              {/* Ministry selection */}
+              <div className="space-y-3">
+                <Label>Ministérios Participantes</Label>
+                <p className="text-xs text-muted-foreground">
+                  Selecione os ministérios que participam deste tipo de culto
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto p-1">
+                  {ministries.length === 0 ? (
+                    <p className="text-sm text-muted-foreground col-span-2 text-center py-4">
+                      Nenhum ministério cadastrado
+                    </p>
+                  ) : (
+                    ministries.map((ministry) => {
+                      const isSelected = serviceTypeForm.selectedMinistries.includes(ministry.id);
+                      return (
+                        <div
+                          key={ministry.id}
+                          onClick={() => {
+                            const newSelected = isSelected
+                              ? serviceTypeForm.selectedMinistries.filter(id => id !== ministry.id)
+                              : [...serviceTypeForm.selectedMinistries, ministry.id];
+                            setServiceTypeForm({ ...serviceTypeForm, selectedMinistries: newSelected });
+                          }}
+                          className={`
+                            flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all
+                            ${isSelected 
+                              ? 'bg-primary/10 border-primary' 
+                              : 'bg-card border-border hover:bg-muted/50'
+                            }
+                          `}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
+                          />
+                          <span className="text-sm font-medium truncate">{ministry.nome}</span>
+                          {isSelected && (
+                            <Users className="h-3 w-3 text-primary ml-auto flex-shrink-0" />
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                {serviceTypeForm.selectedMinistries.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {serviceTypeForm.selectedMinistries.length} ministério(s) selecionado(s)
+                  </p>
+                )}
               </div>
             </div>
           </ScrollArea>
