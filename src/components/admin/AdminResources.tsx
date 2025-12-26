@@ -11,7 +11,7 @@ import { Plus, Pencil, Trash2, Loader2, LifeBuoy, Book, Music, Video, ExternalLi
 import { FileUpload } from './FileUpload';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 
-type ResourceCategory = 'sos' | 'apoio' | 'devocional' | 'estudo' | 'livro' | 'musica' | 'pregacao';
+type ResourceCategory = 'sos' | 'apoio' | 'devocional' | 'estudo' | 'livro' | 'musica' | 'pregacao' | 'playbook';
 
 interface Resource {
   id: string;
@@ -24,6 +24,12 @@ interface Resource {
   autor: string | null;
   link_externo: string | null;
   imagem_capa: string | null;
+  ministry_id: string | null;
+}
+
+interface Ministry {
+  id: string;
+  nome: string;
 }
 
 const categoriaLabels: Record<ResourceCategory, string> = {
@@ -33,7 +39,8 @@ const categoriaLabels: Record<ResourceCategory, string> = {
   estudo: 'Estudo',
   livro: 'Livro',
   musica: 'Música',
-  pregacao: 'Pregação'
+  pregacao: 'Pregação',
+  playbook: 'Playbook'
 };
 
 const categoriaColors: Record<ResourceCategory, string> = {
@@ -43,7 +50,8 @@ const categoriaColors: Record<ResourceCategory, string> = {
   estudo: 'bg-green-100 text-green-700',
   livro: 'bg-amber-100 text-amber-700',
   musica: 'bg-pink-100 text-pink-700',
-  pregacao: 'bg-indigo-100 text-indigo-700'
+  pregacao: 'bg-indigo-100 text-indigo-700',
+  playbook: 'bg-teal-100 text-teal-700'
 };
 
 interface AdminResourcesProps {
@@ -52,6 +60,7 @@ interface AdminResourcesProps {
 
 export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
   const [resources, setResources] = useState<Resource[]>([]);
+  const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Resource | null>(null);
@@ -68,7 +77,8 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
     tags: '',
     autor: '',
     link_externo: '',
-    imagem_capa: ''
+    imagem_capa: '',
+    ministry_id: ''
   });
 
   const handleGenerateEmbeddings = async () => {
@@ -102,7 +112,8 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
 
   useEffect(() => {
     fetchResources();
-  }, []);
+    fetchMinistries();
+  }, [churchId]);
 
   const fetchResources = async () => {
     const { data, error } = await supabase
@@ -114,6 +125,19 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
     else setResources(data || []);
 
     setLoading(false);
+  };
+
+  const fetchMinistries = async () => {
+    if (!churchId) return;
+    
+    const { data, error } = await supabase
+      .from('ministries')
+      .select('id, nome')
+      .eq('church_id', churchId)
+      .eq('is_active', true)
+      .order('nome');
+
+    if (!error) setMinistries(data || []);
   };
 
   const handleOpenDialog = (resource?: Resource) => {
@@ -128,11 +152,12 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
         tags: (resource.tags || []).join(', '),
         autor: resource.autor || '',
         link_externo: resource.link_externo || '',
-        imagem_capa: resource.imagem_capa || ''
+        imagem_capa: resource.imagem_capa || '',
+        ministry_id: resource.ministry_id || ''
       });
     } else {
       setEditing(null);
-      setForm({ titulo: '', descricao: '', categoria: 'sos', video_url: '', url_pdf: '', tags: '', autor: '', link_externo: '', imagem_capa: '' });
+      setForm({ titulo: '', descricao: '', categoria: 'sos', video_url: '', url_pdf: '', tags: '', autor: '', link_externo: '', imagem_capa: '', ministry_id: '' });
     }
     setDialogOpen(true);
   };
@@ -165,7 +190,8 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
       autor: form.autor || null,
       link_externo: form.link_externo || null,
       imagem_capa: form.imagem_capa || null,
-      church_id: churchId
+      church_id: churchId,
+      ministry_id: form.categoria === 'playbook' && form.ministry_id ? form.ministry_id : null
     };
 
     if (editing) {
@@ -268,6 +294,7 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                       <SelectItem value="livro">Livro</SelectItem>
                       <SelectItem value="musica">Música</SelectItem>
                       <SelectItem value="pregacao">Pregação</SelectItem>
+                      <SelectItem value="playbook">Playbook</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -281,6 +308,28 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                   />
                 </div>
               </div>
+              
+              {form.categoria === 'playbook' && (
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Ministério *</Label>
+                  <Select value={form.ministry_id} onValueChange={(v) => setForm({ ...form, ministry_id: v })}>
+                    <SelectTrigger className="border-gray-300 bg-white">
+                      <SelectValue placeholder="Selecione o ministério" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      {ministries.map((ministry) => (
+                        <SelectItem key={ministry.id} value={ministry.id}>
+                          {ministry.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Voluntários só verão playbooks do seu ministério
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label className="text-gray-700">Descrição</Label>
                 <Textarea
@@ -376,9 +425,16 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                     </div>
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell">
-                    <span className={`inline-flex px-2 py-1 text-xs rounded-full ${categoriaColors[resource.categoria]}`}>
-                      {categoriaLabels[resource.categoria]}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full w-fit ${categoriaColors[resource.categoria]}`}>
+                        {categoriaLabels[resource.categoria]}
+                      </span>
+                      {resource.categoria === 'playbook' && resource.ministry_id && (
+                        <span className="text-xs text-muted-foreground">
+                          {ministries.find(m => m.id === resource.ministry_id)?.nome || 'Ministério'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
                     <div className="flex flex-wrap gap-1">
