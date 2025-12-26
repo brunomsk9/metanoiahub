@@ -205,15 +205,37 @@ export default function Admin() {
         <div className="flex flex-wrap gap-2 mb-6">
           {/* Líder Ministerial Navigation */}
           {isLiderMinisterial && !isAdmin && (
-            <Button
-              variant={activeSection === 'schedules' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setActiveSection('schedules')}
-              className="gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Escalas</span>
-            </Button>
+            <>
+              <Button
+                variant={activeSection === 'ministries' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('ministries')}
+                className="gap-2"
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Rede Ministerial</span>
+              </Button>
+
+              <Button
+                variant={activeSection === 'schedules' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('schedules')}
+                className="gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Escalas</span>
+              </Button>
+
+              <Button
+                variant={activeSection === 'resources' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveSection('resources')}
+                className="gap-2"
+              >
+                <LifeBuoy className="h-4 w-4" />
+                <span className="hidden sm:inline">Recursos</span>
+              </Button>
+            </>
           )}
 
           {isAdmin && (
