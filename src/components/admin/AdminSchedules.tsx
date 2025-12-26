@@ -156,11 +156,9 @@ export function AdminSchedules() {
         .eq('church_id', churchId),
     ]);
 
-    console.log('Ministries response:', ministriesRes);
     if (ministriesRes.error) {
       console.error('Error fetching ministries:', ministriesRes.error);
     } else {
-      console.log('Ministries loaded:', ministriesRes.data);
       setMinistries(ministriesRes.data || []);
     }
 
@@ -741,73 +739,118 @@ export function AdminSchedules() {
 
       {/* Dialog: Service Type */}
       <Dialog open={isServiceTypeDialogOpen} onOpenChange={(open) => { setIsServiceTypeDialogOpen(open); if (!open) resetServiceTypeForm(); }}>
-        <DialogContent className="max-h-[90vh] flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>{editingServiceType ? 'Editar' : 'Novo'} Tipo de Culto</DialogTitle>
-            <DialogDescription>
-              Configure os detalhes do tipo de culto ou evento
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10">
+                <Church className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl">{editingServiceType ? 'Editar' : 'Novo'} Tipo de Culto</DialogTitle>
+                <DialogDescription className="mt-0.5">
+                  Configure os detalhes e ministérios participantes
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome *</Label>
-                <Input
-                  placeholder="Ex: Culto de Domingo"
-                  value={serviceTypeForm.nome}
-                  onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, nome: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Textarea
-                  placeholder="Descrição opcional..."
-                  value={serviceTypeForm.descricao}
-                  onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, descricao: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Dia da Semana</Label>
-                  <Select
-                    value={serviceTypeForm.dia_semana}
-                    onValueChange={(value) => setServiceTypeForm({ ...serviceTypeForm, dia_semana: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {DIAS_SEMANA.map((dia) => (
-                        <SelectItem key={dia.value} value={dia.value.toString()}>
-                          {dia.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          
+          <ScrollArea className="flex-1 px-6">
+            <div className="space-y-6 py-6">
+              {/* Basic Info Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <ClipboardList className="h-4 w-4" />
+                  Informações Básicas
                 </div>
+                
                 <div className="space-y-2">
-                  <Label>Horário</Label>
+                  <Label className="text-sm font-medium">Nome do Tipo de Culto *</Label>
                   <Input
-                    type="time"
-                    value={serviceTypeForm.horario}
-                    onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, horario: e.target.value })}
+                    placeholder="Ex: Culto de Celebração"
+                    value={serviceTypeForm.nome}
+                    onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, nome: e.target.value })}
+                    className="h-11"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Descrição</Label>
+                  <Textarea
+                    placeholder="Descreva o propósito deste tipo de culto..."
+                    value={serviceTypeForm.descricao}
+                    onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, descricao: e.target.value })}
+                    className="min-h-[80px] resize-none"
                   />
                 </div>
               </div>
+
+              {/* Schedule Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  Horário Recorrente
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Dia da Semana</Label>
+                    <Select
+                      value={serviceTypeForm.dia_semana}
+                      onValueChange={(value) => setServiceTypeForm({ ...serviceTypeForm, dia_semana: value })}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {DIAS_SEMANA.map((dia) => (
+                          <SelectItem key={dia.value} value={dia.value.toString()}>
+                            {dia.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Horário</Label>
+                    <Input
+                      type="time"
+                      value={serviceTypeForm.horario}
+                      onChange={(e) => setServiceTypeForm({ ...serviceTypeForm, horario: e.target.value })}
+                      className="h-11"
+                    />
+                  </div>
+                </div>
+              </div>
               
-              {/* Ministry selection */}
-              <div className="space-y-3">
-                <Label>Ministérios Participantes</Label>
-                <p className="text-xs text-muted-foreground">
-                  Selecione os ministérios que participam deste tipo de culto
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto p-1">
-                  {ministries.length === 0 ? (
-                    <p className="text-sm text-muted-foreground col-span-2 text-center py-4">
-                      Nenhum ministério cadastrado
-                    </p>
-                  ) : (
-                    ministries.map((ministry) => {
+              {/* Ministry Selection Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    Ministérios Participantes
+                  </div>
+                  {serviceTypeForm.selectedMinistries.length > 0 && (
+                    <Badge variant="secondary" className="font-normal">
+                      {serviceTypeForm.selectedMinistries.length} selecionado(s)
+                    </Badge>
+                  )}
+                </div>
+                
+                {ministries.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="py-8 text-center">
+                      <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Nenhum ministério cadastrado
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Cadastre ministérios na aba "Rede Ministerial" para associá-los aqui
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2">
+                    {ministries.map((ministry) => {
                       const isSelected = serviceTypeForm.selectedMinistries.includes(ministry.id);
                       return (
                         <div
@@ -819,41 +862,54 @@ export function AdminSchedules() {
                             setServiceTypeForm({ ...serviceTypeForm, selectedMinistries: newSelected });
                           }}
                           className={`
-                            flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all
+                            flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200
                             ${isSelected 
-                              ? 'bg-primary/10 border-primary' 
-                              : 'bg-card border-border hover:bg-muted/50'
+                              ? 'bg-primary/5 border-primary shadow-sm' 
+                              : 'bg-card border-transparent hover:border-muted-foreground/20 hover:bg-muted/30'
                             }
                           `}
                         >
                           <div 
-                            className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
-                          />
-                          <span className="text-sm font-medium truncate">{ministry.nome}</span>
-                          {isSelected && (
-                            <Users className="h-3 w-3 text-primary ml-auto flex-shrink-0" />
-                          )}
+                            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: `${ministry.cor || 'hsl(var(--primary))'}20` }}
+                          >
+                            <div 
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-sm">{ministry.nome}</span>
+                          </div>
+                          <div className={`
+                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                            ${isSelected 
+                              ? 'border-primary bg-primary' 
+                              : 'border-muted-foreground/30'
+                            }
+                          `}>
+                            {isSelected && (
+                              <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
                         </div>
                       );
-                    })
-                  )}
-                </div>
-                {serviceTypeForm.selectedMinistries.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {serviceTypeForm.selectedMinistries.length} ministério(s) selecionado(s)
-                  </p>
+                    })}
+                  </div>
                 )}
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="flex-shrink-0 pt-4 border-t">
+          
+          <DialogFooter className="flex-shrink-0 px-6 py-4 border-t bg-muted/30">
             <Button variant="outline" onClick={() => setIsServiceTypeDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateServiceType} disabled={saving}>
+            <Button onClick={handleCreateServiceType} disabled={saving} className="min-w-[100px]">
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingServiceType ? 'Salvar' : 'Criar'}
+              {editingServiceType ? 'Salvar Alterações' : 'Criar Tipo de Culto'}
             </Button>
           </DialogFooter>
         </DialogContent>
