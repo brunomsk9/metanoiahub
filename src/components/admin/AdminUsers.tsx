@@ -3,12 +3,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, Users, UserCheck, Shield, Search, Upload, UserPlus, Building2 } from 'lucide-react';
+import { Loader2, Users, UserCheck, Shield, Search, Upload, UserPlus, Building2, Filter, Droplets, HeartHandshake, ArrowRightLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Database } from '@/integrations/supabase/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminUserImport } from './AdminUserImport';
 import { CreateUserModal } from './CreateUserModal';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 type AppRole = Database['public']['Enums']['app_role'] | 'lider_ministerial';
 
@@ -17,7 +26,12 @@ interface UserWithRoles {
   nome: string;
   email: string;
   roles: AppRole[];
+  is_batizado?: boolean;
+  is_novo_convertido?: boolean;
+  is_transferido?: boolean;
 }
+
+type SpiritualFilter = 'batizado' | 'novo_convertido' | 'transferido';
 
 export function AdminUsers() {
   const [users, setUsers] = useState<UserWithRoles[]>([]);
@@ -25,16 +39,17 @@ export function AdminUsers() {
   const [saving, setSaving] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [spiritualFilters, setSpiritualFilters] = useState<SpiritualFilter[]>([]);
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
-    // Fetch all profiles
+    // Fetch all profiles with spiritual status
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, nome')
+      .select('id, nome, is_batizado, is_novo_convertido, is_transferido')
       .order('nome');
 
     if (profilesError) {
@@ -58,14 +73,29 @@ export function AdminUsers() {
     const usersWithRoles: UserWithRoles[] = (profiles || []).map(profile => ({
       id: profile.id,
       nome: profile.nome || 'Sem nome',
-      email: '', // We don't have access to email from profiles
+      email: '',
       roles: (allRoles || [])
         .filter(r => r.user_id === profile.id)
-        .map(r => r.role)
+        .map(r => r.role),
+      is_batizado: profile.is_batizado ?? false,
+      is_novo_convertido: profile.is_novo_convertido ?? false,
+      is_transferido: profile.is_transferido ?? false,
     }));
 
     setUsers(usersWithRoles);
     setLoading(false);
+  };
+
+  const toggleSpiritualFilter = (filter: SpiritualFilter) => {
+    setSpiritualFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
+  const clearFilters = () => {
+    setSpiritualFilters([]);
   };
 
   const toggleRole = async (userId: string, role: AppRole, hasRole: boolean) => {
@@ -116,9 +146,22 @@ export function AdminUsers() {
     setSaving(null);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.nome.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    // Text search filter
+    const matchesSearch = user.nome.toLowerCase().includes(search.toLowerCase());
+    
+    // Spiritual status filters
+    const matchesSpiritualFilters = spiritualFilters.length === 0 || spiritualFilters.some(filter => {
+      switch (filter) {
+        case 'batizado': return user.is_batizado;
+        case 'novo_convertido': return user.is_novo_convertido;
+        case 'transferido': return user.is_transferido;
+        default: return false;
+      }
+    });
+
+    return matchesSearch && matchesSpiritualFilters;
+  });
 
   const getRoleIcon = (role: AppRole) => {
     switch (role) {
@@ -169,23 +212,98 @@ export function AdminUsers() {
       </TabsList>
 
       <TabsContent value="list" className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-4">
-            <p className="text-muted-foreground">{users.length} usuário(s) cadastrado(s)</p>
-            <Button onClick={() => setCreateModalOpen(true)} size="sm" className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Novo Usuário
-            </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <p className="text-muted-foreground">{filteredUsers.length} de {users.length} usuário(s)</p>
+              <Button onClick={() => setCreateModalOpen(true)} size="sm" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Novo Usuário
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar usuário..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="relative">
+                    <Filter className="h-4 w-4" />
+                    {spiritualFilters.length > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 text-xs bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                        {spiritualFilters.length}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Status Espiritual</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuCheckboxItem
+                    checked={spiritualFilters.includes('batizado')}
+                    onCheckedChange={() => toggleSpiritualFilter('batizado')}
+                  >
+                    <Droplets className="h-4 w-4 mr-2 text-blue-500" />
+                    Batizado
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={spiritualFilters.includes('novo_convertido')}
+                    onCheckedChange={() => toggleSpiritualFilter('novo_convertido')}
+                  >
+                    <HeartHandshake className="h-4 w-4 mr-2 text-green-500" />
+                    Novo Convertido
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={spiritualFilters.includes('transferido')}
+                    onCheckedChange={() => toggleSpiritualFilter('transferido')}
+                  >
+                    <ArrowRightLeft className="h-4 w-4 mr-2 text-orange-500" />
+                    Transferido
+                  </DropdownMenuCheckboxItem>
+                  {spiritualFilters.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start text-muted-foreground"
+                        onClick={clearFilters}
+                      >
+                        Limpar filtros
+                      </Button>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar usuário..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          
+          {spiritualFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {spiritualFilters.map(filter => (
+                <Badge 
+                  key={filter} 
+                  variant="secondary" 
+                  className="gap-1 cursor-pointer hover:bg-destructive/20"
+                  onClick={() => toggleSpiritualFilter(filter)}
+                >
+                  {filter === 'batizado' && <Droplets className="h-3 w-3" />}
+                  {filter === 'novo_convertido' && <HeartHandshake className="h-3 w-3" />}
+                  {filter === 'transferido' && <ArrowRightLeft className="h-3 w-3" />}
+                  {filter === 'batizado' && 'Batizado'}
+                  {filter === 'novo_convertido' && 'Novo Convertido'}
+                  {filter === 'transferido' && 'Transferido'}
+                  <span className="ml-1">×</span>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         <CreateUserModal
