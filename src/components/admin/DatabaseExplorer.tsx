@@ -90,6 +90,8 @@ const AVAILABLE_TABLES = [
   'ai_settings',
   'ai_prompt_history',
   'super_admin_audit_logs',
+  // Views (somente leitura)
+  'v_user_auth_details',
 ] as const;
 
 type TableName = typeof AVAILABLE_TABLES[number];
@@ -187,17 +189,19 @@ export function DatabaseExplorer() {
       const to = from + pageSize - 1;
 
       const { data, error, count } = await supabase
-        .from(selectedTable)
+        // "from" tipado não aceita views no schema, então usamos cast aqui.
+        .from(selectedTable as any)
         .select('*', { count: 'exact' })
         .range(from, to)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const columns = data && data.length > 0 ? Object.keys(data[0]) : [];
+      const safeRows = (data as unknown as Record<string, unknown>[]) || [];
+      const columns = safeRows.length > 0 ? Object.keys(safeRows[0]) : [];
       setTableData({
         columns,
-        rows: data || [],
+        rows: safeRows,
         count: count || 0,
       });
     } catch (error: any) {
@@ -337,14 +341,28 @@ export function DatabaseExplorer() {
       // For other queries, we'll provide guidance
       if (type === 'select') {
         // Try to parse simple SELECT queries
-        const tableMatch = query.match(/from\s+(\w+)/i);
+        const tableMatch = query.match(/from\s+([^\s;]+)/i);
         if (!tableMatch) {
-          throw new Error('Não foi possível identificar a tabela. Use: SELECT * FROM tabela');
+          throw new Error('Não foi possível identificar a tabela. Use: SELECT * FROM public.tabela');
         }
 
-        const tableName = tableMatch[1];
+        const rawRelation = tableMatch[1].trim().replace(/;$/, '').replace(/"/g, '');
+
+        // Este editor não executa SQL arbitrário; ele traduz SELECT simples para chamadas do SDK.
+        // Então, funções como get_user_auth_details() não funcionam em "FROM".
+        if (rawRelation.includes('(') || rawRelation.includes(')')) {
+          throw new Error('Este editor suporta SELECT apenas em tabelas/views. Para auth.users, use: SELECT * FROM public.v_user_auth_details');
+        }
+
+        const relationParts = rawRelation.split('.');
+        const schema = relationParts.length > 1 ? relationParts[0] : 'public';
+        const tableName = relationParts[relationParts.length - 1];
+        if (schema !== 'public') {
+          throw new Error(`Schema "${schema}" não suportado aqui. Use o schema public.`);
+        }
+
         if (!AVAILABLE_TABLES.includes(tableName as TableName)) {
-          throw new Error(`Tabela "${tableName}" não encontrada.`);
+          throw new Error(`Tabela/view "${tableName}" não encontrada.`);
         }
 
         // Parse LIMIT
@@ -378,13 +396,20 @@ export function DatabaseExplorer() {
 
       } else {
         // For INSERT, UPDATE, DELETE - execute via supabase
-        const tableMatch = query.match(/(?:into|update|from|delete\s+from)\s+(\w+)/i);
+        const tableMatch = query.match(/(?:into|update|from|delete\s+from)\s+([^\s(;]+)/i);
         if (!tableMatch) {
           throw new Error('Não foi possível identificar a tabela.');
         }
 
-        const tableName = tableMatch[1];
-        
+        const rawRelation = tableMatch[1].trim().replace(/;$/, '').replace(/"/g, '');
+        const relationParts = rawRelation.split('.');
+        const schema = relationParts.length > 1 ? relationParts[0] : 'public';
+        const tableName = relationParts[relationParts.length - 1];
+
+        if (schema !== 'public') {
+          throw new Error(`Schema "${schema}" não suportado aqui. Use o schema public.`);
+        }
+
         if (type === 'insert') {
           // Parse INSERT INTO table (columns) VALUES (values)
           const columnsMatch = query.match(/\(([^)]+)\)\s*values\s*\(([^)]+)\)/i);
