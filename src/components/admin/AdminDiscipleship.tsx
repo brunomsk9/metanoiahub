@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DiscipleshipHistory } from "./DiscipleshipHistory";
 import { DiscipleshipOrganogram } from "./DiscipleshipOrganogram";
+import { CreateUserModal } from "./CreateUserModal";
 import { useChurch } from "@/contexts/ChurchContext";
 
 interface Profile {
@@ -87,6 +88,9 @@ export function AdminDiscipleship() {
   const [transferNotes, setTransferNotes] = useState<string>("");
   const [isTransferring, setIsTransferring] = useState(false);
   const [openTransferDiscipulador, setOpenTransferDiscipulador] = useState(false);
+  
+  // Create user modal state
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -835,15 +839,33 @@ export function AdminDiscipleship() {
         </Card>
       )}
 
-      {/* Info banner for non-admins */}
+      {/* Register user card for non-admins (discipuladores) */}
       {!isAdmin && (
-        <div className="flex items-center gap-3 p-4 rounded-lg border border-muted bg-muted/30">
-          <Users className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            Apenas administradores podem adicionar ou remover discípulos. Entre em contato com o admin da sua igreja para solicitar alterações.
-          </p>
-        </div>
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Cadastrar Novo Discípulo
+            </CardTitle>
+            <CardDescription>
+              Cadastre um novo usuário que será automaticamente vinculado ao seu discipulado
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => setCreateUserModalOpen(true)}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Cadastrar Usuário
+            </Button>
+          </CardContent>
+        </Card>
       )}
+
+      {/* Create User Modal */}
+      <CreateUserModal
+        open={createUserModalOpen}
+        onOpenChange={setCreateUserModalOpen}
+        onUserCreated={fetchData}
+      />
 
       {/* Relationships list */}
       <Card>
