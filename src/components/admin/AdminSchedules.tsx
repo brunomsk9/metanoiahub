@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList, Wand2, List, History, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList, Wand2, List, History, CheckCircle, XCircle, AlertCircle, TrendingUp, Award, BarChart3 } from 'lucide-react';
 import { AdminMinistryPositions } from './AdminMinistryPositions';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { Progress } from '@/components/ui/progress';
 import { ServiceScheduleBuilder } from './ServiceScheduleBuilder';
 import { AdminCalendarView } from './AdminCalendarView';
 import {
@@ -84,14 +85,23 @@ interface ScheduleHistoryProps {
 function ScheduleHistory({ schedules, services, ministries, filterMinistryIds }: ScheduleHistoryProps) {
   const [selectedMinistry, setSelectedMinistry] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'history' | 'stats'>('history');
 
-  // Filter schedules for past services and by ministry
-  const filteredSchedules = schedules.filter(schedule => {
-    // Filter by ministry if filterMinistryIds is provided (for leaders)
+  // Filter base schedules by ministry access (for leaders)
+  const accessibleSchedules = schedules.filter(schedule => {
     if (filterMinistryIds && filterMinistryIds.length > 0 && !filterMinistryIds.includes(schedule.ministry_id)) {
       return false;
     }
-    
+    // Only include past services
+    const serviceDate = schedule.service?.data_hora ? new Date(schedule.service.data_hora) : null;
+    if (!serviceDate || serviceDate > new Date()) {
+      return false;
+    }
+    return true;
+  });
+
+  // Filter for display based on user selection
+  const filteredSchedules = accessibleSchedules.filter(schedule => {
     // Filter by selected ministry
     if (selectedMinistry !== 'all' && schedule.ministry_id !== selectedMinistry) {
       return false;
@@ -102,18 +112,55 @@ function ScheduleHistory({ schedules, services, ministries, filterMinistryIds }:
       return false;
     }
     
-    // Only show schedules for past services
-    const serviceDate = schedule.service?.data_hora ? new Date(schedule.service.data_hora) : null;
-    if (!serviceDate || serviceDate > new Date()) {
-      return false;
-    }
-    
     return true;
   }).sort((a, b) => {
     const dateA = a.service?.data_hora ? new Date(a.service.data_hora) : new Date(0);
     const dateB = b.service?.data_hora ? new Date(b.service.data_hora) : new Date(0);
     return dateB.getTime() - dateA.getTime();
   });
+
+  // Calculate volunteer statistics
+  const volunteerStats = useMemo(() => {
+    const stats: Record<string, {
+      id: string;
+      nome: string;
+      total: number;
+      confirmed: number;
+      declined: number;
+      pending: number;
+      ministries: Set<string>;
+    }> = {};
+
+    accessibleSchedules.forEach(schedule => {
+      const volunteerId = schedule.volunteer_id;
+      const volunteerName = schedule.volunteer?.nome || 'Voluntário';
+      
+      if (!stats[volunteerId]) {
+        stats[volunteerId] = {
+          id: volunteerId,
+          nome: volunteerName,
+          total: 0,
+          confirmed: 0,
+          declined: 0,
+          pending: 0,
+          ministries: new Set(),
+        };
+      }
+      
+      stats[volunteerId].total++;
+      stats[volunteerId].ministries.add(schedule.ministry?.nome || 'Ministério');
+      
+      if (schedule.status === 'confirmed') {
+        stats[volunteerId].confirmed++;
+      } else if (schedule.status === 'declined') {
+        stats[volunteerId].declined++;
+      } else {
+        stats[volunteerId].pending++;
+      }
+    });
+
+    return Object.values(stats).sort((a, b) => b.total - a.total);
+  }, [accessibleSchedules]);
 
   // Get available ministries for filter
   const availableMinistries = filterMinistryIds 
@@ -142,7 +189,18 @@ function ScheduleHistory({ schedules, services, ministries, filterMinistryIds }:
     }
   };
 
-  if (filteredSchedules.length === 0) {
+  // Summary stats
+  const summaryStats = useMemo(() => {
+    const total = accessibleSchedules.length;
+    const confirmed = accessibleSchedules.filter(s => s.status === 'confirmed').length;
+    const declined = accessibleSchedules.filter(s => s.status === 'declined').length;
+    const pending = accessibleSchedules.filter(s => s.status === 'pending').length;
+    const confirmationRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+    
+    return { total, confirmed, declined, pending, confirmationRate };
+  }, [accessibleSchedules]);
+
+  if (accessibleSchedules.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -165,92 +223,244 @@ function ScheduleHistory({ schedules, services, ministries, filterMinistryIds }:
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        {availableMinistries.length > 1 && (
-          <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por ministério" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="all">Todos os ministérios</SelectItem>
-              {availableMinistries.map(ministry => (
-                <SelectItem key={ministry.id} value={ministry.id}>
-                  {ministry.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="confirmed">Confirmados</SelectItem>
-            <SelectItem value="declined">Recusados</SelectItem>
-            <SelectItem value="pending">Pendentes</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="bg-muted/30">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">Total</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{summaryStats.total}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-green-500/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-sm text-muted-foreground">Confirmados</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-green-600">{summaryStats.confirmed}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-red-500/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-red-500" />
+              <span className="text-sm text-muted-foreground">Recusados</span>
+            </div>
+            <p className="text-2xl font-bold mt-1 text-red-600">{summaryStats.declined}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-primary/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">Taxa Confirmação</span>
+            </div>
+            <p className="text-2xl font-bold mt-1">{summaryStats.confirmationRate}%</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Schedule History List */}
-      <div className="space-y-4">
-        {Object.entries(groupedByService).map(([serviceId, serviceSchedules]) => {
-          const service = serviceSchedules[0]?.service;
-          if (!service) return null;
-          
-          return (
-            <Card key={serviceId}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{service.nome}</CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-1">
-                      <CalendarDays className="h-3 w-3" />
-                      {format(new Date(service.data_hora), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                      <Clock className="h-3 w-3 ml-2" />
-                      {format(new Date(service.data_hora), 'HH:mm')}
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary">
-                    {serviceSchedules.length} voluntário(s)
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  {serviceSchedules.map(schedule => (
-                    <div 
-                      key={schedule.id} 
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: schedule.ministry?.cor || 'hsl(var(--primary))' }}
-                        />
-                        <div>
-                          <p className="font-medium text-sm">{schedule.volunteer?.nome || 'Voluntário'}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {schedule.ministry?.nome} • {schedule.position?.nome}
-                          </p>
+      {/* View Toggle and Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-1 bg-muted rounded-lg p-1">
+          <Button
+            variant={viewMode === 'history' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8"
+            onClick={() => setViewMode('history')}
+          >
+            <History className="h-4 w-4 mr-2" />
+            Histórico
+          </Button>
+          <Button
+            variant={viewMode === 'stats' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-8"
+            onClick={() => setViewMode('stats')}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Estatísticas
+          </Button>
+        </div>
+
+        {viewMode === 'history' && (
+          <div className="flex flex-wrap gap-3">
+            {availableMinistries.length > 1 && (
+              <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filtrar por ministério" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">Todos os ministérios</SelectItem>
+                  {availableMinistries.map(ministry => (
+                    <SelectItem key={ministry.id} value={ministry.id}>
+                      {ministry.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="confirmed">Confirmados</SelectItem>
+                <SelectItem value="declined">Recusados</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
+      {/* Content based on view mode */}
+      {viewMode === 'stats' ? (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-primary" />
+                <CardTitle className="text-base">Estatísticas por Voluntário</CardTitle>
+              </div>
+              <CardDescription>
+                Ranking de participação e taxa de confirmação
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {volunteerStats.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">Nenhum voluntário encontrado</p>
+              ) : (
+                <div className="space-y-3">
+                  {volunteerStats.map((volunteer, index) => {
+                    const confirmationRate = volunteer.total > 0 
+                      ? Math.round((volunteer.confirmed / volunteer.total) * 100) 
+                      : 0;
+                    
+                    return (
+                      <div 
+                        key={volunteer.id} 
+                        className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                          {index + 1}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="font-medium truncate">{volunteer.nome}</p>
+                            <div className="flex items-center gap-3 text-sm">
+                              <span className="text-muted-foreground">{volunteer.total} escalas</span>
+                              <span className={`font-medium ${confirmationRate >= 80 ? 'text-green-600' : confirmationRate >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                {confirmationRate}% confirmação
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Progress 
+                              value={confirmationRate} 
+                              className="h-2 flex-1"
+                            />
+                          </div>
+                          
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              {volunteer.confirmed}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <XCircle className="h-3 w-3 text-red-500" />
+                              {volunteer.declined}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3 text-yellow-500" />
+                              {volunteer.pending}
+                            </span>
+                            <span className="ml-auto">
+                              {Array.from(volunteer.ministries).slice(0, 2).join(', ')}
+                              {volunteer.ministries.size > 2 && ` +${volunteer.ministries.size - 2}`}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(schedule.status)}
-                        <span className="text-sm text-muted-foreground">{getStatusLabel(schedule.status)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {Object.keys(groupedByService).length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <History className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground">Nenhum histórico encontrado para os filtros selecionados</p>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ) : (
+            Object.entries(groupedByService).map(([serviceId, serviceSchedules]) => {
+              const service = serviceSchedules[0]?.service;
+              if (!service) return null;
+              
+              return (
+                <Card key={serviceId}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base">{service.nome}</CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1">
+                          <CalendarDays className="h-3 w-3" />
+                          {format(new Date(service.data_hora), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          <Clock className="h-3 w-3 ml-2" />
+                          {format(new Date(service.data_hora), 'HH:mm')}
+                        </CardDescription>
+                      </div>
+                      <Badge variant="secondary">
+                        {serviceSchedules.length} voluntário(s)
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-2">
+                      {serviceSchedules.map(schedule => (
+                        <div 
+                          key={schedule.id} 
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: schedule.ministry?.cor || 'hsl(var(--primary))' }}
+                            />
+                            <div>
+                              <p className="font-medium text-sm">{schedule.volunteer?.nome || 'Voluntário'}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {schedule.ministry?.nome} • {schedule.position?.nome}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(schedule.status)}
+                            <span className="text-sm text-muted-foreground">{getStatusLabel(schedule.status)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 }
