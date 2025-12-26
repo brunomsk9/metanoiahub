@@ -26,6 +26,7 @@ interface Volunteer {
 export function VolunteersExportReport() {
   const { churchId } = useUserChurchId();
   const [selectedMinistry, setSelectedMinistry] = useState<string>("all");
+  const [selectedGender, setSelectedGender] = useState<string>("all");
   const [selectedVolunteers, setSelectedVolunteers] = useState<Set<string>>(new Set());
 
   // Fetch ministries
@@ -115,13 +116,22 @@ export function VolunteersExportReport() {
     enabled: !!churchId,
   });
 
-  // Filter volunteers by selected ministry
+  // Filter volunteers by selected ministry and gender
   const filteredVolunteers = useMemo(() => {
-    if (selectedMinistry === "all") return volunteers;
-    return volunteers.filter(v => 
-      v.ministries.some(m => m.id === selectedMinistry)
-    );
-  }, [volunteers, selectedMinistry]);
+    let filtered = volunteers;
+    
+    if (selectedMinistry !== "all") {
+      filtered = filtered.filter(v => 
+        v.ministries.some(m => m.id === selectedMinistry)
+      );
+    }
+    
+    if (selectedGender !== "all") {
+      filtered = filtered.filter(v => v.genero === selectedGender);
+    }
+    
+    return filtered;
+  }, [volunteers, selectedMinistry, selectedGender]);
 
   // Toggle volunteer selection
   const toggleVolunteer = (id: string) => {
@@ -207,10 +217,10 @@ export function VolunteersExportReport() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
               <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
-                <SelectTrigger className="w-full sm:w-[280px]">
+                <SelectTrigger className="w-full sm:w-[220px]">
                   <SelectValue placeholder="Selecione um ministério" />
                 </SelectTrigger>
                 <SelectContent>
@@ -220,6 +230,17 @@ export function VolunteersExportReport() {
                       {ministry.nome}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedGender} onValueChange={setSelectedGender}>
+                <SelectTrigger className="w-full sm:w-[160px]">
+                  <SelectValue placeholder="Gênero" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Gêneros</SelectItem>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                  <SelectItem value="feminino">Feminino</SelectItem>
                 </SelectContent>
               </Select>
             </div>
