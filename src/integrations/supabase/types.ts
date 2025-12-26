@@ -703,11 +703,15 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          batizou_na_igreja: boolean | null
           church_id: string | null
           created_at: string
           current_streak: number
           genero: Database["public"]["Enums"]["gender_type"] | null
           id: string
+          is_batizado: boolean | null
+          is_novo_convertido: boolean | null
+          is_transferido: boolean | null
           needs_password_change: boolean
           nome: string
           onboarding_completed: boolean
@@ -718,11 +722,15 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          batizou_na_igreja?: boolean | null
           church_id?: string | null
           created_at?: string
           current_streak?: number
           genero?: Database["public"]["Enums"]["gender_type"] | null
           id: string
+          is_batizado?: boolean | null
+          is_novo_convertido?: boolean | null
+          is_transferido?: boolean | null
           needs_password_change?: boolean
           nome?: string
           onboarding_completed?: boolean
@@ -733,11 +741,15 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          batizou_na_igreja?: boolean | null
           church_id?: string | null
           created_at?: string
           current_streak?: number
           genero?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
+          is_batizado?: boolean | null
+          is_novo_convertido?: boolean | null
+          is_transferido?: boolean | null
           needs_password_change?: boolean
           nome?: string
           onboarding_completed?: boolean

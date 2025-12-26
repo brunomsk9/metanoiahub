@@ -20,6 +20,10 @@ interface UserRow {
   nome: string;
   role: string;
   genero?: string;
+  is_transferido?: boolean;
+  is_novo_convertido?: boolean;
+  is_batizado?: boolean;
+  batizou_na_igreja?: boolean;
 }
 
 interface ImportResult {
@@ -96,11 +100,21 @@ export function AdminUserImport() {
     const nomeIdx = headers.findIndex(h => h === 'nome' || h === 'name' || h === 'nome completo');
     const roleIdx = headers.findIndex(h => h === 'role' || h === 'papel' || h === 'tipo');
     const generoIdx = headers.findIndex(h => h === 'genero' || h === 'sexo' || h === 'gender');
+    const transferidoIdx = headers.findIndex(h => h === 'transferido' || h === 'is_transferido');
+    const novoConvertidoIdx = headers.findIndex(h => h === 'novo_convertido' || h === 'is_novo_convertido' || h === 'novo convertido');
+    const batizadoIdx = headers.findIndex(h => h === 'batizado' || h === 'is_batizado');
+    const batizouNaIgrejaIdx = headers.findIndex(h => h === 'batizou_na_igreja' || h === 'batizou na igreja');
 
     if (emailIdx === -1 || nomeIdx === -1) {
       toast.error("CSV deve conter colunas 'email' e 'nome'");
       return [];
     }
+
+    const parseBooleanValue = (value: string | undefined): boolean => {
+      if (!value) return false;
+      const v = value.toLowerCase().trim();
+      return v === 'sim' || v === 's' || v === 'yes' || v === 'y' || v === 'true' || v === '1';
+    };
 
     const users: UserRow[] = [];
     for (let i = 1; i < lines.length; i++) {
@@ -115,7 +129,11 @@ export function AdminUserImport() {
           email: values[emailIdx],
           nome: values[nomeIdx] || '',
           role: roleIdx !== -1 ? values[roleIdx] || 'discipulo' : 'discipulo',
-          genero: validGenero
+          genero: validGenero,
+          is_transferido: transferidoIdx !== -1 ? parseBooleanValue(values[transferidoIdx]) : false,
+          is_novo_convertido: novoConvertidoIdx !== -1 ? parseBooleanValue(values[novoConvertidoIdx]) : false,
+          is_batizado: batizadoIdx !== -1 ? parseBooleanValue(values[batizadoIdx]) : false,
+          batizou_na_igreja: batizouNaIgrejaIdx !== -1 ? parseBooleanValue(values[batizouNaIgrejaIdx]) : false
         });
       }
     }
@@ -224,7 +242,7 @@ export function AdminUserImport() {
   };
 
   const downloadTemplate = () => {
-    const template = "email,nome,role,genero\njohn@example.com,John Doe,discipulo,masculino\njane@example.com,Jane Smith,discipulador,feminino";
+    const template = "email,nome,role,genero,transferido,novo_convertido,batizado,batizou_na_igreja\njohn@example.com,John Doe,discipulo,masculino,nao,sim,nao,nao\njane@example.com,Jane Smith,discipulador,feminino,sim,nao,sim,sim";
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -320,7 +338,7 @@ export function AdminUserImport() {
         <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-4" />
         <p className="text-foreground font-medium">Clique para selecionar arquivo CSV</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Colunas: email, nome, role (discipulo/discipulador/admin), genero (masculino/feminino)
+          Colunas: email, nome, role, genero, transferido, novo_convertido, batizado, batizou_na_igreja
         </p>
       </div>
 
@@ -344,9 +362,10 @@ export function AdminUserImport() {
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Email</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Nome</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Sexo</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status Espiritual</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Role</th>
                   {results && (
-                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Resultado</th>
                   )}
                 </tr>
               </thead>
@@ -365,6 +384,25 @@ export function AdminUserImport() {
                         ) : (
                           <span className="text-muted-foreground text-xs">-</span>
                         )}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-1">
+                          {user.is_transferido && (
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-blue-500/10 text-blue-600">Transf</span>
+                          )}
+                          {user.is_novo_convertido && (
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-green-500/10 text-green-600">Novo</span>
+                          )}
+                          {user.is_batizado && (
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-purple-500/10 text-purple-600">Bat</span>
+                          )}
+                          {user.batizou_na_igreja && (
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-amber-500/10 text-amber-600">BatIgr</span>
+                          )}
+                          {!user.is_transferido && !user.is_novo_convertido && !user.is_batizado && !user.batizou_na_igreja && (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-2">
                         <span className="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">

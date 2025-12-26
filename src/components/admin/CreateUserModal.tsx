@@ -41,6 +41,10 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [genero, setGenero] = useState<string>('');
+  const [isTransferido, setIsTransferido] = useState(false);
+  const [isNovoConvertido, setIsNovoConvertido] = useState(false);
+  const [isBatizado, setIsBatizado] = useState(false);
+  const [batizouNaIgreja, setBatizouNaIgreja] = useState(false);
   const [roles, setRoles] = useState<AppRole[]>(['discipulo']);
   const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>('');
   const [discipuladores, setDiscipuladores] = useState<Discipulador[]>([]);
@@ -106,6 +110,10 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
     setNome('');
     setEmail('');
     setGenero('');
+    setIsTransferido(false);
+    setIsNovoConvertido(false);
+    setIsBatizado(false);
+    setBatizouNaIgreja(false);
     setRoles(['discipulo']);
     setSelectedDiscipulador('');
   };
@@ -147,7 +155,11 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
             email: email.trim().toLowerCase(),
             nome: nome.trim(),
             role: roles[0] || 'discipulo',
-            genero: genero || null
+            genero: genero || null,
+            is_transferido: isTransferido,
+            is_novo_convertido: isNovoConvertido,
+            is_batizado: isBatizado,
+            batizou_na_igreja: batizouNaIgreja
           }],
           church_id: churchId
         }
@@ -279,6 +291,56 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
                 <SelectItem value="feminino">Feminino</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Status Espiritual</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="transferido"
+                  checked={isTransferido}
+                  onCheckedChange={(checked) => setIsTransferido(checked as boolean)}
+                  disabled={isLoading}
+                />
+                <label htmlFor="transferido" className="text-sm cursor-pointer">
+                  Transferido
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="novoConvertido"
+                  checked={isNovoConvertido}
+                  onCheckedChange={(checked) => setIsNovoConvertido(checked as boolean)}
+                  disabled={isLoading}
+                />
+                <label htmlFor="novoConvertido" className="text-sm cursor-pointer">
+                  Novo Convertido
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="batizado"
+                  checked={isBatizado}
+                  onCheckedChange={(checked) => setIsBatizado(checked as boolean)}
+                  disabled={isLoading}
+                />
+                <label htmlFor="batizado" className="text-sm cursor-pointer">
+                  Batizado
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="batizouNaIgreja"
+                  checked={batizouNaIgreja}
+                  onCheckedChange={(checked) => setBatizouNaIgreja(checked as boolean)}
+                  disabled={isLoading}
+                />
+                <label htmlFor="batizouNaIgreja" className="text-sm cursor-pointer">
+                  Batizou na Igreja
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3">
