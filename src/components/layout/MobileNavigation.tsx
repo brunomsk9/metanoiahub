@@ -1,6 +1,6 @@
 import { memo, useCallback, useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, GraduationCap, Trophy, User, Settings, Calendar } from "lucide-react";
+import { Home, GraduationCap, Trophy, User, Settings, Calendar, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +30,7 @@ export const MobileNavigation = memo(function MobileNavigation({
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
   const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
   const [isLiderMinisterial, setIsLiderMinisterial] = useState(cachedRoles.isLiderMinisterial);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export const MobileNavigation = memo(function MobileNavigation({
       if (cachedRoles.userId === session.user.id) {
         setIsAdmin(cachedRoles.isAdmin);
         setIsDiscipulador(cachedRoles.isDiscipulador);
+        setIsSuperAdmin(cachedRoles.isSuperAdmin);
         setIsLiderMinisterial(cachedRoles.isLiderMinisterial);
         return;
       }
@@ -56,18 +58,20 @@ export const MobileNavigation = memo(function MobileNavigation({
       const userRoles = roles?.map((r) => r.role) || [];
       const admin = userRoles.includes("admin");
       const discipulador = userRoles.includes("discipulador");
+      const superAdmin = userRoles.includes("super_admin");
       const liderMinisterial = userRoles.includes("lider_ministerial");
 
       cachedRoles = {
-        ...cachedRoles,
         isAdmin: admin,
         isDiscipulador: discipulador,
+        isSuperAdmin: superAdmin,
         isLiderMinisterial: liderMinisterial,
         userId: session.user.id,
       };
 
       setIsAdmin(admin);
       setIsDiscipulador(discipulador);
+      setIsSuperAdmin(superAdmin);
       setIsLiderMinisterial(liderMinisterial);
     }
   }, []);
@@ -80,8 +84,13 @@ export const MobileNavigation = memo(function MobileNavigation({
     { path: "/perfil", label: "Perfil", icon: User },
   ];
 
-  // Replace escalas with admin for admin users
+  // Replace escalas/profile with appropriate links based on role
   const displayItems = navItems.map((item) => {
+    // Super Admin gets Super Admin link instead of Profile
+    if (item.path === "/perfil" && isSuperAdmin) {
+      return { path: "/super-admin", label: "Super Admin", icon: ShieldAlert };
+    }
+    // Admin/Lider Ministerial gets Admin link instead of Escalas
     if (item.path === "/minhas-escalas" && (isAdmin || isLiderMinisterial)) {
       return { path: "/admin", label: "Admin", icon: Settings };
     }
@@ -103,7 +112,8 @@ export const MobileNavigation = memo(function MobileNavigation({
             location.pathname === item.path ||
             (item.path === "/trilhas" &&
               ["/trilhas", "/biblioteca", "/sos"].includes(location.pathname)) ||
-            (item.path === "/admin" && location.pathname.startsWith("/admin"));
+            (item.path === "/admin" && location.pathname.startsWith("/admin")) ||
+            (item.path === "/super-admin" && location.pathname === "/super-admin");
 
           return (
             <NavLink

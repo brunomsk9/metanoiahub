@@ -1,8 +1,8 @@
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
+import { MobileNavigation } from "@/components/layout/MobileNavigation";
 import { PageTransition } from "@/components/PageTransition";
 import { AchievementBadges } from "@/components/AchievementBadges";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Target, Flame, BookOpen, Heart, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -49,64 +49,62 @@ export default function Achievements() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
-        <Sidebar onLogout={handleLogout} />
-
-        <main className="lg:pl-64">
-          <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-            {/* Header */}
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-warning to-warning/60 mb-4">
-                <Trophy className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-3xl font-display font-bold text-foreground">Conquistas</h1>
-              <p className="text-muted-foreground">Acompanhe seu progresso e desbloqueie badges</p>
+      <AppShell onLogout={handleLogout}>
+        <div className="space-y-8 pb-20 md:pb-0">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-warning to-warning/60 mb-4">
+              <Trophy className="w-8 h-8 text-white" />
             </div>
-
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-              <Card className="text-center">
-                <CardContent className="pt-4 pb-3">
-                  <Flame className="w-6 h-6 mx-auto text-orange-500 mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{stats.streak}</p>
-                  <p className="text-xs text-muted-foreground">Streak</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-4 pb-3">
-                  <Zap className="w-6 h-6 mx-auto text-yellow-500 mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{stats.xp}</p>
-                  <p className="text-xs text-muted-foreground">XP Total</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-4 pb-3">
-                  <BookOpen className="w-6 h-6 mx-auto text-blue-500 mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{stats.lessons}</p>
-                  <p className="text-xs text-muted-foreground">Lições</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-4 pb-3">
-                  <Heart className="w-6 h-6 mx-auto text-pink-500 mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{stats.habits}</p>
-                  <p className="text-xs text-muted-foreground">Hábitos</p>
-                </CardContent>
-              </Card>
-              <Card className="text-center col-span-2 sm:col-span-1">
-                <CardContent className="pt-4 pb-3">
-                  <Target className="w-6 h-6 mx-auto text-green-500 mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{stats.readingDays}</p>
-                  <p className="text-xs text-muted-foreground">Dias Lidos</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* All Achievements */}
-            <AchievementBadges showAll />
+            <h1 className="text-3xl font-display font-bold text-foreground">Conquistas</h1>
+            <p className="text-muted-foreground">Acompanhe seu progresso e desbloqueie badges</p>
           </div>
-        </main>
-      </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <Card className="text-center">
+              <CardContent className="pt-4 pb-3">
+                <Flame className="w-6 h-6 mx-auto text-orange-500 mb-2" />
+                <p className="text-2xl font-bold text-foreground">{stats.streak}</p>
+                <p className="text-xs text-muted-foreground">Streak</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-4 pb-3">
+                <Zap className="w-6 h-6 mx-auto text-yellow-500 mb-2" />
+                <p className="text-2xl font-bold text-foreground">{stats.xp}</p>
+                <p className="text-xs text-muted-foreground">XP Total</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-4 pb-3">
+                <BookOpen className="w-6 h-6 mx-auto text-blue-500 mb-2" />
+                <p className="text-2xl font-bold text-foreground">{stats.lessons}</p>
+                <p className="text-xs text-muted-foreground">Lições</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardContent className="pt-4 pb-3">
+                <Heart className="w-6 h-6 mx-auto text-pink-500 mb-2" />
+                <p className="text-2xl font-bold text-foreground">{stats.habits}</p>
+                <p className="text-xs text-muted-foreground">Hábitos</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center col-span-2 sm:col-span-1">
+              <CardContent className="pt-4 pb-3">
+                <Target className="w-6 h-6 mx-auto text-green-500 mb-2" />
+                <p className="text-2xl font-bold text-foreground">{stats.readingDays}</p>
+                <p className="text-xs text-muted-foreground">Dias Lidos</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* All Achievements */}
+          <AchievementBadges showAll />
+        </div>
+        
+        <MobileNavigation />
+      </AppShell>
     </PageTransition>
   );
 }

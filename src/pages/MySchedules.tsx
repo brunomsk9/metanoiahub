@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/layout";
+import { MobileNavigation } from "@/components/layout/MobileNavigation";
 import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -275,10 +276,8 @@ export default function MySchedules() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
-        <Sidebar onLogout={handleLogout} userName={userName} />
-        
-        <main className="pt-16 lg:pt-20 px-4 pb-8 max-w-4xl mx-auto">
+      <AppShell onLogout={handleLogout} userName={userName}>
+        <div className="pb-20 md:pb-0">
           <div className="mb-8">
             <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
               Minhas Escalas
@@ -539,8 +538,10 @@ export default function MySchedules() {
               )}
             </div>
           )}
-        </main>
-      </div>
+        </div>
+        
+        <MobileNavigation />
+      </AppShell>
     </PageTransition>
   );
 }

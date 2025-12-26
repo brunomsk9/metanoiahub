@@ -13,6 +13,12 @@ import {
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Table,
   TableBody,
   TableCell,
@@ -241,6 +247,34 @@ export function DatabaseExplorer() {
 
     // Log the export action
     logAction('export_csv', { table: selectedTable, rows_exported: tableData.rows.length });
+  };
+
+  const exportToJson = () => {
+    if (!tableData || tableData.rows.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não há dados para exportar.',
+      });
+      return;
+    }
+
+    const json = JSON.stringify(tableData.rows, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${selectedTable}_export_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Exportado!',
+      description: `${tableData.rows.length} registros exportados para JSON.`,
+    });
+
+    // Log the export action
+    logAction('export_json', { table: selectedTable, rows_exported: tableData.rows.length });
   };
 
   const logAction = async (action: string, details: Record<string, unknown>) => {
@@ -909,10 +943,23 @@ export function DatabaseExplorer() {
                     <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                     Atualizar
                   </Button>
-                  <Button variant="outline" size="sm" onClick={exportToCsv} disabled={!tableData?.rows.length}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Exportar CSV
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" disabled={!tableData?.rows.length}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Exportar
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={exportToCsv}>
+                        Exportar CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={exportToJson}>
+                        Exportar JSON
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button size="sm" onClick={openInsertDialog} disabled={!tableData}>
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Registro
