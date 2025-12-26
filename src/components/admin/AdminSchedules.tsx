@@ -739,7 +739,7 @@ export function AdminSchedules() {
 
       {/* Dialog: Service Type */}
       <Dialog open={isServiceTypeDialogOpen} onOpenChange={(open) => { setIsServiceTypeDialogOpen(open); if (!open) resetServiceTypeForm(); }}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col p-0">
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col min-h-0 p-0">
           <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-primary/10">
@@ -754,7 +754,7 @@ export function AdminSchedules() {
             </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6">
             <div className="space-y-6 py-6">
               {/* Basic Info Section */}
               <div className="space-y-4">
@@ -901,7 +901,7 @@ export function AdminSchedules() {
                 )}
               </div>
             </div>
-          </ScrollArea>
+          </div>
           
           <DialogFooter className="flex-shrink-0 px-6 py-4 border-t bg-muted/30">
             <Button variant="outline" onClick={() => setIsServiceTypeDialogOpen(false)}>
