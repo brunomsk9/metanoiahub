@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
@@ -14,9 +14,9 @@ import {
   ChevronRight,
   ShieldAlert,
   FolderOpen,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,74 +30,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useSidebarState } from "./AppShell";
-
-// Cache for user roles
-let cachedRoles: {
-  isAdmin: boolean;
-  isDiscipulador: boolean;
-  isSuperAdmin: boolean;
-  isLiderMinisterial: boolean;
-  userId: string | null;
-} = {
-  isAdmin: false,
-  isDiscipulador: false,
-  isSuperAdmin: false,
-  isLiderMinisterial: false,
-  userId: null,
-};
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 export const DesktopSidebar = memo(function DesktopSidebar() {
   const location = useLocation();
   const { isCollapsed, setIsCollapsed } = useSidebarState();
-  const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
-  const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
-  const [isLiderMinisterial, setIsLiderMinisterial] = useState(cachedRoles.isLiderMinisterial);
   const [learningOpen, setLearningOpen] = useState(true);
+  
+  const { isAdmin, isDiscipulador, isSuperAdmin, isLiderMinisterial } = useUserRoles();
 
-  useEffect(() => {
-    checkRoles();
-  }, []);
-
-  const checkRoles = useCallback(async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session) {
-      if (cachedRoles.userId === session.user.id) {
-        setIsAdmin(cachedRoles.isAdmin);
-        setIsDiscipulador(cachedRoles.isDiscipulador);
-        setIsSuperAdmin(cachedRoles.isSuperAdmin);
-        setIsLiderMinisterial(cachedRoles.isLiderMinisterial);
-        return;
-      }
-
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id);
-
-      const userRoles = roles?.map((r) => r.role) || [];
-      const admin = userRoles.includes("admin");
-      const discipulador = userRoles.includes("discipulador");
-      const superAdmin = userRoles.includes("super_admin");
-      const liderMinisterial = userRoles.includes("lider_ministerial");
-
-      cachedRoles = {
-        isAdmin: admin,
-        isDiscipulador: discipulador,
-        isSuperAdmin: superAdmin,
-        isLiderMinisterial: liderMinisterial,
-        userId: session.user.id,
-      };
-
-      setIsAdmin(admin);
-      setIsDiscipulador(discipulador);
-      setIsSuperAdmin(superAdmin);
-      setIsLiderMinisterial(liderMinisterial);
-    }
-  }, []);
-
+  // Learning items - same as mobile
   const learningItems = [
     { path: "/trilhas", label: "Trilhas", icon: GraduationCap },
     { path: "/biblioteca", label: "Biblioteca", icon: BookMarked },
@@ -240,8 +182,16 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
             active={location.pathname === "/minhas-escalas" || (location.pathname === "/admin" && location.search.includes("escalas"))}
           />
 
+          {/* Perfil */}
+          <NavItem
+            to="/perfil"
+            icon={User}
+            label="Meu Perfil"
+            active={location.pathname === "/perfil"}
+          />
+
           {/* Admin Section */}
-          {(isAdmin || isDiscipulador || isLiderMinisterial) && (
+          {(isAdmin || isDiscipulador || isLiderMinisterial || isSuperAdmin) && (
             <div className={cn("pt-4 mt-4 border-t border-border/50", isCollapsed && "pt-2 mt-2")}>
               {!isCollapsed && (
                 <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -261,7 +211,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
                 />
               )}
 
-              {isDiscipulador && (
+              {isDiscipulador && !isAdmin && (
                 <NavItem
                   to="/admin"
                   icon={Users}

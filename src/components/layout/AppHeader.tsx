@@ -4,7 +4,6 @@ import {
   ChevronLeft, 
   Bell, 
   Menu, 
-  X, 
   Home, 
   GraduationCap, 
   Trophy, 
@@ -27,8 +26,8 @@ import { useChurch } from "@/contexts/ChurchContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 interface AppHeaderProps {
   title?: string;
@@ -37,21 +36,6 @@ interface AppHeaderProps {
   className?: string;
   transparent?: boolean;
 }
-
-// Cache for user roles
-let cachedRoles: {
-  isAdmin: boolean;
-  isDiscipulador: boolean;
-  isSuperAdmin: boolean;
-  isLiderMinisterial: boolean;
-  userId: string | null;
-} = {
-  isAdmin: false,
-  isDiscipulador: false,
-  isSuperAdmin: false,
-  isLiderMinisterial: false,
-  userId: null,
-};
 
 export const AppHeader = memo(function AppHeader({
   title,
@@ -65,53 +49,23 @@ export const AppHeader = memo(function AppHeader({
   const navigate = useNavigate();
   const isHome = location.pathname === "/dashboard";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(cachedRoles.isAdmin);
-  const [isDiscipulador, setIsDiscipulador] = useState(cachedRoles.isDiscipulador);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(cachedRoles.isSuperAdmin);
-  const [isLiderMinisterial, setIsLiderMinisterial] = useState(cachedRoles.isLiderMinisterial);
   const [userName, setUserName] = useState("");
   const [learningOpen, setLearningOpen] = useState(true);
+  
+  const { isAdmin, isDiscipulador, isSuperAdmin, isLiderMinisterial, userId } = useUserRoles();
 
   useEffect(() => {
-    checkRoles();
-  }, []);
-
-  const checkRoles = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      if (cachedRoles.userId === session.user.id) {
-        setIsAdmin(cachedRoles.isAdmin);
-        setIsDiscipulador(cachedRoles.isDiscipulador);
-        setIsSuperAdmin(cachedRoles.isSuperAdmin);
-        setIsLiderMinisterial(cachedRoles.isLiderMinisterial);
-      } else {
-        const [rolesRes, profileRes] = await Promise.all([
-          supabase.from("user_roles").select("role").eq("user_id", session.user.id),
-          supabase.from("profiles").select("nome").eq("id", session.user.id).single()
-        ]);
-
-        const userRoles = rolesRes.data?.map((r) => r.role) || [];
-        const admin = userRoles.includes("admin");
-        const discipulador = userRoles.includes("discipulador");
-        const superAdmin = userRoles.includes("super_admin");
-        const liderMinisterial = userRoles.includes("lider_ministerial");
-
-        cachedRoles = {
-          isAdmin: admin,
-          isDiscipulador: discipulador,
-          isSuperAdmin: superAdmin,
-          isLiderMinisterial: liderMinisterial,
-          userId: session.user.id,
-        };
-
-        setIsAdmin(admin);
-        setIsDiscipulador(discipulador);
-        setIsSuperAdmin(superAdmin);
-        setIsLiderMinisterial(liderMinisterial);
-        setUserName(profileRes.data?.nome || "");
-      }
-    }
-  }, []);
+    const fetchUserName = async () => {
+      if (!userId) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", userId)
+        .single();
+      setUserName(data?.nome || "");
+    };
+    fetchUserName();
+  }, [userId]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -123,7 +77,7 @@ export const AppHeader = memo(function AppHeader({
     navigate(path);
   };
 
-  // Learning items (same as desktop)
+  // Learning items - same as desktop sidebar
   const learningItems = [
     { path: "/trilhas", label: "Trilhas", icon: GraduationCap },
     { path: "/biblioteca", label: "Biblioteca", icon: BookMarked },
@@ -265,7 +219,7 @@ export const AppHeader = memo(function AppHeader({
                   </button>
 
                   {/* Admin Section */}
-                  {(isAdmin || isDiscipulador || isLiderMinisterial) && (
+                  {(isAdmin || isDiscipulador || isLiderMinisterial || isSuperAdmin) && (
                     <div className="pt-4 mt-4 border-t border-border/50 animate-fade-in" style={{ animationDelay: '175ms' }}>
                       <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Gestão
@@ -286,7 +240,7 @@ export const AppHeader = memo(function AppHeader({
                         </button>
                       )}
 
-                      {isDiscipulador && (
+                      {isDiscipulador && !isAdmin && (
                         <button
                           onClick={() => handleNavigate("/admin")}
                           className={cn(

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout";
-import { MobileNavigation } from "@/components/layout/MobileNavigation";
 import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -539,8 +538,6 @@ export default function MySchedules() {
             </div>
           )}
         </div>
-        
-        <MobileNavigation />
       </AppShell>
     </PageTransition>
   );
