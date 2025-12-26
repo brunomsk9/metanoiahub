@@ -1510,6 +1510,13 @@ export function DatabaseExplorer() {
                   >
                     <Search className="h-3 w-3 mr-1" /> Discipulados Ativos
                   </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSqlQuery("SELECT * FROM public.v_user_auth_details LIMIT 50")}
+                  >
+                    <Search className="h-3 w-3 mr-1" /> Auth Usuários
+                  </Button>
                 </div>
               </div>
 
