@@ -12,8 +12,9 @@ import { DailyHabitsCard } from "@/components/DailyHabitsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Leaderboard } from "@/components/Leaderboard";
-import { BookOpen, Flame, ChevronRight, BookMarked, Play, Users, Trophy, CalendarDays } from "lucide-react";
+import { BookOpen, Flame, ChevronRight, BookMarked, Play, Users, Trophy, CalendarDays, FileText } from "lucide-react";
 import { VolunteerSchedules } from "@/components/VolunteerSchedules";
+import { VolunteerPlaybooks } from "@/components/VolunteerPlaybooks";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
@@ -200,6 +201,17 @@ export default function Dashboard() {
                   </Suspense>
                 </CollapsibleSection>
               </section>
+            )}
+
+            {/* Playbooks do Ministério - para voluntários */}
+            {userId && churchId && (
+              <CollapsibleSection 
+                title="Playbooks" 
+                icon={<FileText className="w-4 h-4" />}
+                defaultOpen={false}
+              >
+                <VolunteerPlaybooks userId={userId} churchId={churchId} />
+              </CollapsibleSection>
             )}
 
             {/* Minhas Escalas - para todos os usuários */}
