@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { Loader2, UserPlus, AlertTriangle, Users } from 'lucide-react';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -52,13 +53,17 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDiscipuladores, setLoadingDiscipuladores] = useState(false);
   const { churchId, loading: loadingChurch } = useUserChurchId();
+  const { isAdmin, isDiscipulador, userId } = useUserRoles();
 
-  // Fetch discipuladores when modal opens
+  // Determine if user can choose discipulador (only admins can choose, discipuladores auto-assign)
+  const canChooseDiscipulador = isAdmin;
+
+  // Fetch discipuladores when modal opens (only for admins)
   useEffect(() => {
-    if (open && churchId) {
+    if (open && churchId && canChooseDiscipulador) {
       fetchDiscipuladores();
     }
-  }, [open, churchId]);
+  }, [open, churchId, canChooseDiscipulador]);
 
   const fetchDiscipuladores = async () => {
     if (!churchId) return;
@@ -150,6 +155,13 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
         return;
       }
 
+      // Determine which discipulador to use
+      // If user is a discipulador (not admin), auto-assign to themselves
+      // If user is admin, use the selected discipulador
+      const discipuladorToAssign = canChooseDiscipulador 
+        ? (selectedDiscipulador && selectedDiscipulador !== 'none' ? selectedDiscipulador : null)
+        : (isDiscipulador && userId ? userId : null);
+
       // Use the import-users edge function to create a single user
       const response = await supabase.functions.invoke('import-users', {
         body: {
@@ -195,12 +207,12 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
           }
         }
 
-        // Create discipleship relationship if a discipulador was selected
-        if (selectedDiscipulador && newUserProfile) {
+        // Create discipleship relationship if a discipulador was determined
+        if (discipuladorToAssign && newUserProfile) {
           const { error: relationshipError } = await supabase
             .from('discipleship_relationships')
             .insert({
-              discipulador_id: selectedDiscipulador,
+              discipulador_id: discipuladorToAssign,
               discipulo_id: newUserProfile.id,
               church_id: churchId,
               status: 'active'
@@ -210,14 +222,20 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
             console.error('Error creating discipleship relationship:', relationshipError);
             toast.warning('Usuário criado, mas houve erro ao vincular ao discipulador');
           } else {
-            const discipuladorNome = discipuladores.find(d => d.id === selectedDiscipulador)?.nome;
-            toast.success('Usuário criado e vinculado!', {
-              description: `Senha padrão: mudar123. Discipulador: ${discipuladorNome}`
-            });
+            if (canChooseDiscipulador) {
+              const discipuladorNome = discipuladores.find(d => d.id === discipuladorToAssign)?.nome;
+              toast.success('Usuário criado e vinculado!', {
+                description: `Senha padrão: mudar123. Discipulador: ${discipuladorNome}`
+              });
+            } else {
+              toast.success('Usuário criado e vinculado ao seu discipulado!', {
+                description: 'Senha padrão: mudar123'
+              });
+            }
           }
         } else {
           toast.success('Usuário criado com sucesso!', {
-            description: `Senha padrão: mudar123`
+            description: 'Senha padrão: mudar123'
           });
         }
         
@@ -242,14 +260,18 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
             Novo Usuário
           </DialogTitle>
           <DialogDescription>
-            Crie um novo usuário para a sua igreja. A senha padrão será <code className="bg-muted px-1 py-0.5 rounded text-xs">mudar123</code>
+            {canChooseDiscipulador 
+              ? 'Crie um novo usuário para a sua igreja.'
+              : 'Crie um novo discípulo que será vinculado ao seu discipulado.'
+            }
+            {' '}A senha padrão será <code className="bg-muted px-1 py-0.5 rounded text-xs">mudar123</code>
           </DialogDescription>
         </DialogHeader>
 
@@ -362,80 +384,95 @@ export function CreateUserModal({ open, onOpenChange, onUserCreated }: CreateUse
             )}
           </div>
 
-          <div className="space-y-3">
-            <Label>Roles (permissões)</Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="role-discipulo"
-                  checked={roles.includes('discipulo')}
-                  onCheckedChange={(checked) => handleRoleToggle('discipulo', checked as boolean)}
-                  disabled={isLoading}
-                />
-                <label htmlFor="role-discipulo" className="text-sm cursor-pointer">
-                  Discípulo
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="role-discipulador"
-                  checked={roles.includes('discipulador')}
-                  onCheckedChange={(checked) => handleRoleToggle('discipulador', checked as boolean)}
-                  disabled={isLoading}
-                />
-                <label htmlFor="role-discipulador" className="text-sm cursor-pointer">
-                  Discipulador
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="role-admin"
-                  checked={roles.includes('admin')}
-                  onCheckedChange={(checked) => handleRoleToggle('admin', checked as boolean)}
-                  disabled={isLoading}
-                />
-                <label htmlFor="role-admin" className="text-sm cursor-pointer">
-                  Admin
-                </label>
+          {/* Roles section - only show for admins */}
+          {canChooseDiscipulador && (
+            <div className="space-y-3">
+              <Label>Roles (permissões)</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="role-discipulo"
+                    checked={roles.includes('discipulo')}
+                    onCheckedChange={(checked) => handleRoleToggle('discipulo', checked as boolean)}
+                    disabled={isLoading}
+                  />
+                  <label htmlFor="role-discipulo" className="text-sm cursor-pointer">
+                    Discípulo
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="role-discipulador"
+                    checked={roles.includes('discipulador')}
+                    onCheckedChange={(checked) => handleRoleToggle('discipulador', checked as boolean)}
+                    disabled={isLoading}
+                  />
+                  <label htmlFor="role-discipulador" className="text-sm cursor-pointer">
+                    Discipulador
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="role-admin"
+                    checked={roles.includes('admin')}
+                    onCheckedChange={(checked) => handleRoleToggle('admin', checked as boolean)}
+                    disabled={isLoading}
+                  />
+                  <label htmlFor="role-admin" className="text-sm cursor-pointer">
+                    Admin
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Discipulador Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="discipulador" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Vincular a Discipulador (opcional)
-            </Label>
-            <Select
-              value={selectedDiscipulador}
-              onValueChange={setSelectedDiscipulador}
-              disabled={isLoading || loadingDiscipuladores}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={
-                  loadingDiscipuladores 
-                    ? "Carregando..." 
-                    : discipuladores.length === 0 
-                      ? "Nenhum discipulador disponível"
-                      : "Selecione um discipulador"
-                } />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Não vincular agora</SelectItem>
-                {discipuladores.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {discipuladores.length === 0 && !loadingDiscipuladores && (
-              <p className="text-xs text-muted-foreground">
-                Nenhum discipulador cadastrado na igreja. Crie um usuário com a role "Discipulador" primeiro.
-              </p>
-            )}
-          </div>
+          {/* Discipulador Selection - only show for admins */}
+          {canChooseDiscipulador && (
+            <div className="space-y-2">
+              <Label htmlFor="discipulador" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Vincular a Discipulador (opcional)
+              </Label>
+              <Select
+                value={selectedDiscipulador}
+                onValueChange={setSelectedDiscipulador}
+                disabled={isLoading || loadingDiscipuladores}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={
+                    loadingDiscipuladores 
+                      ? "Carregando..." 
+                      : discipuladores.length === 0 
+                        ? "Nenhum discipulador disponível"
+                        : "Selecione um discipulador"
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Não vincular agora</SelectItem>
+                  {discipuladores.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {discipuladores.length === 0 && !loadingDiscipuladores && (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum discipulador cadastrado na igreja. Crie um usuário com a role "Discipulador" primeiro.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Info for discipuladores */}
+          {!canChooseDiscipulador && isDiscipulador && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex gap-2">
+              <Users className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+              <div className="text-xs text-muted-foreground">
+                <p>Este usuário será automaticamente vinculado ao seu discipulado.</p>
+              </div>
+            </div>
+          )}
 
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
