@@ -1,5 +1,4 @@
 import { AppShell } from "@/components/layout";
-import { MobileNavigation } from "@/components/layout/MobileNavigation";
 import { PageTransition } from "@/components/PageTransition";
 import { AchievementBadges } from "@/components/AchievementBadges";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,7 +49,7 @@ export default function Achievements() {
   return (
     <PageTransition>
       <AppShell onLogout={handleLogout}>
-        <div className="space-y-8 pb-20 md:pb-0">
+        <div className="space-y-8 pb-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-warning to-warning/60 mb-4">
@@ -102,8 +101,6 @@ export default function Achievements() {
           {/* All Achievements */}
           <AchievementBadges showAll />
         </div>
-        
-        <MobileNavigation />
       </AppShell>
     </PageTransition>
   );
