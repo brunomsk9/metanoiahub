@@ -124,7 +124,7 @@ export function AdminSchedules() {
     if (!churchId) return;
     setLoading(true);
 
-    const [serviceTypesRes, servicesRes, schedulesRes, ministriesRes, serviceTypeMinistriesRes] = await Promise.all([
+    const [serviceTypesRes, servicesRes, schedulesRes, ministriesRes, serviceTypeMinistriesRes, positionsRes] = await Promise.all([
       supabase
         .from('service_types')
         .select('*')
@@ -156,12 +156,26 @@ export function AdminSchedules() {
         .from('service_type_ministries')
         .select('service_type_id, ministry_id, ministry:ministries(id, nome, cor, icone)')
         .eq('church_id', churchId),
+      supabase
+        .from('ministry_positions')
+        .select('ministry_id')
+        .eq('church_id', churchId)
+        .eq('is_active', true),
     ]);
+
+    // Get unique ministry IDs that have positions
+    const ministriesWithPositions = new Set(
+      (positionsRes.data || []).map(p => p.ministry_id)
+    );
 
     if (ministriesRes.error) {
       console.error('Error fetching ministries:', ministriesRes.error);
     } else {
-      setMinistries(ministriesRes.data || []);
+      // Filter to only ministries that have at least one position
+      const filteredMinistries = (ministriesRes.data || []).filter(
+        m => ministriesWithPositions.has(m.id)
+      );
+      setMinistries(filteredMinistries);
     }
 
     if (serviceTypesRes.error) {
