@@ -852,6 +852,43 @@ export function AdminSchedules() {
                   </Card>
                 ) : (
                   <div className="space-y-3">
+                    {/* Selected ministries chips */}
+                    {serviceTypeForm.selectedMinistries.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg">
+                        {serviceTypeForm.selectedMinistries.map(ministryId => {
+                          const ministry = ministries.find(m => m.id === ministryId);
+                          if (!ministry) return null;
+                          return (
+                            <div
+                              key={ministry.id}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                            >
+                              <span 
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
+                              />
+                              {ministry.nome}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setServiceTypeForm({
+                                    ...serviceTypeForm,
+                                    selectedMinistries: serviceTypeForm.selectedMinistries.filter(id => id !== ministry.id)
+                                  });
+                                }}
+                                className="ml-0.5 hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                              >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
                     {/* Search input for ministries */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
