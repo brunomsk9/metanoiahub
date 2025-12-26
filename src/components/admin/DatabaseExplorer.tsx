@@ -341,22 +341,34 @@ export function DatabaseExplorer() {
       // For other queries, we'll provide guidance
       if (type === 'select') {
         // Try to parse simple SELECT queries
-        const tableMatch = query.match(/from\s+([^\s;]+)/i);
-        if (!tableMatch) {
+        // Suporta: FROM tabela | FROM public.tabela | FROM public . tabela | FROM "public"."tabela"
+        const relationMatch = query.match(/\bfrom\s+((?:"?[\w]+"?\s*\.\s*)?"?[\w]+"?)/i);
+        if (!relationMatch) {
           throw new Error('Não foi possível identificar a tabela. Use: SELECT * FROM public.tabela');
         }
 
-        const rawRelation = tableMatch[1].trim().replace(/;$/, '').replace(/"/g, '');
+        const rawRelationToken = relationMatch[1]
+          .trim()
+          .replace(/;$/, '')
+          .replace(/"/g, '')
+          .replace(/\s*\.\s*/g, '.');
 
         // Este editor não executa SQL arbitrário; ele traduz SELECT simples para chamadas do SDK.
         // Então, funções como get_user_auth_details() não funcionam em "FROM".
-        if (rawRelation.includes('(') || rawRelation.includes(')')) {
+        if (rawRelationToken.includes('(') || rawRelationToken.includes(')')) {
           throw new Error('Este editor suporta SELECT apenas em tabelas/views. Para auth.users, use: SELECT * FROM public.v_user_auth_details');
         }
 
-        const relationParts = rawRelation.split('.');
+        const relationParts = rawRelationToken.split('.').map((p) => p.trim()).filter(Boolean);
+
+        // Ex.: "FROM public" (apenas schema)
+        if (relationParts.length === 1 && relationParts[0] === 'public') {
+          throw new Error('Você digitou apenas o schema "public". Use: SELECT * FROM public.nome_tabela');
+        }
+
         const schema = relationParts.length > 1 ? relationParts[0] : 'public';
-        const tableName = relationParts[relationParts.length - 1];
+        const tableName = relationParts.length > 1 ? relationParts[1] : relationParts[0];
+
         if (schema !== 'public') {
           throw new Error(`Schema "${schema}" não suportado aqui. Use o schema public.`);
         }
@@ -396,15 +408,21 @@ export function DatabaseExplorer() {
 
       } else {
         // For INSERT, UPDATE, DELETE - execute via supabase
-        const tableMatch = query.match(/(?:into|update|from|delete\s+from)\s+([^\s(;]+)/i);
-        if (!tableMatch) {
+        // Suporta: INTO tabela | INTO public.tabela | INTO public . tabela | "public"."tabela"
+        const relationMatch = query.match(/\b(?:into|update|delete\s+from)\s+((?:"?[\w]+"?\s*\.\s*)?"?[\w]+"?)/i);
+        if (!relationMatch) {
           throw new Error('Não foi possível identificar a tabela.');
         }
 
-        const rawRelation = tableMatch[1].trim().replace(/;$/, '').replace(/"/g, '');
-        const relationParts = rawRelation.split('.');
+        const rawRelationToken = relationMatch[1]
+          .trim()
+          .replace(/;$/, '')
+          .replace(/"/g, '')
+          .replace(/\s*\.\s*/g, '.');
+
+        const relationParts = rawRelationToken.split('.').map((p) => p.trim()).filter(Boolean);
         const schema = relationParts.length > 1 ? relationParts[0] : 'public';
-        const tableName = relationParts[relationParts.length - 1];
+        const tableName = relationParts.length > 1 ? relationParts[1] : relationParts[0];
 
         if (schema !== 'public') {
           throw new Error(`Schema "${schema}" não suportado aqui. Use o schema public.`);
