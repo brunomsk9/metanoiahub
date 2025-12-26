@@ -39,6 +39,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 // List of tables available in the public schema
 const AVAILABLE_TABLES = [
@@ -123,6 +132,16 @@ export function DatabaseExplorer() {
   const [deletingRowId, setDeletingRowId] = useState<unknown>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [pendingDeleteRowId, setPendingDeleteRowId] = useState<unknown>(null);
+  
+  // Multi-select state
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [deletingBulk, setDeletingBulk] = useState(false);
+  
+  // Insert new row state
+  const [showInsertDialog, setShowInsertDialog] = useState(false);
+  const [newRowData, setNewRowData] = useState<Record<string, string>>({});
+  const [insertingRow, setInsertingRow] = useState(false);
 
   useEffect(() => {
     loadTableData();
@@ -606,6 +625,143 @@ export function DatabaseExplorer() {
     }
   };
 
+  // Multi-select functions
+  const toggleRowSelection = (rowId: string) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(rowId)) {
+      newSelected.delete(rowId);
+    } else {
+      newSelected.add(rowId);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedRows.size === filteredRows.length) {
+      setSelectedRows(new Set());
+    } else {
+      const allIds = new Set(filteredRows.map(row => String(row['id'])));
+      setSelectedRows(allIds);
+    }
+  };
+
+  const deleteBulkRows = async () => {
+    if (selectedRows.size === 0) return;
+
+    setDeletingBulk(true);
+    setShowBulkDeleteDialog(false);
+
+    try {
+      const idsToDelete = Array.from(selectedRows);
+      
+      const { error } = await supabase
+        .from(selectedTable as any)
+        .delete()
+        .in('id', idsToDelete);
+
+      if (error) throw error;
+
+      // Log the action
+      await logAction('bulk_delete', {
+        table: selectedTable,
+        row_ids: idsToDelete,
+        count: idsToDelete.length,
+      });
+
+      toast({
+        title: 'Deletados!',
+        description: `${idsToDelete.length} registro(s) removido(s) com sucesso.`,
+      });
+
+      setSelectedRows(new Set());
+      await loadTableData();
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao deletar',
+        description: error.message,
+      });
+    } finally {
+      setDeletingBulk(false);
+    }
+  };
+
+  // Insert new row functions
+  const openInsertDialog = () => {
+    if (!tableData?.columns) return;
+    
+    // Initialize with empty values for all columns except id and created_at
+    const initialData: Record<string, string> = {};
+    tableData.columns.forEach(col => {
+      if (col !== 'id' && col !== 'created_at' && col !== 'updated_at') {
+        initialData[col] = '';
+      }
+    });
+    setNewRowData(initialData);
+    setShowInsertDialog(true);
+  };
+
+  const insertNewRow = async () => {
+    setInsertingRow(true);
+
+    try {
+      // Parse values appropriately
+      const parsedData: Record<string, unknown> = {};
+      
+      Object.entries(newRowData).forEach(([key, value]) => {
+        if (value === '' || value === 'null') {
+          parsedData[key] = null;
+        } else if (value === 'true') {
+          parsedData[key] = true;
+        } else if (value === 'false') {
+          parsedData[key] = false;
+        } else if (value.startsWith('{') || value.startsWith('[')) {
+          try {
+            parsedData[key] = JSON.parse(value);
+          } catch {
+            parsedData[key] = value;
+          }
+        } else if (!isNaN(Number(value)) && value.trim() !== '') {
+          // Keep as string unless it looks like a number field
+          parsedData[key] = value;
+        } else {
+          parsedData[key] = value;
+        }
+      });
+
+      const { error } = await supabase
+        .from(selectedTable as any)
+        .insert(parsedData as any);
+
+      if (error) throw error;
+
+      // Log the action
+      await logAction('insert_row', {
+        table: selectedTable,
+        data: parsedData,
+      });
+
+      toast({
+        title: 'Inserido!',
+        description: 'Novo registro adicionado com sucesso.',
+      });
+
+      setShowInsertDialog(false);
+      setNewRowData({});
+      await loadTableData();
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao inserir',
+        description: error.message,
+      });
+    } finally {
+      setInsertingRow(false);
+    }
+  };
+
   const filteredRows = tableData?.rows.filter(row => {
     if (!searchTerm) return true;
     return Object.values(row).some(val => 
@@ -642,7 +798,7 @@ export function DatabaseExplorer() {
                     Visualize e exporte dados de qualquer tabela do banco.
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button variant="outline" size="sm" onClick={loadTableData} disabled={loading}>
                     <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                     Atualizar
@@ -651,6 +807,25 @@ export function DatabaseExplorer() {
                     <Download className="h-4 w-4 mr-2" />
                     Exportar CSV
                   </Button>
+                  <Button size="sm" onClick={openInsertDialog} disabled={!tableData}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Registro
+                  </Button>
+                  {selectedRows.size > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => setShowBulkDeleteDialog(true)}
+                      disabled={deletingBulk}
+                    >
+                      {deletingBulk ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 mr-2" />
+                      )}
+                      Deletar ({selectedRows.size})
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -703,8 +878,17 @@ export function DatabaseExplorer() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="whitespace-nowrap bg-muted/50 sticky top-0 w-[60px]">
-                            Ações
+                          <TableHead className="whitespace-nowrap bg-muted/50 sticky top-0 w-[100px]">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedRows.size === filteredRows.length && filteredRows.length > 0}
+                                onChange={toggleSelectAll}
+                                className="h-4 w-4 rounded border-border"
+                                title="Selecionar todos"
+                              />
+                              <span className="text-xs">Ações</span>
+                            </div>
                           </TableHead>
                           {tableData.columns.map((col) => (
                             <TableHead key={col} className="whitespace-nowrap bg-muted/50 sticky top-0">
@@ -714,25 +898,37 @@ export function DatabaseExplorer() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredRows.map((row, rowIndex) => (
-                          <TableRow key={rowIndex} className="hover:bg-muted/30">
-                            {/* Actions column */}
-                            <TableCell className="w-[60px]">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => confirmDeleteRow(row['id'])}
-                                disabled={deletingRowId === row['id']}
-                                title="Deletar registro"
-                              >
-                                {deletingRowId === row['id'] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </TableCell>
+                        {filteredRows.map((row, rowIndex) => {
+                          const rowId = String(row['id']);
+                          const isSelected = selectedRows.has(rowId);
+                          
+                          return (
+                            <TableRow key={rowIndex} className={`hover:bg-muted/30 ${isSelected ? 'bg-primary/5' : ''}`}>
+                              {/* Actions column */}
+                              <TableCell className="w-[100px]">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => toggleRowSelection(rowId)}
+                                    className="h-4 w-4 rounded border-border"
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => confirmDeleteRow(row['id'])}
+                                    disabled={deletingRowId === row['id']}
+                                    title="Deletar registro"
+                                  >
+                                    {deletingRowId === row['id'] ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </TableCell>
                             {tableData.columns.map((col) => {
                               const cellId = `${rowIndex}-${col}`;
                               const value = row[col];
@@ -809,7 +1005,8 @@ export function DatabaseExplorer() {
                               );
                             })}
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </ScrollArea>
@@ -1040,6 +1237,80 @@ export function DatabaseExplorer() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Confirmation Dialog for bulk deletion */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Confirmar exclusão em lote
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a excluir permanentemente <strong>{selectedRows.size} registro(s)</strong> da tabela <strong>{selectedTable}</strong>. 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteBulkRows}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir {selectedRows.size} registro(s)
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog for inserting new row */}
+      <Dialog open={showInsertDialog} onOpenChange={setShowInsertDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Novo Registro - {selectedTable}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha os campos para inserir um novo registro. Campos vazios serão definidos como null.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4 py-4">
+              {Object.entries(newRowData).map(([column, value]) => (
+                <div key={column} className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor={column} className="text-right text-sm font-medium truncate" title={column}>
+                    {column}
+                  </Label>
+                  <Input
+                    id={column}
+                    value={value}
+                    onChange={(e) => setNewRowData(prev => ({
+                      ...prev,
+                      [column]: e.target.value,
+                    }))}
+                    className="col-span-3"
+                    placeholder={`Valor para ${column}`}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInsertDialog(false)} disabled={insertingRow}>
+              Cancelar
+            </Button>
+            <Button onClick={insertNewRow} disabled={insertingRow}>
+              {insertingRow ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-2" />
+              )}
+              Inserir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
