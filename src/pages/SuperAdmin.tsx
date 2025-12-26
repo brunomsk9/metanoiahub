@@ -115,6 +115,10 @@ interface UserData {
   roles: string[];
   created_at: string;
   genero: string | null;
+  is_transferido: boolean | null;
+  is_novo_convertido: boolean | null;
+  is_batizado: boolean | null;
+  batizou_na_igreja: boolean | null;
 }
 
 export default function SuperAdmin() {
@@ -147,6 +151,10 @@ export default function SuperAdmin() {
     church_id: '',
     genero: '',
     roles: [] as string[],
+    is_transferido: false,
+    is_novo_convertido: false,
+    is_batizado: false,
+    batizou_na_igreja: false,
   });
   const [savingRole, setSavingRole] = useState(false);
 
@@ -204,7 +212,7 @@ export default function SuperAdmin() {
   const loadUsers = async () => {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, nome, telefone, church_id, created_at, genero')
+      .select('id, nome, telefone, church_id, created_at, genero, is_transferido, is_novo_convertido, is_batizado, batizou_na_igreja')
       .order('nome');
 
     if (profilesError) {
@@ -248,6 +256,10 @@ export default function SuperAdmin() {
       roles: rolesMap.get(profile.id) || ['discipulo'],
       created_at: profile.created_at,
       genero: profile.genero,
+      is_transferido: profile.is_transferido,
+      is_novo_convertido: profile.is_novo_convertido,
+      is_batizado: profile.is_batizado,
+      batizou_na_igreja: profile.batizou_na_igreja,
     }));
 
     setUsers(usersWithData);
@@ -313,6 +325,10 @@ export default function SuperAdmin() {
       church_id: user.church_id || '',
       genero: user.genero || '',
       roles: [...user.roles],
+      is_transferido: user.is_transferido || false,
+      is_novo_convertido: user.is_novo_convertido || false,
+      is_batizado: user.is_batizado || false,
+      batizou_na_igreja: user.batizou_na_igreja || false,
     });
     setIsUserDialogOpen(true);
   };
@@ -396,7 +412,11 @@ export default function SuperAdmin() {
         nome: userFormData.nome,
         telefone: userFormData.telefone || null,
         church_id: userFormData.church_id || null,
-        genero: generoValue || null 
+        genero: generoValue || null,
+        is_transferido: userFormData.is_transferido,
+        is_novo_convertido: userFormData.is_novo_convertido,
+        is_batizado: userFormData.is_batizado,
+        batizou_na_igreja: userFormData.batizou_na_igreja
       })
       .eq('id', selectedUser.id);
 
@@ -1085,6 +1105,53 @@ export default function SuperAdmin() {
                               <SelectItem value="feminino">Feminino</SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
+                      </div>
+
+                      {/* Status Espiritual */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Status Espiritual</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="edit-transferido"
+                              checked={userFormData.is_transferido}
+                              onCheckedChange={(checked) => setUserFormData({ ...userFormData, is_transferido: checked as boolean })}
+                            />
+                            <label htmlFor="edit-transferido" className="text-sm cursor-pointer">
+                              Transferido
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="edit-novoConvertido"
+                              checked={userFormData.is_novo_convertido}
+                              onCheckedChange={(checked) => setUserFormData({ ...userFormData, is_novo_convertido: checked as boolean })}
+                            />
+                            <label htmlFor="edit-novoConvertido" className="text-sm cursor-pointer">
+                              Novo Convertido
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="edit-batizado"
+                              checked={userFormData.is_batizado}
+                              onCheckedChange={(checked) => setUserFormData({ ...userFormData, is_batizado: checked as boolean })}
+                            />
+                            <label htmlFor="edit-batizado" className="text-sm cursor-pointer">
+                              Batizado
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="edit-batizouNaIgreja"
+                              checked={userFormData.batizou_na_igreja}
+                              onCheckedChange={(checked) => setUserFormData({ ...userFormData, batizou_na_igreja: checked as boolean })}
+                            />
+                            <label htmlFor="edit-batizouNaIgreja" className="text-sm cursor-pointer">
+                              Batizou na Igreja
+                            </label>
+                          </div>
                         </div>
                       </div>
                     </div>
