@@ -73,8 +73,9 @@ import { AdminAISettings } from '@/components/admin/AdminAISettings';
 import { AdminHabits } from '@/components/admin/AdminHabits';
 import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGenerator';
 import { DatabaseConnectionPanel } from '@/components/admin/DatabaseConnectionPanel';
+import { DatabaseExplorer } from '@/components/admin/DatabaseExplorer';
 
-type ContentSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'admin-users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'database';
+type ContentSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'admin-users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'database' | 'database-explorer';
 
 const contentSections = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard },
@@ -89,6 +90,7 @@ const contentSections = [
   { id: 'ai-settings' as const, label: 'Configurações IA', icon: Bot },
   { id: 'presentation' as const, label: 'Apresentação', icon: Presentation },
   { id: 'admin-users' as const, label: 'Usuários (Admin)', icon: Users },
+  { id: 'database-explorer' as const, label: 'Explorador SQL', icon: Database },
   { id: 'database' as const, label: 'Conexão Banco', icon: Database },
 ];
 
@@ -506,6 +508,7 @@ export default function SuperAdmin() {
       case 'habits': return <AdminHabits />;
       case 'presentation': return <PresentationPdfGenerator />;
       case 'database': return <DatabaseConnectionPanel />;
+      case 'database-explorer': return <DatabaseExplorer />;
       default: return null;
     }
   };
