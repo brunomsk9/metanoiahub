@@ -118,6 +118,11 @@ export function DatabaseExplorer() {
   // Inline editing state
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [savingCell, setSavingCell] = useState(false);
+  
+  // Delete row state
+  const [deletingRowId, setDeletingRowId] = useState<unknown>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [pendingDeleteRowId, setPendingDeleteRowId] = useState<unknown>(null);
 
   useEffect(() => {
     loadTableData();
@@ -556,6 +561,51 @@ export function DatabaseExplorer() {
     }
   };
 
+  const confirmDeleteRow = (rowId: unknown) => {
+    setPendingDeleteRowId(rowId);
+    setShowDeleteDialog(true);
+  };
+
+  const deleteRow = async () => {
+    if (!pendingDeleteRowId) return;
+
+    setDeletingRowId(pendingDeleteRowId);
+    setShowDeleteDialog(false);
+
+    try {
+      const { error } = await supabase
+        .from(selectedTable as any)
+        .delete()
+        .eq('id', pendingDeleteRowId);
+
+      if (error) throw error;
+
+      // Log the action
+      await logAction('delete_row', {
+        table: selectedTable,
+        row_id: pendingDeleteRowId,
+      });
+
+      toast({
+        title: 'Deletado!',
+        description: 'Registro removido com sucesso.',
+      });
+
+      // Reload table data
+      await loadTableData();
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao deletar',
+        description: error.message,
+      });
+    } finally {
+      setDeletingRowId(null);
+      setPendingDeleteRowId(null);
+    }
+  };
+
   const filteredRows = tableData?.rows.filter(row => {
     if (!searchTerm) return true;
     return Object.values(row).some(val => 
@@ -653,6 +703,9 @@ export function DatabaseExplorer() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="whitespace-nowrap bg-muted/50 sticky top-0 w-[60px]">
+                            Ações
+                          </TableHead>
                           {tableData.columns.map((col) => (
                             <TableHead key={col} className="whitespace-nowrap bg-muted/50 sticky top-0">
                               {col}
@@ -663,6 +716,23 @@ export function DatabaseExplorer() {
                       <TableBody>
                         {filteredRows.map((row, rowIndex) => (
                           <TableRow key={rowIndex} className="hover:bg-muted/30">
+                            {/* Actions column */}
+                            <TableCell className="w-[60px]">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => confirmDeleteRow(row['id'])}
+                                disabled={deletingRowId === row['id']}
+                                title="Deletar registro"
+                              >
+                                {deletingRowId === row['id'] ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TableCell>
                             {tableData.columns.map((col) => {
                               const cellId = `${rowIndex}-${col}`;
                               const value = row[col];
@@ -938,6 +1008,34 @@ export function DatabaseExplorer() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Executar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Dialog for row deletion */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Confirmar exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a excluir permanentemente este registro da tabela <strong>{selectedTable}</strong>. 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="bg-muted p-3 rounded-lg">
+            <code className="text-sm break-all">ID: {String(pendingDeleteRowId)}</code>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDeleteRowId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteRow}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
