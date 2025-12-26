@@ -11,6 +11,10 @@ interface UserImport {
   nome: string;
   role: string;
   genero?: string;
+  is_transferido?: boolean;
+  is_novo_convertido?: boolean;
+  is_batizado?: boolean;
+  batizou_na_igreja?: boolean;
 }
 
 interface ImportResult {
@@ -145,7 +149,7 @@ serve(async (req) => {
         const genero = userData.genero?.toLowerCase().trim();
         const validGenero = genero && validGeneros.includes(genero) ? genero : null;
 
-        // Update profile with nome, church_id, genero, set needs_password_change flag and mark onboarding as completed
+        // Update profile with nome, church_id, genero, spiritual status, set needs_password_change flag and mark onboarding as completed
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
           .update({ 
@@ -153,7 +157,11 @@ serve(async (req) => {
             needs_password_change: true,
             church_id: church_id,
             onboarding_completed: true,
-            genero: validGenero
+            genero: validGenero,
+            is_transferido: userData.is_transferido || false,
+            is_novo_convertido: userData.is_novo_convertido || false,
+            is_batizado: userData.is_batizado || false,
+            batizou_na_igreja: userData.batizou_na_igreja || false
           })
           .eq('id', userId);
 
