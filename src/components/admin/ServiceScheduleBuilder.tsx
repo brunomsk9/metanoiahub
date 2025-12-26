@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw, Share2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,7 @@ import {
 } from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
+import { ScheduleExport } from './ScheduleExport';
 
 interface Service {
   id: string;
@@ -218,6 +219,9 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     ministry: Ministry;
     position: Position;
   } | null>(null);
+  
+  // Export dialog state
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   useEffect(() => {
     if (churchId) {
@@ -854,6 +858,15 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                   )}
                   Escalar Automaticamente
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsExportOpen(true)}
+                  disabled={schedules.length === 0}
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Exportar
+                </Button>
                 <Badge variant="outline" className="text-sm">
                   {schedules.length} escalado{schedules.length !== 1 ? 's' : ''}
                 </Badge>
@@ -1384,6 +1397,17 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Export Dialog */}
+      <ScheduleExport
+        service={services.find(s => s.id === selectedServiceId) || null}
+        ministries={ministries}
+        positions={positions}
+        schedules={schedules}
+        users={users}
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+      />
     </div>
   );
 }
