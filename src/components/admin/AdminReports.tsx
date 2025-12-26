@@ -5,7 +5,8 @@ import { CursosTrillhasReport } from "./reports/CursosTrillhasReport";
 import { DiscipuladoReport } from "./reports/DiscipuladoReport";
 import { PerformanceDiscipuladoresReport } from "./reports/PerformanceDiscipuladoresReport";
 import { VolunteerEngagementReport } from "./reports/VolunteerEngagementReport";
-import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck } from "lucide-react";
+import { VolunteersExportReport } from "./reports/VolunteersExportReport";
+import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck, FileSpreadsheet } from "lucide-react";
 
 export function AdminReports() {
   const [activeTab, setActiveTab] = useState("visao-geral");
@@ -13,7 +14,7 @@ export function AdminReports() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
           <TabsTrigger value="visao-geral" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">Visão Geral</span>
@@ -39,6 +40,11 @@ export function AdminReports() {
             <span className="hidden sm:inline">Voluntários</span>
             <span className="sm:hidden">Vol.</span>
           </TabsTrigger>
+          <TabsTrigger value="exportar" className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            <span className="hidden sm:inline">Exportar</span>
+            <span className="sm:hidden">Exp.</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="visao-geral" className="mt-6">
@@ -59,6 +65,10 @@ export function AdminReports() {
 
         <TabsContent value="voluntarios" className="mt-6">
           <VolunteerEngagementReport />
+        </TabsContent>
+
+        <TabsContent value="exportar" className="mt-6">
+          <VolunteersExportReport />
         </TabsContent>
       </Tabs>
     </div>
