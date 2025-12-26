@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw, Share2 } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw, Share2, MessageCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -68,6 +68,7 @@ interface Volunteer {
 interface UserProfile {
   id: string;
   nome: string;
+  telefone: string | null;
   genero: 'masculino' | 'feminino' | 'unissex' | null;
 }
 
@@ -93,15 +94,41 @@ interface ServiceScheduleBuilderProps {
   serviceId?: string;
 }
 
+// Format phone number for WhatsApp
+function formatPhoneForWhatsApp(phone: string | null): string | null {
+  if (!phone) return null;
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '');
+  // If starts with 0, assume it's a local number and add Brazil code
+  if (digits.startsWith('0')) {
+    return '55' + digits.substring(1);
+  }
+  // If doesn't start with country code (less than 12 digits), add Brazil code
+  if (digits.length <= 11) {
+    return '55' + digits;
+  }
+  return digits;
+}
+
 // Draggable Schedule Component
 function DraggableSchedule({ 
   schedule, 
-  volunteerName, 
+  volunteerName,
+  volunteerPhone,
+  serviceName,
+  serviceDate,
+  positionName,
+  ministryName,
   statusBadge, 
   onRemove 
 }: { 
   schedule: Schedule; 
-  volunteerName: string; 
+  volunteerName: string;
+  volunteerPhone: string | null;
+  serviceName: string;
+  serviceDate: string;
+  positionName: string;
+  ministryName: string;
   statusBadge: React.ReactNode; 
   onRemove: () => void;
 }) {
@@ -112,6 +139,21 @@ function DraggableSchedule({
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
+
+  const formattedPhone = formatPhoneForWhatsApp(volunteerPhone);
+
+  const handleWhatsAppClick = () => {
+    if (!formattedPhone) {
+      toast.error('Voluntário não possui telefone cadastrado');
+      return;
+    }
+    
+    const formattedDate = format(new Date(serviceDate), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
+    const message = `Olá, ${volunteerName}! 👋\n\nVocê foi escalado(a) para servir no *${serviceName}*.\n\n📅 *Data:* ${formattedDate}\n🎯 *Ministério:* ${ministryName}\n📌 *Função:* ${positionName}\n\nPor favor, confirme sua presença.\n\nDeus abençoe! 🙏`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${formattedPhone}?text=${encodedMessage}`, '_blank');
+  };
 
   return (
     <div
@@ -139,6 +181,15 @@ function DraggableSchedule({
       </div>
       <div className="flex items-center gap-2">
         {statusBadge}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleWhatsAppClick}
+          title={formattedPhone ? 'Enviar notificação via WhatsApp' : 'Telefone não cadastrado'}
+          className={formattedPhone ? 'text-green-600 hover:text-green-700 hover:bg-green-50' : 'text-muted-foreground'}
+        >
+          <MessageCircle className="h-4 w-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -312,7 +363,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         .eq('church_id', churchId),
       supabase
         .from('profiles')
-        .select('id, nome, genero')
+        .select('id, nome, genero, telefone')
         .eq('church_id', churchId)
         .order('nome'),
     ]);
@@ -394,6 +445,18 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
 
   const getVolunteerName = (volunteerId: string) => {
     return users.find(u => u.id === volunteerId)?.nome || 'Desconhecido';
+  };
+
+  const getVolunteerPhone = (volunteerId: string) => {
+    return users.find(u => u.id === volunteerId)?.telefone || null;
+  };
+
+  const getPositionName = (positionId: string) => {
+    return positions.find(p => p.id === positionId)?.nome || 'Posição';
+  };
+
+  const getMinistryName = (ministryId: string) => {
+    return ministries.find(m => m.id === ministryId)?.nome || 'Ministério';
   };
 
   const getStatusBadge = (status: string) => {
@@ -974,6 +1037,11 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                                       key={schedule.id}
                                       schedule={schedule}
                                       volunteerName={getVolunteerName(schedule.volunteer_id)}
+                                      volunteerPhone={getVolunteerPhone(schedule.volunteer_id)}
+                                      serviceName={selectedService?.nome || ''}
+                                      serviceDate={selectedService?.data_hora || ''}
+                                      positionName={getPositionName(schedule.position_id)}
+                                      ministryName={getMinistryName(schedule.ministry_id)}
                                       statusBadge={getStatusBadge(schedule.status)}
                                       onRemove={() => handleRemoveSchedule(schedule.id)}
                                     />
