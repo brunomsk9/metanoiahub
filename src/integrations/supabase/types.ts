@@ -1442,6 +1442,16 @@ export type Database = {
         Returns: number
       }
       get_max_disciples_limit: { Args: { _church_id: string }; Returns: number }
+      get_user_auth_details: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          id: string
+          last_sign_in_at: string
+        }[]
+      }
       get_user_church_id: { Args: { _user_id: string }; Returns: string }
       get_user_emails: {
         Args: never
