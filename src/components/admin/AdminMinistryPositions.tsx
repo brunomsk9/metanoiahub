@@ -57,7 +57,11 @@ interface Position {
   genero_restrito: GenderType | null;
 }
 
-export function AdminMinistryPositions() {
+interface AdminMinistryPositionsProps {
+  filterMinistryIds?: string[];
+}
+
+export function AdminMinistryPositions({ filterMinistryIds }: AdminMinistryPositionsProps) {
   const { churchId, loading: loadingChurch } = useUserChurchId();
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -229,13 +233,15 @@ export function AdminMinistryPositions() {
       .filter(p => p.nome.toLowerCase().includes(search.toLowerCase()));
   };
 
-  const filteredMinistries = ministries.filter(m => {
-    if (!search) return true;
-    const hasMatchingPosition = positions.some(
-      p => p.ministry_id === m.id && p.nome.toLowerCase().includes(search.toLowerCase())
-    );
-    return m.nome.toLowerCase().includes(search.toLowerCase()) || hasMatchingPosition;
-  });
+  const filteredMinistries = ministries
+    .filter(m => !filterMinistryIds || filterMinistryIds.includes(m.id))
+    .filter(m => {
+      if (!search) return true;
+      const hasMatchingPosition = positions.some(
+        p => p.ministry_id === m.id && p.nome.toLowerCase().includes(search.toLowerCase())
+      );
+      return m.nome.toLowerCase().includes(search.toLowerCase()) || hasMatchingPosition;
+    });
 
   if (loadingChurch || loading) {
     return (
