@@ -8,7 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Database, Table as TableIcon, Download, Play, AlertTriangle, 
-  RefreshCw, Search, Loader2, Copy, Check, Trash2, Plus, Edit
+  RefreshCw, Search, Loader2, Copy, Check, Trash2, Plus, Edit,
+  X, Save
 } from 'lucide-react';
 import {
   Table,
@@ -83,6 +84,14 @@ interface TableData {
   count: number;
 }
 
+interface EditingCell {
+  rowIndex: number;
+  column: string;
+  originalValue: unknown;
+  currentValue: string;
+  rowId: unknown;
+}
+
 export function DatabaseExplorer() {
   const { toast } = useToast();
   const [selectedTable, setSelectedTable] = useState<TableName>('profiles');
@@ -105,6 +114,10 @@ export function DatabaseExplorer() {
   
   // Copy state
   const [copiedCell, setCopiedCell] = useState<string | null>(null);
+  
+  // Inline editing state
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  const [savingCell, setSavingCell] = useState(false);
 
   useEffect(() => {
     loadTableData();
@@ -423,6 +436,126 @@ export function DatabaseExplorer() {
     return String(value);
   };
 
+  const startEditing = (rowIndex: number, column: string, value: unknown, row: Record<string, unknown>) => {
+    // Don't allow editing 'id' column directly
+    if (column === 'id') {
+      toast({
+        variant: 'destructive',
+        title: 'Não permitido',
+        description: 'O campo ID não pode ser editado diretamente.',
+      });
+      return;
+    }
+    
+    // Get the row ID for the update
+    const rowId = row['id'];
+    if (!rowId) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Esta linha não possui um ID válido para edição.',
+      });
+      return;
+    }
+
+    setEditingCell({
+      rowIndex,
+      column,
+      originalValue: value,
+      currentValue: formatCellValue(value),
+      rowId,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingCell(null);
+  };
+
+  const saveEditing = async () => {
+    if (!editingCell) return;
+
+    const { column, currentValue, originalValue, rowId } = editingCell;
+
+    // Check if value actually changed
+    if (currentValue === formatCellValue(originalValue)) {
+      setEditingCell(null);
+      return;
+    }
+
+    setSavingCell(true);
+
+    try {
+      // Parse the value appropriately
+      let parsedValue: unknown = currentValue;
+      
+      if (currentValue === 'null') {
+        parsedValue = null;
+      } else if (currentValue === 'true') {
+        parsedValue = true;
+      } else if (currentValue === 'false') {
+        parsedValue = false;
+      } else if (currentValue.startsWith('{') || currentValue.startsWith('[')) {
+        try {
+          parsedValue = JSON.parse(currentValue);
+        } catch {
+          // Keep as string if not valid JSON
+        }
+      } else if (!isNaN(Number(currentValue)) && currentValue.trim() !== '') {
+        // Check if original was a number type to preserve type
+        if (typeof originalValue === 'number') {
+          parsedValue = Number(currentValue);
+        }
+      }
+
+      const updateData: Record<string, unknown> = {
+        [column]: parsedValue,
+      };
+
+      const { error } = await supabase
+        .from(selectedTable as any)
+        .update(updateData as any)
+        .eq('id', rowId);
+
+      if (error) throw error;
+
+      // Log the action
+      await logAction('inline_edit', {
+        table: selectedTable,
+        column,
+        row_id: rowId,
+        old_value: originalValue,
+        new_value: parsedValue,
+      });
+
+      toast({
+        title: 'Atualizado!',
+        description: `Campo "${column}" atualizado com sucesso.`,
+      });
+
+      // Reload table data
+      await loadTableData();
+      setEditingCell(null);
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao salvar',
+        description: error.message,
+      });
+    } finally {
+      setSavingCell(false);
+    }
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      saveEditing();
+    } else if (e.key === 'Escape') {
+      cancelEditing();
+    }
+  };
+
   const filteredRows = tableData?.rows.filter(row => {
     if (!searchTerm) return true;
     return Object.values(row).some(val => 
@@ -499,8 +632,14 @@ export function DatabaseExplorer() {
               </div>
 
               {tableData && (
-                <div className="text-sm text-muted-foreground">
-                  {tableData.count} registro(s) • Mostrando {filteredRows.length} de {tableData.rows.length}
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    {tableData.count} registro(s) • Mostrando {filteredRows.length} de {tableData.rows.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Edit className="h-3 w-3" />
+                    Clique duplo para editar uma célula
+                  </div>
                 </div>
               )}
 
@@ -527,21 +666,75 @@ export function DatabaseExplorer() {
                             {tableData.columns.map((col) => {
                               const cellId = `${rowIndex}-${col}`;
                               const value = row[col];
+                              const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.column === col;
+                              const isIdColumn = col === 'id';
+                              
                               return (
                                 <TableCell 
                                   key={col} 
-                                  className="max-w-[200px] truncate cursor-pointer hover:bg-muted/50 transition-colors"
-                                  onClick={() => copyCell(value, cellId)}
-                                  title={formatCellValue(value)}
+                                  className={`max-w-[200px] transition-colors ${
+                                    isEditing 
+                                      ? 'p-0' 
+                                      : isIdColumn 
+                                        ? 'cursor-pointer hover:bg-muted/50' 
+                                        : 'cursor-pointer hover:bg-primary/10'
+                                  }`}
+                                  onClick={() => !isEditing && copyCell(value, cellId)}
+                                  onDoubleClick={() => !isIdColumn && startEditing(rowIndex, col, value, row)}
+                                  title={isIdColumn ? 'Clique para copiar' : 'Clique duplo para editar'}
                                 >
-                                  <div className="flex items-center gap-1">
-                                    <span className="truncate">
-                                      {formatCellValue(value)}
-                                    </span>
-                                    {copiedCell === cellId && (
-                                      <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                                    )}
-                                  </div>
+                                  {isEditing ? (
+                                    <div className="flex items-center gap-1 p-1">
+                                      <Input
+                                        value={editingCell.currentValue}
+                                        onChange={(e) => setEditingCell({
+                                          ...editingCell,
+                                          currentValue: e.target.value,
+                                        })}
+                                        onKeyDown={handleEditKeyDown}
+                                        className="h-7 text-xs min-w-[100px]"
+                                        autoFocus
+                                        disabled={savingCell}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 flex-shrink-0"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          saveEditing();
+                                        }}
+                                        disabled={savingCell}
+                                      >
+                                        {savingCell ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <Check className="h-3 w-3 text-green-500" />
+                                        )}
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 flex-shrink-0"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          cancelEditing();
+                                        }}
+                                        disabled={savingCell}
+                                      >
+                                        <X className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 truncate">
+                                      <span className="truncate">
+                                        {formatCellValue(value)}
+                                      </span>
+                                      {copiedCell === cellId && (
+                                        <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
+                                      )}
+                                    </div>
+                                  )}
                                 </TableCell>
                               );
                             })}
