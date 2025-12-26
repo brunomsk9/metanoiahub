@@ -156,9 +156,11 @@ export function AdminSchedules() {
         .eq('church_id', churchId),
     ]);
 
+    console.log('Ministries response:', ministriesRes);
     if (ministriesRes.error) {
       console.error('Error fetching ministries:', ministriesRes.error);
     } else {
+      console.log('Ministries loaded:', ministriesRes.data);
       setMinistries(ministriesRes.data || []);
     }
 
