@@ -655,7 +655,7 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
 
                     <CollapsibleContent>
                       {serviceScheds.length > 0 ? (
-                        <div className="ml-20 mt-2 space-y-2 pb-3">
+                        <div className="ml-4 sm:ml-20 mt-2 space-y-2 pb-3">
                           {/* Group by ministry */}
                           {Object.entries(
                             serviceScheds.reduce((acc, sched) => {
@@ -667,17 +667,19 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
                           ).map(([ministryName, scheds]: [string, typeof serviceScheds]) => (
                             <div key={ministryName} className="space-y-1">
                               <div className="text-sm font-medium text-muted-foreground">{ministryName}</div>
-                              <div className="grid gap-1 pl-2">
+                              <div className="grid gap-1.5 pl-2">
                                 {scheds.map((sched) => (
                                   <div
                                     key={sched.id}
-                                    className="flex items-center justify-between text-sm p-2 rounded bg-muted/30"
+                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm p-2 rounded bg-muted/30 gap-1"
                                   >
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-muted-foreground">{sched.position?.nome}:</span>
-                                      <span>{sched.volunteer?.nome || "Não atribuído"}</span>
+                                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                      <span className="text-muted-foreground text-xs sm:text-sm shrink-0">{sched.position?.nome}:</span>
+                                      <span className="truncate">{sched.volunteer?.nome || "Não atribuído"}</span>
                                     </div>
-                                    {getStatusBadge(sched.status)}
+                                    <div className="self-end sm:self-auto shrink-0">
+                                      {getStatusBadge(sched.status)}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -685,7 +687,7 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
                           ))}
                         </div>
                       ) : (
-                        <div className="ml-20 mt-2 pb-3">
+                        <div className="ml-4 sm:ml-20 mt-2 pb-3">
                           <p className="text-sm text-muted-foreground">Nenhum voluntário escalado para este culto.</p>
                         </div>
                       )}
