@@ -7,7 +7,8 @@ import { PageTransition } from "@/components/PageTransition";
 import { CelebrationModal } from "@/components/CelebrationModal";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TracksSkeleton } from "@/components/skeletons/PageSkeletons";
+
 interface Track {
   id: string;
   titulo: string;
@@ -134,13 +135,7 @@ export default function Tracks() {
             </div>
 
             {/* Loading */}
-            {loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-48 rounded-xl" />
-                ))}
-              </div>
-            )}
+            {loading && <TracksSkeleton />}
 
             {/* Grid */}
             {!loading && (

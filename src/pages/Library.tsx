@@ -18,6 +18,7 @@ import {
   Search,
   User
 } from "lucide-react";
+import { LibrarySkeleton } from "@/components/skeletons/PageSkeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Resource {

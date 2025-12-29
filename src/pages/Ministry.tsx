@@ -5,10 +5,11 @@ import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { Loader2, ShieldAlert, ArrowLeft, Building2, Calendar } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Building2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MinistrySkeleton } from '@/components/skeletons/PageSkeletons';
 
 export default function Ministry() {
   const navigate = useNavigate();
@@ -51,9 +52,9 @@ export default function Ministry() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <AppShell>
+        <MinistrySkeleton />
+      </AppShell>
     );
   }
 
