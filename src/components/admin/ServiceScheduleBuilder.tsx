@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw, Share2, MessageCircle, ChevronLeft, CalendarDays } from 'lucide-react';
+import { ActionButtons, NavigationWithActions } from '@/components/ui/action-buttons';
 import {
   Dialog,
   DialogContent,
@@ -1031,85 +1032,77 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       {/* Service Selector - Compact Navigation */}
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="py-3">
-          <div className="flex flex-col gap-2">
-            {/* Navigation with current service */}
-            <div className="flex items-center gap-1 w-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={goToPrevService}
-                disabled={!canGoPrev}
-                className="shrink-0 h-7 w-7"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              {selectedService && (
-                <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
-                  <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-sm font-medium shrink-0">
-                    {format(new Date(selectedService.data_hora), 'dd/MM')}
-                  </span>
-                  <span className="truncate text-sm">
-                    {selectedService.nome}
-                  </span>
-                  <span className="text-muted-foreground text-xs shrink-0">
-                    {format(new Date(selectedService.data_hora), 'HH:mm')}
-                  </span>
-                </div>
-              )}
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={goToNextService}
-                disabled={!canGoNext}
-                className="shrink-0 h-7 w-7"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              
-              <span className="text-xs text-muted-foreground shrink-0">
-                {currentServiceIndex + 1}/{services.length}
-              </span>
-            </div>
-            
-            {/* Actions - Second row on mobile */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBatchAutoScheduleOpen(true)}
-                className="h-7 px-2 gap-1"
-              >
-                <CalendarDays className="h-3.5 w-3.5" />
-                <span className="text-xs">Vários</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAutoSchedulePreview}
-                disabled={isAutoScheduling}
-                className="h-7 px-2 gap-1"
-              >
-                {isAutoScheduling ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Wand2 className="h-3.5 w-3.5" />
+          <NavigationWithActions
+            navigation={
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={goToPrevService}
+                  disabled={!canGoPrev}
+                  className="shrink-0 h-7 w-7"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                {selectedService && (
+                  <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                    <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-sm font-medium shrink-0">
+                      {format(new Date(selectedService.data_hora), 'dd/MM')}
+                    </span>
+                    <span className="truncate text-sm">
+                      {selectedService.nome}
+                    </span>
+                    <span className="text-muted-foreground text-xs shrink-0">
+                      {format(new Date(selectedService.data_hora), 'HH:mm')}
+                    </span>
+                  </div>
                 )}
-                <span className="text-xs">Auto</span>
-              </Button>
-              <Button
-                variant="outline"
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={goToNextService}
+                  disabled={!canGoNext}
+                  className="shrink-0 h-7 w-7"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {currentServiceIndex + 1}/{services.length}
+                </span>
+              </>
+            }
+            actions={
+              <ActionButtons
                 size="sm"
-                onClick={() => setIsExportOpen(true)}
-                disabled={schedules.length === 0}
-                className="h-7 px-2 gap-1"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                <span className="text-xs">Exportar</span>
-              </Button>
-            </div>
-          </div>
+                buttons={[
+                  {
+                    id: 'batch',
+                    label: 'Vários',
+                    icon: <CalendarDays />,
+                    onClick: () => setIsBatchAutoScheduleOpen(true),
+                  },
+                  {
+                    id: 'auto',
+                    label: 'Auto',
+                    icon: <Wand2 />,
+                    onClick: handleAutoSchedulePreview,
+                    disabled: isAutoScheduling,
+                    loading: isAutoScheduling,
+                  },
+                  {
+                    id: 'export',
+                    label: 'Exportar',
+                    icon: <Share2 />,
+                    onClick: () => setIsExportOpen(true),
+                    disabled: schedules.length === 0,
+                  },
+                ]}
+              />
+            }
+          />
         </CardContent>
       </Card>
 
