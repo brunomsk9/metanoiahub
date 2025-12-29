@@ -18,20 +18,30 @@ import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
 export default function Index() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Check session without blocking render
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
+      } else {
+        setIsChecking(false);
       }
-      setIsLoading(false);
-    };
-    checkSession();
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate('/dashboard', { replace: true });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
-  if (isLoading) {
+  // Show content immediately, only hide if we're still checking AND redirecting
+  if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 rounded-xl bg-primary animate-pulse" />
