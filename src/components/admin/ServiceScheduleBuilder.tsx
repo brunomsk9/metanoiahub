@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw, Share2, MessageCircle } from 'lucide-react';
+import { Loader2, Trash2, UserPlus, Calendar, Clock, ChevronDown, ChevronRight, Check, X, AlertCircle, Users, GripVertical, Wand2, RefreshCw, Share2, MessageCircle, ChevronLeft, CalendarDays } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -282,6 +282,12 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   
   // Export dialog state
   const [isExportOpen, setIsExportOpen] = useState(false);
+  
+  // Batch auto-schedule state
+  const [isBatchAutoScheduleOpen, setIsBatchAutoScheduleOpen] = useState(false);
+  const [selectedServicesForBatch, setSelectedServicesForBatch] = useState<string[]>([]);
+  const [isBatchScheduling, setIsBatchScheduling] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     if (churchId) {
@@ -897,28 +903,211 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     );
   }
 
+  // Get current service index for navigation
+  const currentServiceIndex = services.findIndex(s => s.id === selectedServiceId);
+  const canGoPrev = currentServiceIndex > 0;
+  const canGoNext = currentServiceIndex < services.length - 1;
+
+  const goToPrevService = () => {
+    if (canGoPrev) {
+      setSelectedServiceId(services[currentServiceIndex - 1].id);
+    }
+  };
+
+  const goToNextService = () => {
+    if (canGoNext) {
+      setSelectedServiceId(services[currentServiceIndex + 1].id);
+    }
+  };
+
+  // Handle batch auto-schedule for multiple services
+  const handleBatchAutoSchedule = async () => {
+    if (selectedServicesForBatch.length === 0) {
+      toast.error('Selecione pelo menos um culto');
+      return;
+    }
+
+    setIsBatchScheduling(true);
+    setBatchProgress({ current: 0, total: selectedServicesForBatch.length });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < selectedServicesForBatch.length; i++) {
+      const serviceId = selectedServicesForBatch[i];
+      setBatchProgress({ current: i + 1, total: selectedServicesForBatch.length });
+
+      try {
+        // Get service
+        const service = services.find(s => s.id === serviceId);
+        if (!service) continue;
+
+        for (const ministry of ministriesWithPositions) {
+          // Get positions for this ministry that are active
+          const ministryPositions = positions.filter(p => p.ministry_id === ministry.id && p.is_active);
+
+          for (const position of ministryPositions) {
+            // Check if position already has schedules
+            const existingSchedules = await supabase
+              .from('schedules')
+              .select('id')
+              .eq('service_id', serviceId)
+              .eq('position_id', position.id);
+            
+            if ((existingSchedules.data?.length || 0) >= position.quantidade_minima) continue;
+
+            // Get eligible volunteers using existing function
+            const eligibleVolunteers = getMinistryVolunteers(ministry.id, position.genero_restrito);
+            
+            // Get availability for this service
+            const { data: serviceAvailability } = await supabase
+              .from('volunteer_availability')
+              .select('*')
+              .eq('service_id', serviceId);
+
+            // Pick best volunteer (exclude already scheduled for this service)
+            const alreadyScheduledForService = await supabase
+              .from('schedules')
+              .select('volunteer_id')
+              .eq('service_id', serviceId);
+            
+            const alreadyScheduledIds = alreadyScheduledForService.data?.map(s => s.volunteer_id) || [];
+
+            const scoredVolunteers = eligibleVolunteers
+              .filter(v => !alreadyScheduledIds.includes(v.id))
+              .map(v => {
+                const isAvailable = !serviceAvailability?.some(a => a.volunteer_id === v.id && !a.is_available);
+                const recentCount = recentSchedules.filter(s => s.volunteer_id === v.id).length;
+                return { volunteer: v, isAvailable, recentCount, score: (isAvailable ? 100 : 0) - (recentCount * 10) };
+              })
+              .filter(v => v.isAvailable)
+              .sort((a, b) => b.score - a.score);
+
+            if (scoredVolunteers.length > 0) {
+              const best = scoredVolunteers[0];
+              
+              // Create schedule
+              const { error } = await supabase.from('schedules').insert({
+                service_id: serviceId,
+                ministry_id: ministry.id,
+                position_id: position.id,
+                volunteer_id: best.volunteer.id,
+                church_id: churchId,
+                created_by: currentUserId,
+                status: 'pending',
+              });
+
+              if (!error) {
+                successCount++;
+              } else {
+                errorCount++;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in batch schedule for service:', serviceId, error);
+        errorCount++;
+      }
+    }
+
+    setIsBatchScheduling(false);
+    setIsBatchAutoScheduleOpen(false);
+    setSelectedServicesForBatch([]);
+    
+    if (successCount > 0) {
+      toast.success(`${successCount} voluntário(s) escalado(s) automaticamente`);
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} erro(s) ao escalar`);
+    }
+    
+    fetchSchedules();
+    fetchRecentSchedules();
+  };
+
   return (
     <div className="space-y-6">
-      {/* Service Selector */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="flex-1">
-          <Label className="text-sm text-muted-foreground mb-2 block">Selecione o Culto/Evento</Label>
-          <div className="flex flex-wrap gap-2">
-            {services.slice(0, 5).map((service) => (
+      {/* Service Selector - Improved */}
+      <Card className="bg-muted/30 border-dashed">
+        <CardContent className="py-4">
+          <div className="flex flex-col gap-4">
+            {/* Navigation Row */}
+            <div className="flex items-center gap-3">
               <Button
-                key={service.id}
-                variant={selectedServiceId === service.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedServiceId(service.id)}
-                className="flex-shrink-0"
+                variant="outline"
+                size="icon"
+                onClick={goToPrevService}
+                disabled={!canGoPrev}
+                className="shrink-0"
               >
-                <Calendar className="h-3 w-3 mr-1" />
-                {format(new Date(service.data_hora), 'dd/MM')} - {service.nome}
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            ))}
+              
+              <div className="flex-1 overflow-x-auto">
+                <div className="flex gap-2 pb-1">
+                  {services.map((service, index) => {
+                    const isSelected = selectedServiceId === service.id;
+                    const serviceDate = new Date(service.data_hora);
+                    const isPast = serviceDate < new Date();
+                    
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => setSelectedServiceId(service.id)}
+                        className={cn(
+                          "flex flex-col items-center min-w-[80px] px-3 py-2 rounded-lg border transition-all text-center",
+                          isSelected 
+                            ? "bg-primary text-primary-foreground border-primary shadow-md" 
+                            : isPast 
+                              ? "bg-muted/50 text-muted-foreground border-muted hover:bg-muted"
+                              : "bg-background hover:bg-muted border-border hover:border-primary/50"
+                        )}
+                      >
+                        <span className={cn("text-2xl font-bold", isSelected ? "" : isPast ? "text-muted-foreground" : "text-foreground")}>
+                          {format(serviceDate, 'dd')}
+                        </span>
+                        <span className={cn("text-xs uppercase", isSelected ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                          {format(serviceDate, 'MMM', { locale: ptBR })}
+                        </span>
+                        <span className={cn("text-xs mt-1 truncate max-w-[70px]", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                          {service.nome.split(' ')[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextService}
+                disabled={!canGoNext}
+                className="shrink-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Action Row */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {services.length} culto{services.length !== 1 ? 's' : ''} agendado{services.length !== 1 ? 's' : ''}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBatchAutoScheduleOpen(true)}
+                className="gap-2"
+              >
+                <CalendarDays className="h-4 w-4" />
+                Escalar Vários Cultos
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Selected Service Info */}
       {selectedService && (
@@ -1509,6 +1698,113 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
       />
+      
+      {/* Batch Auto-Schedule Dialog */}
+      <Dialog open={isBatchAutoScheduleOpen} onOpenChange={setIsBatchAutoScheduleOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              Escalar Vários Cultos Automaticamente
+            </DialogTitle>
+            <DialogDescription>
+              Selecione os cultos que deseja escalar automaticamente. O sistema irá distribuir os voluntários de forma equilibrada.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="flex items-center justify-between mb-3">
+              <Label>Selecione os cultos:</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (selectedServicesForBatch.length === services.length) {
+                    setSelectedServicesForBatch([]);
+                  } else {
+                    setSelectedServicesForBatch(services.map(s => s.id));
+                  }
+                }}
+              >
+                {selectedServicesForBatch.length === services.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+              </Button>
+            </div>
+            
+            <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-lg p-3">
+              {services.map((service) => {
+                const isSelected = selectedServicesForBatch.includes(service.id);
+                const serviceDate = new Date(service.data_hora);
+                
+                return (
+                  <button
+                    key={service.id}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedServicesForBatch(prev => prev.filter(id => id !== service.id));
+                      } else {
+                        setSelectedServicesForBatch(prev => [...prev, service.id]);
+                      }
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
+                      isSelected 
+                        ? "bg-primary/10 border-primary" 
+                        : "bg-background border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                      isSelected ? "bg-primary border-primary" : "border-muted-foreground"
+                    )}>
+                      {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{service.nome}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {format(serviceDate, "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {isBatchScheduling && (
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm font-medium">
+                    Processando... {batchProgress.current}/{batchProgress.total}
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-background rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all" 
+                    style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }} 
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBatchAutoScheduleOpen(false)} disabled={isBatchScheduling}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleBatchAutoSchedule} 
+              disabled={isBatchScheduling || selectedServicesForBatch.length === 0}
+            >
+              {isBatchScheduling ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
+              Escalar {selectedServicesForBatch.length} Culto{selectedServicesForBatch.length !== 1 ? 's' : ''}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
