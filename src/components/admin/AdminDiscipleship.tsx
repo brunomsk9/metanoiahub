@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus } from "lucide-react";
+import { ActionButtons } from "@/components/ui/action-buttons";
 import { useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -860,19 +861,27 @@ export function AdminDiscipleship() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={() => setCreateUserModalOpen(true)}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Cadastrar Usuário
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/dashboard?novoEncontro=true')}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Encontro
-              </Button>
-            </div>
+            <ActionButtons
+              layout="stack"
+              buttons={[
+                {
+                  id: 'create-user',
+                  label: 'Cadastrar Usuário',
+                  shortLabel: 'Cadastrar',
+                  icon: <UserPlus />,
+                  onClick: () => setCreateUserModalOpen(true),
+                  variant: 'default',
+                },
+                {
+                  id: 'new-meeting',
+                  label: 'Novo Encontro',
+                  shortLabel: 'Encontro',
+                  icon: <Plus />,
+                  onClick: () => navigate('/dashboard?novoEncontro=true'),
+                  variant: 'outline',
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       )}
