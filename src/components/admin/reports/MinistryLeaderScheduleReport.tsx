@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,13 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Users, CheckCircle2, Clock, XCircle, ChevronLeft, ChevronRight, BarChart3, Download, Copy } from "lucide-react";
+import { Calendar, Users, CheckCircle2, Clock, XCircle, ChevronLeft, ChevronRight, BarChart3, Download, Copy, FileText, TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import html2pdf from "html2pdf.js";
 
 interface MinistryLeaderScheduleReportProps {
   churchId?: string;
@@ -23,6 +26,8 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
   const [selectedMinistry, setSelectedMinistry] = useState<string>("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const tableRef = useRef<HTMLDivElement>(null);
 
   // Fetch ministries the user leads
   const { data: ministries, isLoading: ministriesLoading } = useQuery({
@@ -322,6 +327,83 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
     toast.success("Copiado para a área de transferência!");
   };
 
+  const handleExportPDF = async () => {
+    if (exportData.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    const monthName = format(currentMonth, "MMMM yyyy", { locale: ptBR });
+    const ministryName = selectedMinistry === "all" 
+      ? "Todos os Ministérios" 
+      : ministries?.find(m => m.id === selectedMinistry)?.nome || "";
+
+    // Create PDF content
+    const content = document.createElement("div");
+    content.style.padding = "20px";
+    content.style.fontFamily = "Arial, sans-serif";
+    content.style.fontSize = "12px";
+    content.style.color = "#000";
+    content.style.backgroundColor = "#fff";
+
+    content.innerHTML = `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="font-size: 18px; margin: 0;">Relatório de Escalas</h1>
+        <p style="margin: 5px 0; color: #666;">${monthName} - ${ministryName}</p>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <thead>
+          <tr style="background: #f3f4f6;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Data</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Horário</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Culto</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Ministério</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Posição</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Voluntário</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${exportData.map(row => `
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 6px;">${row.data}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">${row.horario}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">${row.culto}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">${row.ministerio}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">${row.posicao}</td>
+              <td style="border: 1px solid #ddd; padding: 6px;">${row.voluntario}</td>
+              <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">
+                ${row.status === "confirmed" ? "✅" : row.status === "pending" ? "⏳" : row.status === "declined" ? "❌" : row.status}
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <div style="margin-top: 20px; font-size: 10px; color: #666; text-align: center;">
+        <p>Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+        <p>Total: ${exportData.length} registros | Confirmados: ${stats.confirmed} | Pendentes: ${stats.pending} | Recusados: ${stats.declined}</p>
+      </div>
+    `;
+
+    const opt = {
+      margin: 10,
+      filename: `escalas-${format(currentMonth, "yyyy-MM")}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+    };
+
+    toast.loading("Gerando PDF...");
+    try {
+      await html2pdf().set(opt).from(content).save();
+      toast.dismiss();
+      toast.success("PDF exportado com sucesso!");
+    } catch {
+      toast.dismiss();
+      toast.error("Erro ao gerar PDF");
+    }
+  };
+
   const isLoading = ministriesLoading || servicesLoading || schedulesLoading;
 
   if (isLoading) {
@@ -380,6 +462,10 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
             <Download className="h-4 w-4 mr-2" />
             CSV
           </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
+            <FileText className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={handleCopyWhatsApp}>
             <Copy className="h-4 w-4 mr-2" />
             WhatsApp
@@ -387,6 +473,24 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
         </div>
       </div>
 
+      {/* View Mode Toggle */}
+      <div className="flex justify-end">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "cards" | "table")} className="w-auto">
+          <TabsList className="grid grid-cols-2 w-[200px]">
+            <TabsTrigger value="cards" className="gap-1">
+              <BarChart3 className="h-4 w-4" />
+              Cards
+            </TabsTrigger>
+            <TabsTrigger value="table" className="gap-1">
+              <TableIcon className="h-4 w-4" />
+              Tabela
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {viewMode === "cards" ? (
+        <>
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -593,6 +697,56 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
           )}
         </CardContent>
       </Card>
+        </>
+      ) : (
+        /* Table View */
+        <Card ref={tableRef}>
+          <CardHeader>
+            <CardTitle>Escalas - {format(currentMonth, "MMMM yyyy", { locale: ptBR })}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {exportData.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                Nenhuma escala encontrada para este mês.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Horário</TableHead>
+                      <TableHead>Culto</TableHead>
+                      <TableHead>Ministério</TableHead>
+                      <TableHead>Posição</TableHead>
+                      <TableHead>Voluntário</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {exportData.map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{row.data}</TableCell>
+                        <TableCell>{row.horario}</TableCell>
+                        <TableCell>{row.culto}</TableCell>
+                        <TableCell>{row.ministerio}</TableCell>
+                        <TableCell>{row.posicao}</TableCell>
+                        <TableCell>{row.voluntario}</TableCell>
+                        <TableCell className="text-center">
+                          {row.status === "confirmed" && <Badge className="bg-green-500">Confirmado</Badge>}
+                          {row.status === "pending" && <Badge className="bg-yellow-500">Pendente</Badge>}
+                          {row.status === "declined" && <Badge variant="destructive">Recusado</Badge>}
+                          {row.status === "-" && <span className="text-muted-foreground">-</span>}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
