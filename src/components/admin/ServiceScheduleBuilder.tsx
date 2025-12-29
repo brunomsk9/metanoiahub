@@ -42,6 +42,14 @@ interface Service {
   nome: string;
   data_hora: string;
   is_special_event: boolean;
+  service_type_id: string | null;
+}
+
+interface ServiceTypePosition {
+  id: string;
+  service_type_id: string;
+  position_id: string;
+  quantidade_minima: number;
 }
 
 interface Ministry {
@@ -235,6 +243,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   const [services, setServices] = useState<Service[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  const [serviceTypePositions, setServiceTypePositions] = useState<ServiceTypePosition[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -337,10 +346,10 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
     if (!churchId) return;
     setLoading(true);
 
-    const [servicesRes, ministriesRes, positionsRes, volunteersRes, usersRes] = await Promise.all([
+    const [servicesRes, ministriesRes, positionsRes, volunteersRes, usersRes, serviceTypePositionsRes] = await Promise.all([
       supabase
         .from('services')
-        .select('id, nome, data_hora, is_special_event')
+        .select('id, nome, data_hora, is_special_event, service_type_id')
         .eq('church_id', churchId)
         .gte('data_hora', new Date().toISOString())
         .order('data_hora', { ascending: true })
@@ -366,6 +375,10 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
         .select('id, nome, genero, telefone')
         .eq('church_id', churchId)
         .order('nome'),
+      supabase
+        .from('service_type_positions')
+        .select('id, service_type_id, position_id, quantidade_minima')
+        .eq('church_id', churchId),
     ]);
 
     if (!servicesRes.error) setServices(servicesRes.data || []);
@@ -374,6 +387,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       setExpandedMinistries(new Set((ministriesRes.data || []).map(m => m.id)));
     }
     if (!positionsRes.error) setPositions(positionsRes.data || []);
+    if (!serviceTypePositionsRes.error) setServiceTypePositions(serviceTypePositionsRes.data || []);
     if (!volunteersRes.error) setVolunteers(volunteersRes.data || []);
     if (!usersRes.error) setUsers(usersRes.data || []);
 
@@ -416,7 +430,26 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   };
 
   const getMinistryPositions = (ministryId: string) => {
-    return positions.filter(p => p.ministry_id === ministryId);
+    const selectedService = services.find(s => s.id === selectedServiceId);
+    const serviceTypeId = selectedService?.service_type_id;
+    
+    // Get all positions for this ministry
+    const ministryPositions = positions.filter(p => p.ministry_id === ministryId);
+    
+    // If service has a type, filter to only positions configured for that type
+    if (serviceTypeId) {
+      const allowedPositionIds = serviceTypePositions
+        .filter(stp => stp.service_type_id === serviceTypeId)
+        .map(stp => stp.position_id);
+      
+      // If there are configured positions for this service type, use only those
+      if (allowedPositionIds.length > 0) {
+        return ministryPositions.filter(p => allowedPositionIds.includes(p.id));
+      }
+    }
+    
+    // Fallback: show all positions (for special events or types without configured positions)
+    return ministryPositions;
   };
 
   const getPositionSchedules = (positionId: string) => {

@@ -1085,6 +1085,55 @@ export type Database = {
           },
         ]
       }
+      service_type_positions: {
+        Row: {
+          church_id: string
+          created_at: string
+          id: string
+          position_id: string
+          quantidade_minima: number
+          service_type_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          id?: string
+          position_id: string
+          quantidade_minima?: number
+          service_type_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          id?: string
+          position_id?: string
+          quantidade_minima?: number
+          service_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_type_positions_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_type_positions_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "ministry_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_type_positions_service_type_id_fkey"
+            columns: ["service_type_id"]
+            isOneToOne: false
+            referencedRelation: "service_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_types: {
         Row: {
           church_id: string
