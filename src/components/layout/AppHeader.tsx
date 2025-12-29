@@ -100,20 +100,20 @@ export const AppHeader = memo(function AppHeader({
   const showMinistrySection = isAdmin || isLiderMinisterial;
   const ministryItems = [
     { 
-      path: "/admin?section=escalas", 
+      path: "/ministerio?tab=escalas", 
       label: "Escalas", 
       icon: CalendarDays,
-      active: location.pathname === "/admin" && location.search.includes("escalas")
+      active: location.pathname === "/ministerio" && (!location.search || location.search.includes("escalas"))
     },
     { 
-      path: "/admin?section=ministerios", 
+      path: "/ministerio?tab=rede", 
       label: "Rede Ministerial", 
       icon: Network,
-      active: location.pathname === "/admin" && location.search.includes("ministerios")
+      active: location.pathname === "/ministerio" && location.search.includes("rede")
     },
   ];
 
-  const isMinistryActive = ministryItems.some((item) => item.active);
+  const isMinistryActive = location.pathname === "/ministerio";
 
   const NavButton = ({ 
     onClick, 
@@ -276,16 +276,11 @@ export const AppHeader = memo(function AppHeader({
                     />
                   )}
 
-                  {/* Discipulado for discipuladores only */}
-                  {isDiscipulador && !isAdmin && (
+                  {/* Discipulado for discipuladores */}
+                  {(isDiscipulador || isAdmin) && (
                     <NavButton
-                      onClick={() => handleNavigate("/admin")}
-                      active={
-                        location.pathname === "/admin" && 
-                        !location.search.includes("recursos") && 
-                        !location.search.includes("escalas") &&
-                        !location.search.includes("ministerios")
-                      }
+                      onClick={() => handleNavigate("/discipulado")}
+                      active={location.pathname === "/discipulado"}
                       icon={Users}
                       label="Discipulado"
                       delay="150ms"

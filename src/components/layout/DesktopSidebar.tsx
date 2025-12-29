@@ -62,20 +62,20 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
   const showMinistrySection = isAdmin || isLiderMinisterial;
   const ministryItems = [
     { 
-      path: "/admin?section=escalas", 
+      path: "/ministerio?tab=escalas", 
       label: "Escalas", 
       icon: CalendarDays,
-      active: location.pathname === "/admin" && location.search.includes("escalas")
+      active: location.pathname === "/ministerio" && (!location.search || location.search.includes("escalas"))
     },
     { 
-      path: "/admin?section=ministerios", 
+      path: "/ministerio?tab=rede", 
       label: "Rede Ministerial", 
       icon: Network,
-      active: location.pathname === "/admin" && location.search.includes("ministerios")
+      active: location.pathname === "/ministerio" && location.search.includes("rede")
     },
   ];
 
-  const isMinistryActive = ministryItems.some((item) => item.active);
+  const isMinistryActive = location.pathname === "/ministerio";
 
   const NavItem = ({
     to,
@@ -268,17 +268,12 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
           )}
 
           {/* Discipulado for discipuladores */}
-          {isDiscipulador && !isAdmin && (
+          {(isDiscipulador || isAdmin) && (
             <NavItem
-              to="/admin"
+              to="/discipulado"
               icon={Users}
               label="Discipulado"
-              active={
-                location.pathname === "/admin" &&
-                !location.search.includes("recursos") &&
-                !location.search.includes("escalas") &&
-                !location.search.includes("ministerios")
-              }
+              active={location.pathname === "/discipulado"}
             />
           )}
 
