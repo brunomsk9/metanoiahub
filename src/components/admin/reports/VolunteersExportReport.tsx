@@ -269,7 +269,7 @@ export function VolunteersExportReport() {
             <p style="color: #888; font-size: 12px; margin: 5px 0;">Gerado em: ${dateStr}</p>
           </div>
           
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; page-break-inside: auto;">
             <thead>
               <tr style="background-color: #8B5CF6; color: white;">
                 ${selectedCols.map(c => `<th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">${c.label}</th>`).join('')}
@@ -277,7 +277,7 @@ export function VolunteersExportReport() {
             </thead>
             <tbody>
               ${volunteersToExport.map((v, index) => `
-                <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+                <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'}; page-break-inside: avoid; page-break-after: auto;">
                   ${selectedCols.map(c => `<td style="border: 1px solid #e5e7eb; padding: 10px;${c.key === 'nome' ? ' font-weight: 500;' : ''}">${getColumnValue(v, c.key)}</td>`).join('')}
                 </tr>
               `).join('')}
@@ -295,11 +295,12 @@ export function VolunteersExportReport() {
       document.body.appendChild(container);
 
       const opt = {
-        margin: 10,
+        margin: [15, 10, 15, 10],
         filename: `voluntarios_${selectedMinistryName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       await html2pdf().set(opt).from(container).save();
