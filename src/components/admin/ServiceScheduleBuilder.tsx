@@ -1031,32 +1031,30 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       {/* Service Selector - Compact Navigation */}
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="py-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Navigation with current service */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-1 flex-1 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={goToPrevService}
                 disabled={!canGoPrev}
-                className="shrink-0 h-8 w-8"
+                className="shrink-0 h-7 w-7"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               
               {selectedService && (
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-1.5 rounded-md">
-                    <span className="font-semibold">
-                      {format(new Date(selectedService.data_hora), 'dd MMM', { locale: ptBR })}
-                    </span>
-                  </div>
-                  <div className="truncate">
-                    <span className="font-medium">{selectedService.nome}</span>
-                    <span className="text-muted-foreground text-sm ml-2">
-                      {format(new Date(selectedService.data_hora), 'HH:mm')}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                  <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-sm font-medium shrink-0">
+                    {format(new Date(selectedService.data_hora), 'dd/MM')}
+                  </span>
+                  <span className="truncate text-sm">
+                    {selectedService.nome}
+                  </span>
+                  <span className="text-muted-foreground text-xs shrink-0">
+                    {format(new Date(selectedService.data_hora), 'HH:mm')}
+                  </span>
                 </div>
               )}
 
@@ -1065,49 +1063,47 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                 size="icon"
                 onClick={goToNextService}
                 disabled={!canGoNext}
-                className="shrink-0 h-8 w-8"
+                className="shrink-0 h-7 w-7"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
               
-              <span className="text-xs text-muted-foreground shrink-0">
+              <span className="text-xs text-muted-foreground">
                 {currentServiceIndex + 1}/{services.length}
               </span>
             </div>
+            
             {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsBatchAutoScheduleOpen(true)}
-                className="gap-1.5"
+                className="h-7 px-2"
               >
                 <CalendarDays className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Vários</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleAutoSchedulePreview}
                 disabled={isAutoScheduling}
-                className="gap-1.5"
+                className="h-7 px-2"
               >
                 {isAutoScheduling ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <Wand2 className="h-3.5 w-3.5" />
                 )}
-                <span className="hidden sm:inline">Auto</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsExportOpen(true)}
                 disabled={schedules.length === 0}
-                className="gap-1.5"
+                className="h-7 px-2"
               >
                 <Share2 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Exportar</span>
               </Button>
             </div>
           </div>
