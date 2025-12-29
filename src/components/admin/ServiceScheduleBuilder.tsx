@@ -1079,31 +1079,34 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                 variant="outline"
                 size="sm"
                 onClick={() => setIsBatchAutoScheduleOpen(true)}
-                className="h-7 px-2"
+                className="h-7 px-2 gap-1"
               >
                 <CalendarDays className="h-3.5 w-3.5" />
+                <span className="text-xs">Vários</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleAutoSchedulePreview}
                 disabled={isAutoScheduling}
-                className="h-7 px-2"
+                className="h-7 px-2 gap-1"
               >
                 {isAutoScheduling ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <Wand2 className="h-3.5 w-3.5" />
                 )}
+                <span className="text-xs">Auto</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsExportOpen(true)}
                 disabled={schedules.length === 0}
-                className="h-7 px-2"
+                className="h-7 px-2 gap-1"
               >
                 <Share2 className="h-3.5 w-3.5" />
+                <span className="text-xs">Exportar</span>
               </Button>
             </div>
           </div>
