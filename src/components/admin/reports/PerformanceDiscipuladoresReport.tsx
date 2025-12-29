@@ -7,8 +7,10 @@ import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Users, Flame, Calendar, CheckCircle2, TrendingUp } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
+import { usePagination } from "@/hooks/usePagination";
 
 interface DiscipuladorStats {
   id: string;
@@ -280,55 +282,79 @@ export function PerformanceDiscipuladoresReport() {
           <CardTitle>Detalhamento por Discipulador</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[600px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Discipulador</TableHead>
-                <TableHead className="text-center">Discípulos</TableHead>
-                <TableHead className="text-center">Média Streak</TableHead>
-                <TableHead className="text-center">Alicerce OK</TableHead>
-                <TableHead className="text-center">Encontros</TableHead>
-                <TableHead className="text-center">Checklist</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {discipuladores.map(disc => (
-                <TableRow key={disc.id}>
-                  <TableCell className="font-medium">{disc.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="secondary">{disc.totalDiscipulos}</Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Flame className="h-3 w-3 text-orange-500" />
-                      {disc.avgStreak}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={disc.alicerceCompleted > 0 ? "default" : "outline"}>
-                      {disc.alicerceCompleted}/{disc.totalDiscipulos}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">{disc.meetingsCount}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center gap-2">
-                      <Progress value={disc.checklistCompliance} className="h-2 w-16" />
-                      <span className="text-xs text-muted-foreground">{disc.checklistCompliance}%</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {discipuladores.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Nenhum discipulador encontrado
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <DiscipuladoresTable discipuladores={discipuladores} />
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function DiscipuladoresTable({ discipuladores }: { discipuladores: DiscipuladorStats[] }) {
+  const pagination = usePagination({ data: discipuladores, pageSize: 10 });
+
+  return (
+    <>
+      <Table className="min-w-[600px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Discipulador</TableHead>
+            <TableHead className="text-center">Discípulos</TableHead>
+            <TableHead className="text-center">Média Streak</TableHead>
+            <TableHead className="text-center">Alicerce OK</TableHead>
+            <TableHead className="text-center">Encontros</TableHead>
+            <TableHead className="text-center">Checklist</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {pagination.paginatedData.map(disc => (
+            <TableRow key={disc.id}>
+              <TableCell className="font-medium">{disc.nome}</TableCell>
+              <TableCell className="text-center">
+                <Badge variant="secondary">{disc.totalDiscipulos}</Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex items-center justify-center gap-1">
+                  <Flame className="h-3 w-3 text-orange-500" />
+                  {disc.avgStreak}
+                </div>
+              </TableCell>
+              <TableCell className="text-center">
+                <Badge variant={disc.alicerceCompleted > 0 ? "default" : "outline"}>
+                  {disc.alicerceCompleted}/{disc.totalDiscipulos}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">{disc.meetingsCount}</TableCell>
+              <TableCell className="text-center">
+                <div className="flex items-center gap-2">
+                  <Progress value={disc.checklistCompliance} className="h-2 w-16" />
+                  <span className="text-xs text-muted-foreground">{disc.checklistCompliance}%</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {discipuladores.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                Nenhum discipulador encontrado
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      {discipuladores.length > 0 && (
+        <TablePagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          startIndex={pagination.startIndex}
+          endIndex={pagination.endIndex}
+          totalItems={pagination.totalItems}
+          onPageChange={pagination.setPage}
+          onNextPage={pagination.nextPage}
+          onPrevPage={pagination.prevPage}
+          hasNextPage={pagination.hasNextPage}
+          hasPrevPage={pagination.hasPrevPage}
+        />
+      )}
+    </>
   );
 }
