@@ -401,7 +401,7 @@ export function AdminMinistryPositions({ filterMinistryIds }: AdminMinistryPosit
 
       {/* Dialog: Position */}
       <Dialog open={isPositionDialogOpen} onOpenChange={(open) => { setIsPositionDialogOpen(open); if (!open) resetPositionForm(); }}>
-        <DialogContent className="max-h-[90vh] flex flex-col">
+        <DialogContent className="max-h-[85vh] flex flex-col overflow-hidden">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle>{editingPosition ? 'Editar' : 'Nova'} Posição</DialogTitle>
             <DialogDescription>
@@ -410,7 +410,7 @@ export function AdminMinistryPositions({ filterMinistryIds }: AdminMinistryPosit
               )}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>Nome da Posição *</Label>
@@ -465,8 +465,8 @@ export function AdminMinistryPositions({ filterMinistryIds }: AdminMinistryPosit
                 </p>
               </div>
             </div>
-          </ScrollArea>
-          <DialogFooter className="flex-shrink-0 pt-4 border-t">
+          </div>
+          <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsPositionDialogOpen(false)}>
               Cancelar
             </Button>
@@ -474,7 +474,7 @@ export function AdminMinistryPositions({ filterMinistryIds }: AdminMinistryPosit
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editingPosition ? 'Salvar' : 'Criar'}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
