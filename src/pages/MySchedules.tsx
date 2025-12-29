@@ -333,22 +333,23 @@ export default function MySchedules() {
                               </div>
                             )}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               size="sm"
                               variant={availability?.is_available === true ? "default" : "outline"}
                               onClick={() => handleAvailabilityChange(service.id, true)}
                               disabled={isUpdating}
-                              className={availability?.is_available === true 
+                              className={`flex-1 sm:flex-none ${availability?.is_available === true 
                                 ? "bg-green-600 hover:bg-green-700" 
-                                : "border-green-500/30 text-green-600 hover:bg-green-500/10"}
+                                : "border-green-500/30 text-green-600 hover:bg-green-500/10"}`}
                             >
                               {isUpdating ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
                                 <>
                                   <CalendarCheck className="w-4 h-4 mr-1" />
-                                  Disponível
+                                  <span className="hidden xs:inline">Disponível</span>
+                                  <span className="xs:hidden">Disp.</span>
                                 </>
                               )}
                             </Button>
@@ -357,16 +358,17 @@ export default function MySchedules() {
                               variant={availability?.is_available === false ? "default" : "outline"}
                               onClick={() => handleAvailabilityChange(service.id, false)}
                               disabled={isUpdating}
-                              className={availability?.is_available === false 
+                              className={`flex-1 sm:flex-none ${availability?.is_available === false 
                                 ? "bg-red-600 hover:bg-red-700" 
-                                : "border-red-500/30 text-red-600 hover:bg-red-500/10"}
+                                : "border-red-500/30 text-red-600 hover:bg-red-500/10"}`}
                             >
                               {isUpdating ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                               ) : (
                                 <>
                                   <CalendarX className="w-4 h-4 mr-1" />
-                                  Indisponível
+                                  <span className="hidden xs:inline">Indisponível</span>
+                                  <span className="xs:hidden">Indisp.</span>
                                 </>
                               )}
                             </Button>

@@ -685,28 +685,34 @@ export function AdminDiscipleship() {
       </Dialog>
 
       <Tabs defaultValue="relationships" className="space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="relationships" className="gap-2">
-              <Users className="w-4 h-4" />
-              Relacionamentos
-            </TabsTrigger>
-            <TabsTrigger value="organogram" className="gap-2">
-              <GitBranch className="w-4 h-4" />
-              Organograma
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="history" className="gap-2">
-                <History className="w-4 h-4" />
-                Histórico
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            <TabsList className="bg-muted/50 w-full sm:w-auto">
+              <TabsTrigger value="relationships" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 flex-1 sm:flex-none">
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Relacionamentos</span>
+                <span className="sm:hidden">Relações</span>
               </TabsTrigger>
-            )}
-          </TabsList>
+              <TabsTrigger value="organogram" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 flex-1 sm:flex-none">
+                <GitBranch className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Organograma</span>
+                <span className="sm:hidden">Org.</span>
+              </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="history" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 flex-1 sm:flex-none">
+                  <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Histórico</span>
+                  <span className="sm:hidden">Hist.</span>
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
           
           {isAdmin && (
             <Button 
               variant="outline" 
               size="sm"
+              className="w-full sm:w-auto self-start"
               onClick={() => {
                 setNewMaxLimit(String(maxDisciplesLimit));
                 setSettingsDialogOpen(true);

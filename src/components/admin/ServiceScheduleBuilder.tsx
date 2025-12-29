@@ -1031,9 +1031,9 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
       {/* Service Selector - Compact Navigation */}
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="py-3">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2">
             {/* Navigation with current service */}
-            <div className="flex items-center gap-1 flex-1 min-w-0">
+            <div className="flex items-center gap-1 w-full">
               <Button
                 variant="ghost"
                 size="icon"
@@ -1068,13 +1068,13 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                 <ChevronRight className="h-4 w-4" />
               </Button>
               
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground shrink-0">
                 {currentServiceIndex + 1}/{services.length}
               </span>
             </div>
             
-            {/* Actions */}
-            <div className="flex items-center gap-1.5">
+            {/* Actions - Second row on mobile */}
+            <div className="flex items-center gap-1.5 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
