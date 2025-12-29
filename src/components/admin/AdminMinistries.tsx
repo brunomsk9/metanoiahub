@@ -328,18 +328,9 @@ export function AdminMinistries() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            Rede Ministerial
-          </h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Gerencie ministérios, líderes e voluntários
-          </p>
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+      {/* Header Actions */}
+      <div className="flex justify-end">
+        <div className="flex items-center gap-3">
           {isAdmin && (
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
