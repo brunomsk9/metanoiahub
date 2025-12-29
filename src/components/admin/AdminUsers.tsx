@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminUserImport } from './AdminUserImport';
 import { CreateUserModal } from './CreateUserModal';
 import { Badge } from '@/components/ui/badge';
+import { TablePagination } from '@/components/ui/table-pagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -312,90 +314,15 @@ export function AdminUsers() {
           onUserCreated={fetchUsers}
         />
 
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
-          {filteredUsers.length === 0 ? (
-            <div className="p-12 text-center">
-              <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                {search ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado ainda.'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px]">
-                <thead className="bg-muted/50 border-b border-border">
-                  <tr>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Usuário</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Roles Atuais</th>
-                    <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discípulo</th>
-                    <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discipulador</th>
-                    <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Líder Min.</th>
-                    <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Admin</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-muted/30">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
-                            {user.nome.charAt(0).toUpperCase()}
-                          </div>
-                          <p className="font-medium text-foreground">{user.nome}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.length === 0 ? (
-                            <span className="text-muted-foreground text-sm">Nenhuma</span>
-                          ) : (
-                            user.roles.map(role => (
-                              <span 
-                                key={role} 
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getRoleColor(role)}`}
-                              >
-                                {getRoleIcon(role)}
-                                {getRoleLabel(role)}
-                              </span>
-                            ))
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Checkbox
-                          checked={user.roles.includes('discipulo')}
-                          onCheckedChange={() => toggleRole(user.id, 'discipulo', user.roles.includes('discipulo'))}
-                          disabled={saving === user.id}
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Checkbox
-                          checked={user.roles.includes('discipulador')}
-                          onCheckedChange={() => toggleRole(user.id, 'discipulador', user.roles.includes('discipulador'))}
-                          disabled={saving === user.id}
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Checkbox
-                          checked={user.roles.includes('lider_ministerial')}
-                          onCheckedChange={() => toggleRole(user.id, 'lider_ministerial', user.roles.includes('lider_ministerial'))}
-                          disabled={saving === user.id}
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Checkbox
-                          checked={user.roles.includes('admin')}
-                          onCheckedChange={() => toggleRole(user.id, 'admin', user.roles.includes('admin'))}
-                          disabled={saving === user.id}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <UsersTable 
+          users={filteredUsers} 
+          search={search}
+          saving={saving}
+          toggleRole={toggleRole}
+          getRoleIcon={getRoleIcon}
+          getRoleColor={getRoleColor}
+          getRoleLabel={getRoleLabel}
+        />
 
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
           <h4 className="font-medium text-foreground mb-2">Sobre as Roles</h4>
@@ -424,5 +351,124 @@ export function AdminUsers() {
         <AdminUserImport />
       </TabsContent>
     </Tabs>
+  );
+}
+
+interface UsersTableProps {
+  users: UserWithRoles[];
+  search: string;
+  saving: string | null;
+  toggleRole: (userId: string, role: AppRole, hasRole: boolean) => void;
+  getRoleIcon: (role: AppRole) => React.ReactNode;
+  getRoleColor: (role: AppRole) => string;
+  getRoleLabel: (role: AppRole) => string;
+}
+
+function UsersTable({ users, search, saving, toggleRole, getRoleIcon, getRoleColor, getRoleLabel }: UsersTableProps) {
+  const pagination = usePagination({ data: users, pageSize: 15 });
+
+  if (users.length === 0) {
+    return (
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-12 text-center">
+          <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            {search ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado ainda.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px]">
+          <thead className="bg-muted/50 border-b border-border">
+            <tr>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Usuário</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Roles Atuais</th>
+              <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discípulo</th>
+              <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discipulador</th>
+              <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Líder Min.</th>
+              <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Admin</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {pagination.paginatedData.map((user) => (
+              <tr key={user.id} className="hover:bg-muted/30">
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                      {user.nome.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="font-medium text-foreground">{user.nome}</p>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex flex-wrap gap-1">
+                    {user.roles.length === 0 ? (
+                      <span className="text-muted-foreground text-sm">Nenhuma</span>
+                    ) : (
+                      user.roles.map(role => (
+                        <span 
+                          key={role} 
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${getRoleColor(role)}`}
+                        >
+                          {getRoleIcon(role)}
+                          {getRoleLabel(role)}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Checkbox
+                    checked={user.roles.includes('discipulo')}
+                    onCheckedChange={() => toggleRole(user.id, 'discipulo', user.roles.includes('discipulo'))}
+                    disabled={saving === user.id}
+                  />
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Checkbox
+                    checked={user.roles.includes('discipulador')}
+                    onCheckedChange={() => toggleRole(user.id, 'discipulador', user.roles.includes('discipulador'))}
+                    disabled={saving === user.id}
+                  />
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Checkbox
+                    checked={user.roles.includes('lider_ministerial')}
+                    onCheckedChange={() => toggleRole(user.id, 'lider_ministerial', user.roles.includes('lider_ministerial'))}
+                    disabled={saving === user.id}
+                  />
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <Checkbox
+                    checked={user.roles.includes('admin')}
+                    onCheckedChange={() => toggleRole(user.id, 'admin', user.roles.includes('admin'))}
+                    disabled={saving === user.id}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-4 pb-4">
+        <TablePagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          startIndex={pagination.startIndex}
+          endIndex={pagination.endIndex}
+          totalItems={pagination.totalItems}
+          onPageChange={pagination.setPage}
+          onNextPage={pagination.nextPage}
+          onPrevPage={pagination.prevPage}
+          hasNextPage={pagination.hasNextPage}
+          hasPrevPage={pagination.hasPrevPage}
+        />
+      </div>
+    </div>
   );
 }

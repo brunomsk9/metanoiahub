@@ -7,10 +7,12 @@ import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Users, Check, X, Clock, TrendingUp, Calendar, Percent } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { usePagination } from "@/hooks/usePagination";
 
 interface VolunteerStats {
   id: string;
@@ -438,73 +440,97 @@ export function VolunteerEngagementReport() {
           <CardTitle>Detalhamento por Voluntário</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[700px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Voluntário</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Confirmados</TableHead>
-                <TableHead className="text-center">Recusados</TableHead>
-                <TableHead className="text-center">Pendentes</TableHead>
-                <TableHead className="text-center">Taxa</TableHead>
-                <TableHead>Ministérios</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {volunteers.map(vol => (
-                <TableRow key={vol.id}>
-                  <TableCell className="font-medium">{vol.nome}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="secondary">{vol.totalSchedules}</Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-300">
-                      {vol.confirmed}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">
-                      {vol.declined}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-300">
-                      {vol.pending}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center gap-2 justify-center">
-                      <Progress value={vol.confirmationRate} className="h-2 w-12" />
-                      <span className="text-xs text-muted-foreground">{vol.confirmationRate}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {vol.ministries.slice(0, 2).map(m => (
-                        <Badge key={m} variant="outline" className="text-[10px]">
-                          {m}
-                        </Badge>
-                      ))}
-                      {vol.ministries.length > 2 && (
-                        <Badge variant="outline" className="text-[10px]">
-                          +{vol.ministries.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {volunteers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    Nenhum voluntário encontrado
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <VolunteerTable volunteers={volunteers} />
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function VolunteerTable({ volunteers }: { volunteers: VolunteerStats[] }) {
+  const pagination = usePagination({ data: volunteers, pageSize: 10 });
+
+  return (
+    <>
+      <Table className="min-w-[700px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Voluntário</TableHead>
+            <TableHead className="text-center">Total</TableHead>
+            <TableHead className="text-center">Confirmados</TableHead>
+            <TableHead className="text-center">Recusados</TableHead>
+            <TableHead className="text-center">Pendentes</TableHead>
+            <TableHead className="text-center">Taxa</TableHead>
+            <TableHead>Ministérios</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {pagination.paginatedData.map(vol => (
+            <TableRow key={vol.id}>
+              <TableCell className="font-medium">{vol.nome}</TableCell>
+              <TableCell className="text-center">
+                <Badge variant="secondary">{vol.totalSchedules}</Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-300">
+                  {vol.confirmed}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">
+                  {vol.declined}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-300">
+                  {vol.pending}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex items-center gap-2 justify-center">
+                  <Progress value={vol.confirmationRate} className="h-2 w-12" />
+                  <span className="text-xs text-muted-foreground">{vol.confirmationRate}%</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {vol.ministries.slice(0, 2).map(m => (
+                    <Badge key={m} variant="outline" className="text-[10px]">
+                      {m}
+                    </Badge>
+                  ))}
+                  {vol.ministries.length > 2 && (
+                    <Badge variant="outline" className="text-[10px]">
+                      +{vol.ministries.length - 2}
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {volunteers.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                Nenhum voluntário encontrado
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      {volunteers.length > 0 && (
+        <TablePagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          startIndex={pagination.startIndex}
+          endIndex={pagination.endIndex}
+          totalItems={pagination.totalItems}
+          onPageChange={pagination.setPage}
+          onNextPage={pagination.nextPage}
+          onPrevPage={pagination.prevPage}
+          hasNextPage={pagination.hasNextPage}
+          hasPrevPage={pagination.hasPrevPage}
+        />
+      )}
+    </>
   );
 }

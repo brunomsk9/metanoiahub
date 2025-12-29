@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Users, Filter, UserCheck, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { useUserChurchId } from "@/hooks/useUserChurchId";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { usePagination } from "@/hooks/usePagination";
 
 interface MultiMinistryVolunteer {
   id: string;
@@ -332,44 +334,72 @@ export function MultiMinistryVolunteersReport() {
               Nenhum voluntário encontrado com {minMinistries}+ ministérios
             </div>
           ) : (
-            <div className="border rounded-lg overflow-x-auto">
-              <Table className="min-w-[500px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead className="text-center w-20">Qtd</TableHead>
-                    <TableHead>Ministérios</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredVolunteers.map(volunteer => (
-                    <TableRow key={volunteer.id}>
-                      <TableCell className="font-medium">{volunteer.nome}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="default" className="text-xs">
-                          {volunteer.ministries.length}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {volunteer.ministries.map((m, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {m.nome}
-                              <span className="ml-1 opacity-60">
-                                ({getFuncaoLabel(m.funcao)})
-                              </span>
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <MultiMinistryTable volunteers={filteredVolunteers} getFuncaoLabel={getFuncaoLabel} />
           )}
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function MultiMinistryTable({ 
+  volunteers, 
+  getFuncaoLabel 
+}: { 
+  volunteers: MultiMinistryVolunteer[]; 
+  getFuncaoLabel: (funcao: string | null) => string;
+}) {
+  const pagination = usePagination({ data: volunteers, pageSize: 10 });
+
+  return (
+    <>
+      <div className="border rounded-lg overflow-x-auto">
+        <Table className="min-w-[500px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead className="text-center w-20">Qtd</TableHead>
+              <TableHead>Ministérios</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pagination.paginatedData.map(volunteer => (
+              <TableRow key={volunteer.id}>
+                <TableCell className="font-medium">{volunteer.nome}</TableCell>
+                <TableCell className="text-center">
+                  <Badge variant="default" className="text-xs">
+                    {volunteer.ministries.length}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {volunteer.ministries.map((m, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {m.nome}
+                        <span className="ml-1 opacity-60">
+                          ({getFuncaoLabel(m.funcao)})
+                        </span>
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <TablePagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        startIndex={pagination.startIndex}
+        endIndex={pagination.endIndex}
+        totalItems={pagination.totalItems}
+        onPageChange={pagination.setPage}
+        onNextPage={pagination.nextPage}
+        onPrevPage={pagination.prevPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPrevPage}
+      />
+    </>
   );
 }
