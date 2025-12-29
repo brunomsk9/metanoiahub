@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ActionButtons } from "@/components/ui/action-buttons";
 import { useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -918,327 +919,507 @@ export function AdminDiscipleship() {
               {searchTerm ? 'Nenhum resultado encontrado.' : 'Nenhum relacionamento encontrado.'}
             </p>
           ) : (
-            <div className="space-y-3">
-              {filteredRelationships.map(rel => (
-                <div
-                  key={rel.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-primary font-semibold">
-                        {(rel.discipulo?.nome || 'D')[0].toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{rel.discipulo?.nome || 'Sem nome'}</p>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        {isAdmin && rel.discipulador && (
-                          <span className="text-xs font-medium flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {rel.discipulador.nome}
-                            <Badge 
-                              variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit ? "destructive" : "secondary"}
-                              className="ml-1 text-[10px] px-1.5 py-0"
-                            >
-                              {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
-                            </Badge>
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Flame className="w-3 h-3 text-orange-500" />
-                          {rel.discipulo?.current_streak || 0} dias
+            <div className="space-y-2">
+              {filteredRelationships.map(rel => {
+                const conexaoCount = [rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length;
+                const academiaCount = [rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length;
+                
+                return (
+                <Collapsible key={rel.id} className="group">
+                  <div className="rounded-lg border bg-card overflow-hidden">
+                    {/* Compact header - always visible */}
+                    <div className="flex items-center gap-3 p-3">
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-primary font-semibold">
+                          {(rel.discipulo?.nome || 'D')[0].toUpperCase()}
                         </span>
-                        <span>{rel.discipulo?.xp_points || 0} XP</span>
+                      </div>
+                      
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{rel.discipulo?.nome || 'Sem nome'}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {isAdmin && rel.discipulador && (
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {rel.discipulador.nome}
+                              <Badge 
+                                variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit ? "destructive" : "secondary"}
+                                className="text-[10px] px-1 py-0 h-4"
+                              >
+                                {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
+                              </Badge>
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Flame className="w-3 h-3 text-orange-500" />
+                            {rel.discipulo?.current_streak || 0} dias
+                          </span>
+                          <span className="hidden sm:inline">{rel.discipulo?.xp_points || 0} XP</span>
+                        </div>
+                      </div>
+                      
+                      {/* Status indicators - compact */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {rel.alicerce_completed_presencial ? (
+                          <Award className="w-4 h-4 text-success" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        )}
+                        {getStatusBadge(rel.status)}
+                        
+                        {/* Expand button for mobile */}
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:hidden">
+                            <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                      
+                      {/* Desktop: Jornadas inline */}
+                      <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/50">
+                        {/* Conexão Inicial */}
+                        <div className="flex items-center gap-1.5">
+                          <Link className="w-3.5 h-3.5 text-accent" />
+                          {[1, 2].map((nivel) => {
+                            const key = `conexao_inicial_${nivel}` as keyof Relationship;
+                            const isChecked = rel[key] as boolean;
+                            return (
+                              <Checkbox
+                                key={nivel}
+                                id={`conexao-${rel.id}-${nivel}`}
+                                checked={isChecked}
+                                onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
+                                className="h-4 w-4 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                              />
+                            );
+                          })}
+                        </div>
+
+                        <div className="w-px h-4 bg-border" />
+
+                        {/* Academia das Nações */}
+                        <div className="flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                          {[1, 2, 3, 4].map((nivel) => {
+                            const key = `academia_nivel_${nivel}` as keyof Relationship;
+                            const isChecked = rel[key] as boolean;
+                            return (
+                              <Checkbox
+                                key={nivel}
+                                id={`academia-${rel.id}-${nivel}`}
+                                checked={isChecked}
+                                onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                className="h-4 w-4 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* Desktop: Action buttons */}
+                      <div className="hidden sm:flex items-center gap-1">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleViewProgress(rel.discipulo_id)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Progresso de {rel.discipulo?.nome}</DialogTitle>
+                            </DialogHeader>
+                            {discipleProgress && viewingProgress === rel.discipulo_id && (
+                              <div className="space-y-6 pt-4">
+                                {/* Alicerce Progress */}
+                                <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-foreground flex items-center gap-2">
+                                      <Award className="w-4 h-4 text-primary" />
+                                      Progresso Alicerce
+                                    </span>
+                                    {rel.alicerce_completed_presencial ? (
+                                      <Badge className="bg-success/10 text-success border-success/20">
+                                        Concluído ✓
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline">Em andamento</Badge>
+                                    )}
+                                  </div>
+                                  <Progress 
+                                    value={discipleProgress.alicerceTotal > 0 
+                                      ? (discipleProgress.alicerceCompleted / discipleProgress.alicerceTotal) * 100 
+                                      : 0} 
+                                  />
+                                  <p className="text-sm text-muted-foreground">
+                                    {discipleProgress.alicerceCompleted}/{discipleProgress.alicerceTotal} aulas concluídas
+                                  </p>
+                                  
+                                  {!rel.alicerce_completed_presencial && (
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button size="sm" className="w-full mt-2">
+                                          <CheckCircle className="w-4 h-4 mr-2" />
+                                          Marcar como Concluído (Presencial)
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Confirmar Conclusão Presencial</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Ao confirmar, você está atestando que {rel.discipulo?.nome} completou a jornada Alicerce presencialmente com você. 
+                                            Isso irá desbloquear todas as trilhas para o discípulo.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleMarkAlicerceComplete(rel.id, rel.discipulo?.nome || '')}>
+                                            Confirmar Conclusão
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  )}
+                                </div>
+
+                                {/* Conexão Inicial Progress */}
+                                <div className="space-y-3 p-4 rounded-lg bg-accent/10 border border-accent/20">
+                                  <div className="flex items-center gap-2">
+                                    <Link className="w-4 h-4 text-accent" />
+                                    <span className="font-semibold text-foreground">Conexão Inicial</span>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    {[1, 2].map((nivel) => {
+                                      const key = `conexao_inicial_${nivel}` as keyof Relationship;
+                                      const isChecked = rel[key] as boolean;
+                                      return (
+                                        <div key={nivel} className="flex items-center gap-2">
+                                          <Checkbox
+                                            id={`progress-conexao-${rel.id}-${nivel}`}
+                                            checked={isChecked}
+                                            onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
+                                          />
+                                          <label 
+                                            htmlFor={`progress-conexao-${rel.id}-${nivel}`}
+                                            className="text-sm cursor-pointer"
+                                          >
+                                            Encontro {nivel}
+                                          </label>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {[rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length}/2 encontros concluídos
+                                  </p>
+                                </div>
+
+                                {/* Academia das Nações Progress */}
+                                <div className="space-y-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
+                                  <div className="flex items-center gap-2">
+                                    <GraduationCap className="w-4 h-4 text-primary" />
+                                    <span className="font-semibold text-foreground">Academia das Nações</span>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    {[1, 2, 3, 4].map((nivel) => {
+                                      const key = `academia_nivel_${nivel}` as keyof Relationship;
+                                      const isChecked = rel[key] as boolean;
+                                      return (
+                                        <div key={nivel} className="flex items-center gap-2">
+                                          <Checkbox
+                                            id={`progress-academia-${rel.id}-${nivel}`}
+                                            checked={isChecked}
+                                            onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                          />
+                                          <label 
+                                            htmlFor={`progress-academia-${rel.id}-${nivel}`}
+                                            className="text-sm cursor-pointer"
+                                          >
+                                            Nível {nivel}
+                                          </label>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {[rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length}/4 níveis concluídos
+                                  </p>
+                                </div>
+
+                                {/* Lessons Progress */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="flex items-center gap-2">
+                                      <BookOpen className="w-4 h-4 text-primary" />
+                                      Aulas Concluídas (Total)
+                                    </span>
+                                    <span className="font-medium">
+                                      {discipleProgress.lessonsCompleted}/{discipleProgress.totalLessons}
+                                    </span>
+                                  </div>
+                                  <Progress 
+                                    value={(discipleProgress.lessonsCompleted / discipleProgress.totalLessons) * 100} 
+                                  />
+                                </div>
+
+                                {/* Reading Plans */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="flex items-center gap-2">
+                                      <CheckCircle className="w-4 h-4 text-green-500" />
+                                      Dias de Leitura Concluídos
+                                    </span>
+                                    <span className="font-medium">
+                                      {discipleProgress.readingPlansProgress} dias
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Weekly Habits */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="flex items-center gap-2">
+                                      <Flame className="w-4 h-4 text-orange-500" />
+                                      Hábitos esta Semana
+                                    </span>
+                                    <span className="font-medium">
+                                      {discipleProgress.habitsThisWeek} registros
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Streak */}
+                                <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Streak Atual</span>
+                                    <span className="text-2xl font-bold text-primary">
+                                      {rel.discipulo?.current_streak || 0} 🔥
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+
+                        {/* Transfer Button - only for admins */}
+                        {isAdmin && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => handleOpenTransferDialog(rel)}
+                            title="Transferir para outro discipulador"
+                          >
+                            <ArrowRightLeft className="w-4 h-4" />
+                          </Button>
+                        )}
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover Relacionamento</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja remover <strong>{rel.discipulo?.nome}</strong> do discipulado de <strong>{rel.discipulador?.nome}</strong>?
+                                <br /><br />
+                                Esta ação será registrada no histórico e não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleRemoveRelationship(rel.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {rel.alicerce_completed_presencial ? (
-                      <Award className="w-4 h-4 text-success" />
-                    ) : (
-                      <Lock className="w-4 h-4 text-muted-foreground" />
-                    )}
-                    {getStatusBadge(rel.status)}
-                  </div>
-
-                  {/* Jornadas */}
-                  <div className="flex items-center gap-4 px-3 py-2 rounded-lg bg-muted/50">
-                    {/* Conexão Inicial */}
-                    <div className="flex items-center gap-2">
-                      <Link className="w-4 h-4 text-accent" />
-                      {[1, 2].map((nivel) => {
-                        const key = `conexao_inicial_${nivel}` as keyof Relationship;
-                        const isChecked = rel[key] as boolean;
-                        return (
-                          <Checkbox
-                            key={nivel}
-                            id={`conexao-${rel.id}-${nivel}`}
-                            checked={isChecked}
-                            onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
-                            className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                          />
-                        );
-                      })}
-                    </div>
-
-                    <div className="w-px h-4 bg-border" />
-
-                    {/* Academia das Nações */}
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-primary" />
-                      {[1, 2, 3, 4].map((nivel) => {
-                        const key = `academia_nivel_${nivel}` as keyof Relationship;
-                        const isChecked = rel[key] as boolean;
-                        return (
-                          <Checkbox
-                            key={nivel}
-                            id={`academia-${rel.id}-${nivel}`}
-                            checked={isChecked}
-                            onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleViewProgress(rel.discipulo_id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Progresso de {rel.discipulo?.nome}</DialogTitle>
-                        </DialogHeader>
-                        {discipleProgress && viewingProgress === rel.discipulo_id && (
-                          <div className="space-y-6 pt-4">
-                            {/* Alicerce Progress */}
-                            <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
-                              <div className="flex items-center justify-between">
-                                <span className="font-semibold text-foreground flex items-center gap-2">
-                                  <Award className="w-4 h-4 text-primary" />
-                                  Progresso Alicerce
-                                </span>
-                                {rel.alicerce_completed_presencial ? (
-                                  <Badge className="bg-success/10 text-success border-success/20">
-                                    Concluído ✓
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline">Em andamento</Badge>
-                                )}
-                              </div>
-                              <Progress 
-                                value={discipleProgress.alicerceTotal > 0 
-                                  ? (discipleProgress.alicerceCompleted / discipleProgress.alicerceTotal) * 100 
-                                  : 0} 
-                              />
-                              <p className="text-sm text-muted-foreground">
-                                {discipleProgress.alicerceCompleted}/{discipleProgress.alicerceTotal} aulas concluídas
-                              </p>
-                              
-                              {!rel.alicerce_completed_presencial && (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button size="sm" className="w-full mt-2">
-                                      <CheckCircle className="w-4 h-4 mr-2" />
-                                      Marcar como Concluído (Presencial)
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Confirmar Conclusão Presencial</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Ao confirmar, você está atestando que {rel.discipulo?.nome} completou a jornada Alicerce presencialmente com você. 
-                                        Isso irá desbloquear todas as trilhas para o discípulo.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleMarkAlicerceComplete(rel.id, rel.discipulo?.nome || '')}>
-                                        Confirmar Conclusão
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              )}
+                    
+                    {/* Mobile: Expandable content */}
+                    <CollapsibleContent className="sm:hidden">
+                      <div className="px-3 pb-3 pt-0 space-y-3 border-t border-border/50">
+                        {/* XP and extra info */}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                          <span>{rel.discipulo?.xp_points || 0} XP</span>
+                        </div>
+                        
+                        {/* Jornadas */}
+                        <div className="flex flex-col gap-3 p-3 rounded-lg bg-muted/50">
+                          {/* Conexão Inicial */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 min-w-[110px]">
+                              <Link className="w-4 h-4 text-accent" />
+                              <span className="text-xs font-medium">Conexão</span>
+                              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                {conexaoCount}/2
+                              </Badge>
                             </div>
-
-                            {/* Conexão Inicial Progress */}
-                            <div className="space-y-3 p-4 rounded-lg bg-accent/10 border border-accent/20">
-                              <div className="flex items-center gap-2">
-                                <Link className="w-4 h-4 text-accent" />
-                                <span className="font-semibold text-foreground">Conexão Inicial</span>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                {[1, 2].map((nivel) => {
-                                  const key = `conexao_inicial_${nivel}` as keyof Relationship;
-                                  const isChecked = rel[key] as boolean;
-                                  return (
-                                    <div key={nivel} className="flex items-center gap-2">
-                                      <Checkbox
-                                        id={`progress-conexao-${rel.id}-${nivel}`}
-                                        checked={isChecked}
-                                        onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
-                                      />
-                                      <label 
-                                        htmlFor={`progress-conexao-${rel.id}-${nivel}`}
-                                        className="text-sm cursor-pointer"
-                                      >
-                                        Encontro {nivel}
-                                      </label>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {[rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length}/2 encontros concluídos
-                              </p>
-                            </div>
-
-                            {/* Academia das Nações Progress */}
-                            <div className="space-y-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
-                              <div className="flex items-center gap-2">
-                                <GraduationCap className="w-4 h-4 text-primary" />
-                                <span className="font-semibold text-foreground">Academia das Nações</span>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                {[1, 2, 3, 4].map((nivel) => {
-                                  const key = `academia_nivel_${nivel}` as keyof Relationship;
-                                  const isChecked = rel[key] as boolean;
-                                  return (
-                                    <div key={nivel} className="flex items-center gap-2">
-                                      <Checkbox
-                                        id={`progress-academia-${rel.id}-${nivel}`}
-                                        checked={isChecked}
-                                        onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                                      />
-                                      <label 
-                                        htmlFor={`progress-academia-${rel.id}-${nivel}`}
-                                        className="text-sm cursor-pointer"
-                                      >
-                                        Nível {nivel}
-                                      </label>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {[rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length}/4 níveis concluídos
-                              </p>
-                            </div>
-
-                            {/* Lessons Progress */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="flex items-center gap-2">
-                                  <BookOpen className="w-4 h-4 text-primary" />
-                                  Aulas Concluídas (Total)
-                                </span>
-                                <span className="font-medium">
-                                  {discipleProgress.lessonsCompleted}/{discipleProgress.totalLessons}
-                                </span>
-                              </div>
-                              <Progress 
-                                value={(discipleProgress.lessonsCompleted / discipleProgress.totalLessons) * 100} 
-                              />
-                            </div>
-
-                            {/* Reading Plans */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-500" />
-                                  Dias de Leitura Concluídos
-                                </span>
-                                <span className="font-medium">
-                                  {discipleProgress.readingPlansProgress} dias
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Weekly Habits */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="flex items-center gap-2">
-                                  <Flame className="w-4 h-4 text-orange-500" />
-                                  Hábitos esta Semana
-                                </span>
-                                <span className="font-medium">
-                                  {discipleProgress.habitsThisWeek} registros
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Streak */}
-                            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Streak Atual</span>
-                                <span className="text-2xl font-bold text-primary">
-                                  {rel.discipulo?.current_streak || 0} 🔥
-                                </span>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              {[1, 2].map((nivel) => {
+                                const key = `conexao_inicial_${nivel}` as keyof Relationship;
+                                const isChecked = rel[key] as boolean;
+                                return (
+                                  <Checkbox
+                                    key={nivel}
+                                    id={`mobile-conexao-${rel.id}-${nivel}`}
+                                    checked={isChecked}
+                                    onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
+                                    className="h-5 w-5 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                                  />
+                                );
+                              })}
                             </div>
                           </div>
-                        )}
-                      </DialogContent>
-                    </Dialog>
 
-                    {/* Transfer Button - only for admins */}
-                    {isAdmin && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        onClick={() => handleOpenTransferDialog(rel)}
-                        title="Transferir para outro discipulador"
-                      >
-                        <ArrowRightLeft className="w-4 h-4" />
-                      </Button>
-                    )}
+                          {/* Academia das Nações */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 min-w-[110px]">
+                              <GraduationCap className="w-4 h-4 text-primary" />
+                              <span className="text-xs font-medium">Academia</span>
+                              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                {academiaCount}/4
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {[1, 2, 3, 4].map((nivel) => {
+                                const key = `academia_nivel_${nivel}` as keyof Relationship;
+                                const isChecked = rel[key] as boolean;
+                                return (
+                                  <Checkbox
+                                    key={nivel}
+                                    id={`mobile-academia-${rel.id}-${nivel}`}
+                                    checked={isChecked}
+                                    onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                    className="h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => handleViewProgress(rel.discipulo_id)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                Ver Progresso
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Progresso de {rel.discipulo?.nome}</DialogTitle>
+                              </DialogHeader>
+                              {discipleProgress && viewingProgress === rel.discipulo_id && (
+                                <div className="space-y-4 pt-4">
+                                  {/* Compact mobile progress view */}
+                                  <div className="space-y-2 p-3 rounded-lg bg-primary/5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm flex items-center gap-2">
+                                        <Award className="w-4 h-4 text-primary" />
+                                        Alicerce
+                                      </span>
+                                      {rel.alicerce_completed_presencial ? (
+                                        <Badge className="bg-success/10 text-success text-xs">Concluído</Badge>
+                                      ) : (
+                                        <span className="text-xs">{discipleProgress.alicerceCompleted}/{discipleProgress.alicerceTotal}</span>
+                                      )}
+                                    </div>
+                                    <Progress 
+                                      value={discipleProgress.alicerceTotal > 0 
+                                        ? (discipleProgress.alicerceCompleted / discipleProgress.alicerceTotal) * 100 
+                                        : 0} 
+                                      className="h-2"
+                                    />
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div className="p-3 rounded-lg bg-muted/50 text-center">
+                                      <BookOpen className="w-4 h-4 mx-auto mb-1 text-primary" />
+                                      <p className="font-medium">{discipleProgress.lessonsCompleted}/{discipleProgress.totalLessons}</p>
+                                      <p className="text-xs text-muted-foreground">Aulas</p>
+                                    </div>
+                                    <div className="p-3 rounded-lg bg-muted/50 text-center">
+                                      <Flame className="w-4 h-4 mx-auto mb-1 text-orange-500" />
+                                      <p className="font-medium">{rel.discipulo?.current_streak || 0}</p>
+                                      <p className="text-xs text-muted-foreground">Streak</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
 
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover Relacionamento</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja remover <strong>{rel.discipulo?.nome}</strong> do discipulado de <strong>{rel.discipulador?.nome}</strong>?
-                            <br /><br />
-                            Esta ação será registrada no histórico e não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleRemoveRelationship(rel.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Remover
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                          {isAdmin && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-blue-600"
+                              onClick={() => handleOpenTransferDialog(rel)}
+                            >
+                              <ArrowRightLeft className="w-4 h-4" />
+                            </Button>
+                          )}
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remover Relacionamento</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja remover <strong>{rel.discipulo?.nome}</strong>?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleRemoveRelationship(rel.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Remover
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
                   </div>
-                </div>
-              ))}
+                </Collapsible>
+              )})}
             </div>
           )}
         </CardContent>
