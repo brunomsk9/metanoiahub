@@ -332,8 +332,8 @@ export function MultiMinistryVolunteersReport() {
               Nenhum voluntário encontrado com {minMinistries}+ ministérios
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
+            <div className="border rounded-lg overflow-x-auto">
+              <Table className="min-w-[500px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
