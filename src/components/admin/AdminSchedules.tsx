@@ -62,6 +62,15 @@ interface ServiceType {
   is_active: boolean;
   church_id: string;
   ministries?: Ministry[];
+  positions?: string[]; // Position IDs for this service type
+}
+
+interface Position {
+  id: string;
+  nome: string;
+  ministry_id: string;
+  quantidade_minima: number;
+  is_active: boolean;
 }
 
 interface Service {
@@ -474,6 +483,8 @@ export function AdminSchedules() {
   const [services, setServices] = useState<Service[]>([]);
   const [allSchedules, setAllSchedules] = useState<any[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const [allPositions, setAllPositions] = useState<Position[]>([]);
+  const [serviceTypePositions, setServiceTypePositions] = useState<{service_type_id: string; position_id: string}[]>([]);
   const [userLeaderMinistries, setUserLeaderMinistries] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -498,6 +509,7 @@ export function AdminSchedules() {
     horario: '',
     is_recurring: true,
     selectedMinistries: [] as string[],
+    selectedPositions: [] as string[],
   });
   
   const [serviceForm, setServiceForm] = useState({
@@ -518,7 +530,7 @@ export function AdminSchedules() {
     if (!churchId) return;
     setLoading(true);
 
-    const [serviceTypesRes, servicesRes, schedulesRes, ministriesRes, serviceTypeMinistriesRes, positionsRes] = await Promise.all([
+    const [serviceTypesRes, servicesRes, schedulesRes, ministriesRes, serviceTypeMinistriesRes, positionsRes, serviceTypePosRes] = await Promise.all([
       supabase
         .from('service_types')
         .select('*')
@@ -553,9 +565,14 @@ export function AdminSchedules() {
         .eq('church_id', churchId),
       supabase
         .from('ministry_positions')
-        .select('ministry_id')
+        .select('id, nome, ministry_id, quantidade_minima, is_active')
         .eq('church_id', churchId)
-        .eq('is_active', true),
+        .eq('is_active', true)
+        .order('ordem'),
+      supabase
+        .from('service_type_positions')
+        .select('service_type_id, position_id')
+        .eq('church_id', churchId),
     ]);
 
     // Get unique ministry IDs that have positions
@@ -579,6 +596,16 @@ export function AdminSchedules() {
           .map(m => m.id);
         setUserLeaderMinistries(leaderMinistries);
       }
+    }
+
+    // Set positions
+    if (!positionsRes.error) {
+      setAllPositions(positionsRes.data || []);
+    }
+
+    // Set service type positions
+    if (!serviceTypePosRes.error) {
+      setServiceTypePositions(serviceTypePosRes.data || []);
     }
 
     if (serviceTypesRes.error) {
@@ -644,7 +671,7 @@ export function AdminSchedules() {
       serviceTypeId = newServiceType.id;
     }
 
-    // Update ministries relationship
+    // Update ministries and positions relationships
     if (serviceTypeId) {
       // Delete existing ministries for this service type
       await supabase
@@ -667,6 +694,31 @@ export function AdminSchedules() {
         if (ministriesError) {
           console.error('Error saving ministries:', ministriesError);
           toast.error('Erro ao salvar ministérios');
+        }
+      }
+
+      // Delete existing positions for this service type
+      await supabase
+        .from('service_type_positions')
+        .delete()
+        .eq('service_type_id', serviceTypeId);
+
+      // Insert new positions
+      if (serviceTypeForm.selectedPositions.length > 0) {
+        const positionsToInsert = serviceTypeForm.selectedPositions.map(positionId => ({
+          service_type_id: serviceTypeId,
+          position_id: positionId,
+          church_id: churchId,
+          quantidade_minima: 1,
+        }));
+
+        const { error: positionsError } = await supabase
+          .from('service_type_positions')
+          .insert(positionsToInsert);
+
+        if (positionsError) {
+          console.error('Error saving positions:', positionsError);
+          toast.error('Erro ao salvar posições');
         }
       }
     }
@@ -840,6 +892,7 @@ export function AdminSchedules() {
       horario: '',
       is_recurring: true,
       selectedMinistries: [],
+      selectedPositions: [],
     });
     setEditingServiceType(null);
   };
@@ -857,6 +910,11 @@ export function AdminSchedules() {
 
   const openEditServiceType = (st: ServiceType) => {
     setEditingServiceType(st);
+    // Get positions for this service type
+    const positionIds = serviceTypePositions
+      .filter(stp => stp.service_type_id === st.id)
+      .map(stp => stp.position_id);
+    
     setServiceTypeForm({
       nome: st.nome,
       descricao: st.descricao || '',
@@ -864,6 +922,7 @@ export function AdminSchedules() {
       horario: st.horario || '',
       is_recurring: st.is_recurring,
       selectedMinistries: st.ministries?.map(m => m.id) || [],
+      selectedPositions: positionIds,
     });
     setIsServiceTypeDialogOpen(true);
   };
@@ -898,17 +957,6 @@ export function AdminSchedules() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full sm:w-auto flex-wrap">
@@ -1404,6 +1452,76 @@ export function AdminSchedules() {
                   </div>
                 )}
               </div>
+
+              {/* Positions Selection Section - Only show if ministries are selected */}
+              {serviceTypeForm.selectedMinistries.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Briefcase className="h-4 w-4" />
+                      Posições para este Tipo de Culto
+                    </div>
+                    {serviceTypeForm.selectedPositions.length > 0 && (
+                      <Badge variant="secondary" className="font-normal">
+                        {serviceTypeForm.selectedPositions.length} selecionada(s)
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Selecione quais posições dos ministérios participantes serão usadas neste tipo de culto. 
+                    Se nenhuma for selecionada, todas as posições serão consideradas.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    {serviceTypeForm.selectedMinistries.map(ministryId => {
+                      const ministry = ministries.find(m => m.id === ministryId);
+                      if (!ministry) return null;
+                      
+                      const ministryPositions = allPositions.filter(p => p.ministry_id === ministryId);
+                      if (ministryPositions.length === 0) return null;
+                      
+                      return (
+                        <div key={ministryId} className="border rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: ministry.cor || 'hsl(var(--primary))' }}
+                            />
+                            <span className="font-medium text-sm">{ministry.nome}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {ministryPositions.map(position => {
+                              const isSelected = serviceTypeForm.selectedPositions.includes(position.id);
+                              return (
+                                <button
+                                  key={position.id}
+                                  type="button"
+                                  onClick={() => {
+                                    const newSelected = isSelected
+                                      ? serviceTypeForm.selectedPositions.filter(id => id !== position.id)
+                                      : [...serviceTypeForm.selectedPositions, position.id];
+                                    setServiceTypeForm({ ...serviceTypeForm, selectedPositions: newSelected });
+                                  }}
+                                  className={`
+                                    px-3 py-1.5 text-xs rounded-full border transition-all
+                                    ${isSelected 
+                                      ? 'bg-primary text-primary-foreground border-primary' 
+                                      : 'bg-background border-border hover:border-primary/50'
+                                    }
+                                  `}
+                                >
+                                  {position.nome}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
