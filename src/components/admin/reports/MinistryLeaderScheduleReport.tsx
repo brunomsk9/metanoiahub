@@ -8,10 +8,11 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Users, CheckCircle2, Clock, XCircle, ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
+import { Calendar, Users, CheckCircle2, Clock, XCircle, ChevronLeft, ChevronRight, BarChart3, Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { toast } from "sonner";
 
 interface MinistryLeaderScheduleReportProps {
   churchId?: string;
@@ -211,6 +212,116 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "confirmed": return "✅";
+      case "pending": return "⏳";
+      case "declined": return "❌";
+      default: return status;
+    }
+  };
+
+  // Build export data
+  const exportData = useMemo(() => {
+    if (!services || !schedules) return [];
+
+    const rows: { data: string; horario: string; culto: string; ministerio: string; posicao: string; voluntario: string; status: string }[] = [];
+
+    services.forEach(service => {
+      const serviceScheds = schedules.filter(s => s.service_id === service.id);
+      
+      if (serviceScheds.length === 0) {
+        rows.push({
+          data: format(new Date(service.data_hora), "dd/MM/yyyy", { locale: ptBR }),
+          horario: format(new Date(service.data_hora), "HH:mm", { locale: ptBR }),
+          culto: service.nome,
+          ministerio: "-",
+          posicao: "-",
+          voluntario: "Sem escala",
+          status: "-",
+        });
+      } else {
+        serviceScheds.forEach(sched => {
+          rows.push({
+            data: format(new Date(service.data_hora), "dd/MM/yyyy", { locale: ptBR }),
+            horario: format(new Date(service.data_hora), "HH:mm", { locale: ptBR }),
+            culto: service.nome,
+            ministerio: sched.ministry?.nome || "-",
+            posicao: sched.position?.nome || "-",
+            voluntario: sched.volunteer?.nome || "-",
+            status: sched.status,
+          });
+        });
+      }
+    });
+
+    return rows;
+  }, [services, schedules]);
+
+  const handleExportCSV = () => {
+    if (exportData.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    const headers = ["Data", "Horário", "Culto", "Ministério", "Posição", "Voluntário", "Status"];
+    const csvRows = [
+      headers.join(";"),
+      ...exportData.map(row => [
+        row.data,
+        row.horario,
+        row.culto,
+        row.ministerio,
+        row.posicao,
+        row.voluntario,
+        row.status === "confirmed" ? "Confirmado" : row.status === "pending" ? "Pendente" : row.status === "declined" ? "Recusado" : row.status,
+      ].join(";"))
+    ];
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `escalas-${format(currentMonth, "yyyy-MM", { locale: ptBR })}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exportado com sucesso!");
+  };
+
+  const handleCopyWhatsApp = () => {
+    if (exportData.length === 0) {
+      toast.error("Não há dados para copiar");
+      return;
+    }
+
+    const monthName = format(currentMonth, "MMMM yyyy", { locale: ptBR });
+    let text = `📅 *Escalas - ${monthName}*\n\n`;
+
+    // Group by date
+    const byDate = exportData.reduce((acc, row) => {
+      const key = `${row.data} ${row.horario}`;
+      if (!acc[key]) acc[key] = { culto: row.culto, items: [] };
+      acc[key].items.push(row);
+      return acc;
+    }, {} as Record<string, { culto: string; items: typeof exportData }>);
+
+    Object.entries(byDate).forEach(([dateTime, { culto, items }]) => {
+      text += `*${dateTime} - ${culto}*\n`;
+      items.forEach(item => {
+        if (item.voluntario !== "Sem escala") {
+          text += `${getStatusText(item.status)} ${item.posicao}: ${item.voluntario}\n`;
+        } else {
+          text += `⚠️ Sem escala definida\n`;
+        }
+      });
+      text += "\n";
+    });
+
+    navigator.clipboard.writeText(text);
+    toast.success("Copiado para a área de transferência!");
+  };
+
   const isLoading = ministriesLoading || servicesLoading || schedulesLoading;
 
   if (isLoading) {
@@ -263,6 +374,17 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
             ))}
           </SelectContent>
         </Select>
+
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleCopyWhatsApp}>
+            <Copy className="h-4 w-4 mr-2" />
+            WhatsApp
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
