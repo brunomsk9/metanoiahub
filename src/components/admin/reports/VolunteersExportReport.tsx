@@ -17,6 +17,7 @@ interface Volunteer {
   nome: string;
   telefone: string | null;
   genero: string | null;
+  email: string | null;
   ministries: {
     id: string;
     nome: string;
@@ -69,8 +70,8 @@ export function VolunteersExportReport() {
       
       if (userIds.length === 0) return [];
       
-      // Get profiles and ministries in parallel
-      const [profilesResult, ministriesResult] = await Promise.all([
+      // Get profiles, ministries, and emails in parallel
+      const [profilesResult, ministriesResult, emailsResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, nome, telefone, genero')
@@ -78,11 +79,15 @@ export function VolunteersExportReport() {
         supabase
           .from('ministries')
           .select('id, nome')
-          .in('id', ministryIds)
+          .in('id', ministryIds),
+        supabase.rpc('get_user_auth_details')
       ]);
       
       if (profilesResult.error) throw profilesResult.error;
       if (ministriesResult.error) throw ministriesResult.error;
+      
+      // Create email lookup map
+      const emailsMap = new Map(emailsResult.data?.map(u => [u.id, u.email]) || []);
       
       // Create ministry lookup map
       const ministriesMap = new Map(ministriesResult.data?.map(m => [m.id, m]) || []);
@@ -96,6 +101,7 @@ export function VolunteersExportReport() {
           nome: profile.nome,
           telefone: profile.telefone,
           genero: profile.genero,
+          email: emailsMap.get(profile.id) || null,
           ministries: [],
         });
       });
@@ -224,29 +230,25 @@ export function VolunteersExportReport() {
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin: 0;">Lista de Voluntários</h1>
-            <p style="color: #666; margin: 5px 0;">${selectedMinistryName}</p>
+            <h1 style="color: #333; margin: 0; font-size: 24px;">Lista de Voluntários</h1>
+            <p style="color: #666; margin: 8px 0; font-size: 16px;">${selectedMinistryName}</p>
             <p style="color: #888; font-size: 12px; margin: 5px 0;">Gerado em: ${dateStr}</p>
           </div>
           
-          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
             <thead>
-              <tr style="background-color: #f5f5f5;">
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nome</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Telefone</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Gênero</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Ministérios</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Funções</th>
+              <tr style="background-color: #8B5CF6; color: white;">
+                <th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">Nome</th>
+                <th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">Ministério</th>
+                <th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">Email</th>
               </tr>
             </thead>
             <tbody>
-              ${volunteersToExport.map(v => `
-                <tr>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${v.nome}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${v.telefone || "-"}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${v.genero === "masculino" ? "Masculino" : v.genero === "feminino" ? "Feminino" : "-"}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${v.ministries.map(m => m.nome).join(", ")}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px;">${v.ministries.map(m => getFuncaoLabel(m.funcao)).join(", ")}</td>
+              ${volunteersToExport.map((v, index) => `
+                <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+                  <td style="border: 1px solid #e5e7eb; padding: 10px; font-weight: 500;">${v.nome}</td>
+                  <td style="border: 1px solid #e5e7eb; padding: 10px;">${v.ministries.map(m => m.nome).join(", ")}</td>
+                  <td style="border: 1px solid #e5e7eb; padding: 10px; color: #6b7280;">${v.email || "-"}</td>
                 </tr>
               `).join('')}
             </tbody>
