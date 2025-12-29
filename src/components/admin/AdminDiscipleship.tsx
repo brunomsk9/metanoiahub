@@ -992,6 +992,7 @@ export function AdminDiscipleship() {
                                 checked={isChecked}
                                 onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
                                 className="h-4 w-4 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                                animated
                               />
                             );
                           })}
@@ -1012,6 +1013,7 @@ export function AdminDiscipleship() {
                                 checked={isChecked}
                                 onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
                                 className="h-4 w-4 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                animated
                               />
                             );
                           })}
@@ -1104,6 +1106,7 @@ export function AdminDiscipleship() {
                                             id={`progress-conexao-${rel.id}-${nivel}`}
                                             checked={isChecked}
                                             onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
+                                            animated
                                           />
                                           <label 
                                             htmlFor={`progress-conexao-${rel.id}-${nivel}`}
@@ -1136,6 +1139,7 @@ export function AdminDiscipleship() {
                                             id={`progress-academia-${rel.id}-${nivel}`}
                                             checked={isChecked}
                                             onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                                            animated
                                           />
                                           <label 
                                             htmlFor={`progress-academia-${rel.id}-${nivel}`}
@@ -1284,6 +1288,7 @@ export function AdminDiscipleship() {
                                     checked={isChecked}
                                     onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
                                     className="h-5 w-5 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                                    animated
                                   />
                                 );
                               })}
@@ -1310,6 +1315,7 @@ export function AdminDiscipleship() {
                                     checked={isChecked}
                                     onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
                                     className="h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    animated
                                   />
                                 );
                               })}
