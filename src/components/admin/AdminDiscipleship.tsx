@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,7 @@ const DEFAULT_MAX_DISCIPLES = 15;
 
 export function AdminDiscipleship() {
   const { churchId } = useChurch();
+  const navigate = useNavigate();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [availableDisciples, setAvailableDisciples] = useState<Profile[]>([]);
   const [availableDiscipuladores, setAvailableDiscipuladores] = useState<Profile[]>([]);
@@ -852,10 +854,19 @@ export function AdminDiscipleship() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => setCreateUserModalOpen(true)}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Cadastrar Usuário
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => setCreateUserModalOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Cadastrar Usuário
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/dashboard?novoEncontro=true')}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Encontro
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
