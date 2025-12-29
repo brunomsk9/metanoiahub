@@ -11,7 +11,9 @@ import { AdminUserImport } from './AdminUserImport';
 import { CreateUserModal } from './CreateUserModal';
 import { Badge } from '@/components/ui/badge';
 import { TablePagination } from '@/components/ui/table-pagination';
+import { SortableHeader } from '@/components/ui/sortable-header';
 import { usePagination } from '@/hooks/usePagination';
+import { useSorting } from '@/hooks/useSorting';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -365,7 +367,8 @@ interface UsersTableProps {
 }
 
 function UsersTable({ users, search, saving, toggleRole, getRoleIcon, getRoleColor, getRoleLabel }: UsersTableProps) {
-  const pagination = usePagination({ data: users, pageSize: 15 });
+  const sorting = useSorting({ data: users, defaultSortKey: "nome", defaultDirection: "asc" });
+  const pagination = usePagination({ data: sorting.sortedData, pageSize: 15 });
 
   if (users.length === 0) {
     return (
@@ -386,7 +389,11 @@ function UsersTable({ users, search, saving, toggleRole, getRoleIcon, getRoleCol
         <table className="w-full min-w-[600px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Usuário</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                <SortableHeader sortState={sorting.getSortIcon("nome")} onClick={() => sorting.toggleSort("nome")}>
+                  Usuário
+                </SortableHeader>
+              </th>
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Roles Atuais</th>
               <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discípulo</th>
               <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Discipulador</th>
