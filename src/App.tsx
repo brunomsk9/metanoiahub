@@ -27,6 +27,8 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Library = lazy(() => import("./pages/Library"));
 const Achievements = lazy(() => import("./pages/Achievements"));
 const MySchedules = lazy(() => import("./pages/MySchedules"));
+const Discipleship = lazy(() => import("./pages/Discipleship"));
+const Ministry = lazy(() => import("./pages/Ministry"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback component
@@ -73,6 +75,8 @@ function AnimatedRoutes() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/conquistas" element={<Achievements />} />
           <Route path="/minhas-escalas" element={<MySchedules />} />
+          <Route path="/discipulado" element={<Discipleship />} />
+          <Route path="/ministerio" element={<Ministry />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
