@@ -15,6 +15,9 @@ import {
   ShieldAlert,
   FolderOpen,
   User,
+  Network,
+  CalendarDays,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -36,10 +39,11 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
   const location = useLocation();
   const { isCollapsed, setIsCollapsed } = useSidebarState();
   const [learningOpen, setLearningOpen] = useState(true);
+  const [ministryOpen, setMinistryOpen] = useState(true);
   
   const { isAdmin, isDiscipulador, isSuperAdmin, isLiderMinisterial } = useUserRoles();
 
-  // Learning items - same as mobile
+  // Learning items
   const learningItems = [
     { path: "/trilhas", label: "Trilhas", icon: GraduationCap },
     { path: "/biblioteca", label: "Biblioteca", icon: BookMarked },
@@ -53,6 +57,25 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
   const isLearningActive = learningItems.some(
     (item) => location.pathname === item.path
   );
+
+  // Ministry items - for those with ministry-related roles
+  const showMinistrySection = isAdmin || isLiderMinisterial;
+  const ministryItems = [
+    { 
+      path: "/admin?section=escalas", 
+      label: "Escalas", 
+      icon: CalendarDays,
+      active: location.pathname === "/admin" && location.search.includes("escalas")
+    },
+    { 
+      path: "/admin?section=ministerios", 
+      label: "Rede Ministerial", 
+      icon: Network,
+      active: location.pathname === "/admin" && location.search.includes("ministerios")
+    },
+  ];
+
+  const isMinistryActive = ministryItems.some((item) => item.active);
 
   const NavItem = ({
     to,
@@ -93,6 +116,15 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
     return content;
   };
 
+  const SectionHeader = ({ label }: { label: string }) => {
+    if (isCollapsed) return null;
+    return (
+      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        {label}
+      </p>
+    );
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside
@@ -117,6 +149,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {/* Home */}
           <NavItem
             to="/dashboard"
             icon={Home}
@@ -126,7 +159,6 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
 
           {/* Learning Section */}
           {isCollapsed ? (
-            // Collapsed: show just icons
             <>
               {learningItems.map((item) => (
                 <NavItem
@@ -139,7 +171,6 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
               ))}
             </>
           ) : (
-            // Expanded: show collapsible group
             <Collapsible open={learningOpen} onOpenChange={setLearningOpen}>
               <CollapsibleTrigger
                 className={cn(
@@ -150,7 +181,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <GraduationCap className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5" />
                   <span>Aprendizado</span>
                 </div>
                 <ChevronDown
@@ -174,13 +205,82 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
             </Collapsible>
           )}
 
-          {/* Escalas */}
-          <NavItem
-            to={isAdmin || isLiderMinisterial ? "/admin?section=escalas" : "/minhas-escalas"}
-            icon={Calendar}
-            label="Escalas"
-            active={location.pathname === "/minhas-escalas" || (location.pathname === "/admin" && location.search.includes("escalas"))}
-          />
+          {/* Ministry Section - for leaders */}
+          {showMinistrySection && (
+            <>
+              {isCollapsed ? (
+                <>
+                  {ministryItems.map((item) => (
+                    <NavItem
+                      key={item.path}
+                      to={item.path}
+                      icon={item.icon}
+                      label={item.label}
+                      active={item.active}
+                    />
+                  ))}
+                </>
+              ) : (
+                <Collapsible open={ministryOpen} onOpenChange={setMinistryOpen}>
+                  <CollapsibleTrigger
+                    className={cn(
+                      "flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      isMinistryActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Network className="w-5 h-5" />
+                      <span>Ministério</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 transition-transform",
+                        ministryOpen && "rotate-180"
+                      )}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-6 mt-1 space-y-1">
+                    {ministryItems.map((item) => (
+                      <NavItem
+                        key={item.path}
+                        to={item.path}
+                        icon={item.icon}
+                        label={item.label}
+                        active={item.active}
+                      />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </>
+          )}
+
+          {/* Escalas for regular volunteers */}
+          {!showMinistrySection && (
+            <NavItem
+              to="/minhas-escalas"
+              icon={Calendar}
+              label="Minhas Escalas"
+              active={location.pathname === "/minhas-escalas"}
+            />
+          )}
+
+          {/* Discipulado for discipuladores */}
+          {isDiscipulador && !isAdmin && (
+            <NavItem
+              to="/admin"
+              icon={Users}
+              label="Discipulado"
+              active={
+                location.pathname === "/admin" &&
+                !location.search.includes("recursos") &&
+                !location.search.includes("escalas") &&
+                !location.search.includes("ministerios")
+              }
+            />
+          )}
 
           {/* Perfil */}
           <NavItem
@@ -191,13 +291,9 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
           />
 
           {/* Admin Section */}
-          {(isAdmin || isDiscipulador || isLiderMinisterial || isSuperAdmin) && (
+          {(isAdmin || isDiscipulador || isSuperAdmin) && (
             <div className={cn("pt-4 mt-4 border-t border-border/50", isCollapsed && "pt-2 mt-2")}>
-              {!isCollapsed && (
-                <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Gestão
-                </p>
-              )}
+              <SectionHeader label="Gestão" />
 
               {(isAdmin || isDiscipulador) && (
                 <NavItem
@@ -211,19 +307,6 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
                 />
               )}
 
-              {isDiscipulador && !isAdmin && (
-                <NavItem
-                  to="/admin"
-                  icon={Users}
-                  label="Discipulado"
-                  active={
-                    location.pathname === "/admin" &&
-                    !location.search.includes("recursos") &&
-                    !location.search.includes("escalas")
-                  }
-                />
-              )}
-
               {isAdmin && (
                 <NavItem
                   to="/admin"
@@ -232,7 +315,8 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
                   active={
                     location.pathname === "/admin" &&
                     !location.search.includes("recursos") &&
-                    !location.search.includes("escalas")
+                    !location.search.includes("escalas") &&
+                    !location.search.includes("ministerios")
                   }
                 />
               )}
