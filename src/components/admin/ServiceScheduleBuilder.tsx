@@ -1064,7 +1064,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                               : "bg-background hover:bg-muted border-border hover:border-primary/50"
                         )}
                       >
-                        <span className={cn("text-2xl font-bold", isSelected ? "" : isPast ? "text-muted-foreground" : "text-foreground")}>
+                        <span className={cn("text-lg font-semibold", isSelected ? "" : isPast ? "text-muted-foreground" : "text-foreground")}>
                           {format(serviceDate, 'dd')}
                         </span>
                         <span className={cn("text-xs uppercase", isSelected ? "text-primary-foreground/80" : "text-muted-foreground")}>
@@ -1115,7 +1115,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
           <CardContent className="py-4">
             <div className="flex items-center gap-4">
               <div className="text-center min-w-[60px]">
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-lg font-semibold text-primary">
                   {format(new Date(selectedService.data_hora), 'dd')}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">
