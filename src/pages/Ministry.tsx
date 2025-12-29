@@ -3,13 +3,11 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
-import { MinistryLeaderScheduleReport } from '@/components/admin/reports/MinistryLeaderScheduleReport';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { ShieldAlert, ArrowLeft, Building2, Calendar, BarChart3 } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Building2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MinistrySkeleton } from '@/components/skeletons/PageSkeletons';
 
 export default function Ministry() {
@@ -19,7 +17,7 @@ export default function Ministry() {
   const [isLiderMinisterial, setIsLiderMinisterial] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  const defaultTab = searchParams.get('tab') || 'escalas';
+  const currentSection = searchParams.get('tab') || 'escalas';
 
   useEffect(() => {
     checkAccess();
@@ -47,8 +45,8 @@ export default function Ministry() {
     setLoading(false);
   };
 
-  const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+  const navigateToSection = (section: string) => {
+    setSearchParams({ tab: section });
   };
 
   if (loading) {
@@ -96,34 +94,29 @@ export default function Ministry() {
             </p>
           </div>
 
-          <Tabs value={defaultTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-lg">
-              <TabsTrigger value="escalas" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                Escalas
-              </TabsTrigger>
-              <TabsTrigger value="relatorio" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Relatório
-              </TabsTrigger>
-              <TabsTrigger value="rede" className="gap-2">
-                <Building2 className="h-4 w-4" />
-                Rede
-              </TabsTrigger>
-            </TabsList>
+          {/* Section Navigation */}
+          <div className="flex gap-2 border-b border-border pb-4">
+            <Button
+              variant={currentSection === 'escalas' ? 'default' : 'ghost'}
+              onClick={() => navigateToSection('escalas')}
+              className="gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Escalas
+            </Button>
+            <Button
+              variant={currentSection === 'rede' ? 'default' : 'ghost'}
+              onClick={() => navigateToSection('rede')}
+              className="gap-2"
+            >
+              <Building2 className="h-4 w-4" />
+              Rede Ministerial
+            </Button>
+          </div>
 
-            <TabsContent value="escalas" className="mt-6">
-              <AdminSchedules />
-            </TabsContent>
-
-            <TabsContent value="relatorio" className="mt-6">
-              <MinistryLeaderScheduleReport isAdmin={isAdmin} />
-            </TabsContent>
-
-            <TabsContent value="rede" className="mt-6">
-              <AdminMinistries />
-            </TabsContent>
-          </Tabs>
+          {/* Content */}
+          {currentSection === 'escalas' && <AdminSchedules />}
+          {currentSection === 'rede' && <AdminMinistries />}
         </div>
       </PageTransition>
     </AppShell>

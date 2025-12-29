@@ -3,12 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList, Wand2, List, History, CheckCircle, XCircle, AlertCircle, TrendingUp, Award, BarChart3 } from 'lucide-react';
+import { Loader2, Plus, Search, Calendar, Clock, Users, ChevronRight, CalendarDays, Church, Trash2, Edit, Briefcase, ClipboardList, Wand2, List, History, CheckCircle, XCircle, AlertCircle, TrendingUp, Award, BarChart3, FileBarChart } from 'lucide-react';
 import { AdminMinistryPositions } from './AdminMinistryPositions';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Progress } from '@/components/ui/progress';
 import { ServiceScheduleBuilder } from './ServiceScheduleBuilder';
 import { AdminCalendarView } from './AdminCalendarView';
+import { MinistryLeaderScheduleReport } from './reports/MinistryLeaderScheduleReport';
 import {
   Dialog,
   DialogContent,
@@ -974,6 +975,12 @@ export function AdminSchedules() {
               Histórico
             </TabsTrigger>
           )}
+          {(isLiderMinisterial || isAdmin) && (
+            <TabsTrigger value="relatorio" className="flex-1 sm:flex-initial">
+              <FileBarChart className="h-4 w-4 mr-2" />
+              Relatório
+            </TabsTrigger>
+          )}
           <TabsTrigger value="cultos" className="flex-1 sm:flex-initial">
             <Church className="h-4 w-4 mr-2" />
             Tipos de Culto
@@ -1105,6 +1112,13 @@ export function AdminSchedules() {
               ministries={ministries}
               filterMinistryIds={isAdmin ? undefined : userLeaderMinistries}
             />
+          </TabsContent>
+        )}
+
+        {/* Relatório */}
+        {(isLiderMinisterial || isAdmin) && (
+          <TabsContent value="relatorio" className="mt-6">
+            <MinistryLeaderScheduleReport isAdmin={isAdmin} />
           </TabsContent>
         )}
 

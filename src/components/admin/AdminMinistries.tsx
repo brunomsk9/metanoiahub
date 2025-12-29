@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Users, Trash2, Edit, UserPlus, Crown, User, Building2, Palette, Settings2 } from 'lucide-react';
+import { Loader2, Plus, Search, Users, Trash2, Edit, UserPlus, Crown, User, Building2, Palette } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { AdminMinistryPositions } from './AdminMinistryPositions';
 
 interface Ministry {
   id: string;
@@ -79,7 +78,6 @@ export function AdminMinistries() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [volunteerSearch, setVolunteerSearch] = useState('');
   const [currentVolunteerSearch, setCurrentVolunteerSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'ministries' | 'positions'>('ministries');
   const [userLeaderMinistries, setUserLeaderMinistries] = useState<string[]>([]);
   
   // Form states
@@ -437,20 +435,8 @@ export function AdminMinistries() {
         </div>
       </div>
 
-      {/* Tabs for Ministries and Positions */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'ministries' | 'positions')}>
-        <TabsList>
-          <TabsTrigger value="ministries" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            Ministérios
-          </TabsTrigger>
-          <TabsTrigger value="positions" className="gap-2">
-            <Settings2 className="h-4 w-4" />
-            Posições/Funções
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="ministries" className="mt-6">
+      {/* Ministries Content */}
+      <div className="mt-6">
           {/* Search */}
           <div className="relative max-w-sm mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -544,12 +530,7 @@ export function AdminMinistries() {
               })}
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="positions" className="mt-6">
-          <AdminMinistryPositions filterMinistryIds={isAdmin ? undefined : userLeaderMinistries} />
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Edit Ministry Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
