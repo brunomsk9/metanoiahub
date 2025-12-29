@@ -6,7 +6,8 @@ import { DiscipuladoReport } from "./reports/DiscipuladoReport";
 import { PerformanceDiscipuladoresReport } from "./reports/PerformanceDiscipuladoresReport";
 import { VolunteerEngagementReport } from "./reports/VolunteerEngagementReport";
 import { VolunteersExportReport } from "./reports/VolunteersExportReport";
-import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck, FileSpreadsheet } from "lucide-react";
+import { MultiMinistryVolunteersReport } from "./reports/MultiMinistryVolunteersReport";
+import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck, FileSpreadsheet, UserCheck } from "lucide-react";
 
 export function AdminReports() {
   const [activeTab, setActiveTab] = useState("visao-geral");
@@ -14,7 +15,7 @@ export function AdminReports() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="visao-geral" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">Visão Geral</span>
@@ -39,6 +40,11 @@ export function AdminReports() {
             <CalendarCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Voluntários</span>
             <span className="sm:hidden">Vol.</span>
+          </TabsTrigger>
+          <TabsTrigger value="multi-ministerio" className="gap-2">
+            <UserCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Multi-Ministério</span>
+            <span className="sm:hidden">Multi</span>
           </TabsTrigger>
           <TabsTrigger value="exportar" className="gap-2">
             <FileSpreadsheet className="h-4 w-4" />
@@ -65,6 +71,10 @@ export function AdminReports() {
 
         <TabsContent value="voluntarios" className="mt-6">
           <VolunteerEngagementReport />
+        </TabsContent>
+
+        <TabsContent value="multi-ministerio" className="mt-6">
+          <MultiMinistryVolunteersReport />
         </TabsContent>
 
         <TabsContent value="exportar" className="mt-6">
