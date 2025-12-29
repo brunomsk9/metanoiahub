@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Download, Users, Filter, FileSpreadsheet } from "lucide-react";
+import { Download, Users, Filter, FileSpreadsheet, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useUserChurchId } from "@/hooks/useUserChurchId";
+import html2pdf from "html2pdf.js";
 
 interface Volunteer {
   id: string;
@@ -28,6 +29,7 @@ export function VolunteersExportReport() {
   const [selectedMinistry, setSelectedMinistry] = useState<string>("all");
   const [selectedGender, setSelectedGender] = useState<string>("all");
   const [selectedVolunteers, setSelectedVolunteers] = useState<Set<string>>(new Set());
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   // Fetch ministries
   const { data: ministries = [] } = useQuery({
@@ -153,20 +155,29 @@ export function VolunteersExportReport() {
     }
   };
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const volunteersToExport = selectedVolunteers.size > 0
+  // Get volunteers to export (helper function)
+  const getVolunteersToExport = () => {
+    return selectedVolunteers.size > 0
       ? filteredVolunteers.filter(v => selectedVolunteers.has(v.id))
       : filteredVolunteers;
+  };
+
+  const getSelectedMinistryName = () => {
+    return selectedMinistry === "all" 
+      ? "Todos os Ministérios" 
+      : ministries.find(m => m.id === selectedMinistry)?.nome || "";
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const volunteersToExport = getVolunteersToExport();
     
     if (volunteersToExport.length === 0) {
       toast.error("Nenhum voluntário para exportar");
       return;
     }
 
-    const selectedMinistryName = selectedMinistry === "all" 
-      ? "Todos os Ministérios" 
-      : ministries.find(m => m.id === selectedMinistry)?.nome || "";
+    const selectedMinistryName = getSelectedMinistryName();
 
     const headers = ["Nome", "Telefone", "Gênero", "Ministérios", "Funções"];
     const rows = volunteersToExport.map(v => [
@@ -193,6 +204,82 @@ export function VolunteersExportReport() {
     document.body.removeChild(link);
 
     toast.success(`${volunteersToExport.length} voluntários exportados com sucesso!`);
+  };
+
+  // Export to PDF
+  const exportToPDF = async () => {
+    const volunteersToExport = getVolunteersToExport();
+    
+    if (volunteersToExport.length === 0) {
+      toast.error("Nenhum voluntário para exportar");
+      return;
+    }
+
+    setGeneratingPdf(true);
+    
+    try {
+      const selectedMinistryName = getSelectedMinistryName();
+      const dateStr = new Date().toLocaleDateString('pt-BR');
+
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #333; margin: 0;">Lista de Voluntários</h1>
+            <p style="color: #666; margin: 5px 0;">${selectedMinistryName}</p>
+            <p style="color: #888; font-size: 12px; margin: 5px 0;">Gerado em: ${dateStr}</p>
+          </div>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+              <tr style="background-color: #f5f5f5;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nome</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Telefone</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Gênero</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Ministérios</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Funções</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${volunteersToExport.map(v => `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${v.nome}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${v.telefone || "-"}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${v.genero === "masculino" ? "Masculino" : v.genero === "feminino" ? "Feminino" : "-"}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${v.ministries.map(m => m.nome).join(", ")}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${v.ministries.map(m => getFuncaoLabel(m.funcao)).join(", ")}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 20px; text-align: right; font-size: 12px; color: #888;">
+            Total: ${volunteersToExport.length} voluntários
+          </div>
+        </div>
+      `;
+
+      const container = document.createElement('div');
+      container.innerHTML = htmlContent;
+      document.body.appendChild(container);
+
+      const opt = {
+        margin: 10,
+        filename: `voluntarios_${selectedMinistryName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+
+      await html2pdf().set(opt).from(container).save();
+      document.body.removeChild(container);
+
+      toast.success(`${volunteersToExport.length} voluntários exportados em PDF com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setGeneratingPdf(false);
+    }
   };
 
   const getFuncaoLabel = (funcao: string | null) => {
@@ -245,16 +332,22 @@ export function VolunteersExportReport() {
               </Select>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary" className="gap-1">
                 <Users className="h-3 w-3" />
                 {filteredVolunteers.length} voluntários
               </Badge>
               
-              <Button onClick={exportToCSV} className="gap-2">
-                <Download className="h-4 w-4" />
-                Exportar CSV
+              <Button onClick={exportToCSV} variant="outline" className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                CSV
                 {selectedVolunteers.size > 0 && ` (${selectedVolunteers.size})`}
+              </Button>
+              
+              <Button onClick={exportToPDF} disabled={generatingPdf} className="gap-2">
+                <FileText className="h-4 w-4" />
+                {generatingPdf ? "Gerando..." : "PDF"}
+                {selectedVolunteers.size > 0 && !generatingPdf && ` (${selectedVolunteers.size})`}
               </Button>
             </div>
           </div>
