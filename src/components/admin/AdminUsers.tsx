@@ -322,7 +322,7 @@ export function AdminUsers() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-muted/50 border-b border-border">
                   <tr>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Usuário</th>
