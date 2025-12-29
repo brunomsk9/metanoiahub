@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Users, Filter, UserCheck } from "lucide-react";
+import { Users, Filter, UserCheck, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { useUserChurchId } from "@/hooks/useUserChurchId";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 interface MultiMinistryVolunteer {
   id: string;
@@ -19,6 +20,8 @@ interface MultiMinistryVolunteer {
     funcao: string | null;
   }[];
 }
+
+const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#6366F1'];
 
 export function MultiMinistryVolunteersReport() {
   const { churchId } = useUserChurchId();
@@ -120,13 +123,37 @@ export function MultiMinistryVolunteersReport() {
     return filtered;
   }, [volunteers, minMinistries, selectedMinistry]);
 
-  const stats = useMemo(() => {
+  // Distribution pie chart data
+  const distributionData = useMemo(() => {
     const counts: Record<number, number> = {};
     volunteers.forEach(v => {
       const count = v.ministries.length;
       counts[count] = (counts[count] || 0) + 1;
     });
-    return counts;
+    
+    return Object.entries(counts)
+      .map(([count, qty]) => ({
+        name: count === '1' ? '1 ministério' : `${count} ministérios`,
+        value: qty,
+        count: parseInt(count),
+      }))
+      .sort((a, b) => a.count - b.count);
+  }, [volunteers]);
+
+  // Volunteers per ministry bar chart data
+  const volunteersPerMinistryData = useMemo(() => {
+    const ministryCount: Record<string, number> = {};
+    
+    volunteers.forEach(v => {
+      v.ministries.forEach(m => {
+        ministryCount[m.nome] = (ministryCount[m.nome] || 0) + 1;
+      });
+    });
+    
+    return Object.entries(ministryCount)
+      .map(([nome, count]) => ({ nome, voluntarios: count }))
+      .sort((a, b) => b.voluntarios - a.voluntarios)
+      .slice(0, 10);
   }, [volunteers]);
 
   const getFuncaoLabel = (funcao: string | null) => {
@@ -158,6 +185,94 @@ export function MultiMinistryVolunteersReport() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Distribution Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <PieChartIcon className="h-4 w-4" />
+              Distribuição por Quantidade de Ministérios
+            </CardTitle>
+            <CardDescription>
+              Total de voluntários: {volunteers.length}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {distributionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={distributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={false}
+                  >
+                    {distributionData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [`${value} voluntários`, 'Quantidade']}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[280px] text-muted-foreground">
+                Sem dados disponíveis
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Volunteers per Ministry Bar Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-4 w-4" />
+              Voluntários Distintos por Ministério
+            </CardTitle>
+            <CardDescription>
+              Top 10 ministérios com mais voluntários
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {volunteersPerMinistryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={volunteersPerMinistryData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                  <XAxis type="number" />
+                  <YAxis 
+                    type="category" 
+                    dataKey="nome" 
+                    width={100}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value} voluntários`, 'Total']}
+                  />
+                  <Bar 
+                    dataKey="voluntarios" 
+                    fill="hsl(var(--primary))" 
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[280px] text-muted-foreground">
+                Sem dados disponíveis
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
