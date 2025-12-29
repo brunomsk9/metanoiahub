@@ -93,6 +93,8 @@ export function ActionButtons({
 /**
  * Responsive navigation with action buttons - combines navigation controls
  * with action buttons in a mobile-friendly layout.
+ * On larger screens, navigation and actions appear on the same row.
+ * On mobile, they stack vertically for better usability.
  */
 interface NavigationWithActionsProps {
   navigation: React.ReactNode;
@@ -106,11 +108,11 @@ export function NavigationWithActions({
   className 
 }: NavigationWithActionsProps) {
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex items-center gap-1 w-full">
+    <div className={cn("flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2", className)}>
+      <div className="flex items-center gap-1 min-w-0 flex-1">
         {navigation}
       </div>
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="flex items-center gap-1.5 flex-wrap shrink-0">
         {actions}
       </div>
     </div>

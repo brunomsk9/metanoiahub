@@ -960,36 +960,39 @@ export function AdminSchedules() {
     <div className="space-y-6">
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full sm:w-auto flex-wrap">
-          <TabsTrigger value="escalar" className="flex-1 sm:flex-initial">
-            <ClipboardList className="h-4 w-4 mr-2" />
-            Escalar
-          </TabsTrigger>
-          <TabsTrigger value="agenda" className="flex-1 sm:flex-initial">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            Agenda
-          </TabsTrigger>
-          {(isLiderMinisterial || isAdmin) && (
-            <TabsTrigger value="historico" className="flex-1 sm:flex-initial">
-              <History className="h-4 w-4 mr-2" />
-              Histórico
+        <ScrollArea className="w-full">
+          <TabsList className="inline-flex w-max min-w-full sm:w-auto bg-muted/50 p-1">
+            <TabsTrigger value="escalar" className="gap-1.5 text-xs sm:text-sm px-3 whitespace-nowrap">
+              <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Escalar
             </TabsTrigger>
-          )}
-          {(isLiderMinisterial || isAdmin) && (
-            <TabsTrigger value="relatorio" className="flex-1 sm:flex-initial">
-              <FileBarChart className="h-4 w-4 mr-2" />
-              Relatório
+            <TabsTrigger value="agenda" className="gap-1.5 text-xs sm:text-sm px-3 whitespace-nowrap">
+              <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Agenda
             </TabsTrigger>
-          )}
-          <TabsTrigger value="cultos" className="flex-1 sm:flex-initial">
-            <Church className="h-4 w-4 mr-2" />
-            Tipos de Culto
-          </TabsTrigger>
-          <TabsTrigger value="posicoes" className="flex-1 sm:flex-initial">
-            <Briefcase className="h-4 w-4 mr-2" />
-            Posições
-          </TabsTrigger>
-        </TabsList>
+            {(isLiderMinisterial || isAdmin) && (
+              <TabsTrigger value="historico" className="gap-1.5 text-xs sm:text-sm px-3 whitespace-nowrap">
+                <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Histórico
+              </TabsTrigger>
+            )}
+            {(isLiderMinisterial || isAdmin) && (
+              <TabsTrigger value="relatorio" className="gap-1.5 text-xs sm:text-sm px-3 whitespace-nowrap">
+                <FileBarChart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                Relatório
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="cultos" className="gap-1.5 text-xs sm:text-sm px-3 whitespace-nowrap">
+              <Church className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Tipos de Culto</span>
+              <span className="sm:hidden">Cultos</span>
+            </TabsTrigger>
+            <TabsTrigger value="posicoes" className="gap-1.5 text-xs sm:text-sm px-3 whitespace-nowrap">
+              <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Posições
+            </TabsTrigger>
+          </TabsList>
+        </ScrollArea>
 
         {/* Escalar Voluntários */}
         <TabsContent value="escalar" className="mt-6">

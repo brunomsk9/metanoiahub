@@ -1028,32 +1028,32 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Service Selector - Compact Navigation */}
       <Card className="bg-muted/30 border-dashed">
-        <CardContent className="py-3">
+        <CardContent className="py-2.5 px-3">
           <NavigationWithActions
             navigation={
-              <>
+              <div className="flex items-center gap-1 min-w-0">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={goToPrevService}
                   disabled={!canGoPrev}
-                  className="shrink-0 h-7 w-7"
+                  className="shrink-0 h-8 w-8"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 
                 {selectedService && (
-                  <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
-                    <span className="bg-primary text-primary-foreground px-2 py-1 rounded text-sm font-medium shrink-0">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
+                    <span className="bg-primary text-primary-foreground px-1.5 py-0.5 rounded text-xs font-medium shrink-0">
                       {format(new Date(selectedService.data_hora), 'dd/MM')}
                     </span>
-                    <span className="truncate text-sm">
+                    <span className="truncate text-sm font-medium">
                       {selectedService.nome}
                     </span>
-                    <span className="text-muted-foreground text-xs shrink-0">
+                    <span className="text-muted-foreground text-xs shrink-0 hidden xs:inline">
                       {format(new Date(selectedService.data_hora), 'HH:mm')}
                     </span>
                   </div>
@@ -1064,15 +1064,15 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                   size="icon"
                   onClick={goToNextService}
                   disabled={!canGoNext}
-                  className="shrink-0 h-7 w-7"
+                  className="shrink-0 h-8 w-8"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 
-                <span className="text-xs text-muted-foreground shrink-0">
+                <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
                   {currentServiceIndex + 1}/{services.length}
                 </span>
-              </>
+              </div>
             }
             actions={
               <ActionButtons
@@ -1081,12 +1081,14 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                   {
                     id: 'batch',
                     label: 'Vários',
+                    shortLabel: 'Vários',
                     icon: <CalendarDays />,
                     onClick: () => setIsBatchAutoScheduleOpen(true),
                   },
                   {
                     id: 'auto',
                     label: 'Auto',
+                    shortLabel: 'Auto',
                     icon: <Wand2 />,
                     onClick: handleAutoSchedulePreview,
                     disabled: isAutoScheduling,
@@ -1095,6 +1097,7 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
                   {
                     id: 'export',
                     label: 'Exportar',
+                    shortLabel: 'Export',
                     icon: <Share2 />,
                     onClick: () => setIsExportOpen(true),
                     disabled: schedules.length === 0,
