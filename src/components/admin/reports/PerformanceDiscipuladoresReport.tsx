@@ -8,9 +8,11 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { Users, Flame, Calendar, CheckCircle2, TrendingUp } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { usePagination } from "@/hooks/usePagination";
+import { useSorting } from "@/hooks/useSorting";
 
 interface DiscipuladorStats {
   id: string;
@@ -290,19 +292,44 @@ export function PerformanceDiscipuladoresReport() {
 }
 
 function DiscipuladoresTable({ discipuladores }: { discipuladores: DiscipuladorStats[] }) {
-  const pagination = usePagination({ data: discipuladores, pageSize: 10 });
+  const sorting = useSorting({ data: discipuladores, defaultSortKey: "nome", defaultDirection: "asc" });
+  const pagination = usePagination({ data: sorting.sortedData, pageSize: 10 });
 
   return (
     <>
       <Table className="min-w-[600px]">
         <TableHeader>
           <TableRow>
-            <TableHead>Discipulador</TableHead>
-            <TableHead className="text-center">Discípulos</TableHead>
-            <TableHead className="text-center">Média Streak</TableHead>
-            <TableHead className="text-center">Alicerce OK</TableHead>
-            <TableHead className="text-center">Encontros</TableHead>
-            <TableHead className="text-center">Checklist</TableHead>
+            <TableHead>
+              <SortableHeader sortState={sorting.getSortIcon("nome")} onClick={() => sorting.toggleSort("nome")}>
+                Discipulador
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("totalDiscipulos")} onClick={() => sorting.toggleSort("totalDiscipulos")} className="justify-center">
+                Discípulos
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("avgStreak")} onClick={() => sorting.toggleSort("avgStreak")} className="justify-center">
+                Média Streak
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("alicerceCompleted")} onClick={() => sorting.toggleSort("alicerceCompleted")} className="justify-center">
+                Alicerce OK
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("meetingsCount")} onClick={() => sorting.toggleSort("meetingsCount")} className="justify-center">
+                Encontros
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("checklistCompliance")} onClick={() => sorting.toggleSort("checklistCompliance")} className="justify-center">
+                Checklist
+              </SortableHeader>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -8,11 +8,13 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import { Users, Check, X, Clock, TrendingUp, Calendar, Percent } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePagination } from "@/hooks/usePagination";
+import { useSorting } from "@/hooks/useSorting";
 
 interface VolunteerStats {
   id: string;
@@ -448,19 +450,44 @@ export function VolunteerEngagementReport() {
 }
 
 function VolunteerTable({ volunteers }: { volunteers: VolunteerStats[] }) {
-  const pagination = usePagination({ data: volunteers, pageSize: 10 });
+  const sorting = useSorting({ data: volunteers, defaultSortKey: "nome", defaultDirection: "asc" });
+  const pagination = usePagination({ data: sorting.sortedData, pageSize: 10 });
 
   return (
     <>
       <Table className="min-w-[700px]">
         <TableHeader>
           <TableRow>
-            <TableHead>Voluntário</TableHead>
-            <TableHead className="text-center">Total</TableHead>
-            <TableHead className="text-center">Confirmados</TableHead>
-            <TableHead className="text-center">Recusados</TableHead>
-            <TableHead className="text-center">Pendentes</TableHead>
-            <TableHead className="text-center">Taxa</TableHead>
+            <TableHead>
+              <SortableHeader sortState={sorting.getSortIcon("nome")} onClick={() => sorting.toggleSort("nome")}>
+                Voluntário
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("totalSchedules")} onClick={() => sorting.toggleSort("totalSchedules")} className="justify-center">
+                Total
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("confirmed")} onClick={() => sorting.toggleSort("confirmed")} className="justify-center">
+                Confirmados
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("declined")} onClick={() => sorting.toggleSort("declined")} className="justify-center">
+                Recusados
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("pending")} onClick={() => sorting.toggleSort("pending")} className="justify-center">
+                Pendentes
+              </SortableHeader>
+            </TableHead>
+            <TableHead className="text-center">
+              <SortableHeader sortState={sorting.getSortIcon("confirmationRate")} onClick={() => sorting.toggleSort("confirmationRate")} className="justify-center">
+                Taxa
+              </SortableHeader>
+            </TableHead>
             <TableHead>Ministérios</TableHead>
           </TableRow>
         </TableHeader>
