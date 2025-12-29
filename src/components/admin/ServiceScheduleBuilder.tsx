@@ -1028,138 +1028,91 @@ export function ServiceScheduleBuilder({ serviceId }: ServiceScheduleBuilderProp
 
   return (
     <div className="space-y-6">
-      {/* Service Selector - Improved */}
+      {/* Service Selector - Compact Navigation */}
       <Card className="bg-muted/30 border-dashed">
-        <CardContent className="py-4">
-          <div className="flex flex-col gap-4">
-            {/* Navigation Row */}
-            <div className="flex items-center gap-3">
+        <CardContent className="py-3">
+          <div className="flex items-center justify-between gap-4">
+            {/* Navigation with current service */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={goToPrevService}
                 disabled={!canGoPrev}
-                className="shrink-0"
+                className="shrink-0 h-8 w-8"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               
-              <div className="flex-1 overflow-x-auto">
-                <div className="flex gap-2 pb-1">
-                  {services.map((service, index) => {
-                    const isSelected = selectedServiceId === service.id;
-                    const serviceDate = new Date(service.data_hora);
-                    const isPast = serviceDate < new Date();
-                    
-                    return (
-                      <button
-                        key={service.id}
-                        onClick={() => setSelectedServiceId(service.id)}
-                        className={cn(
-                          "flex flex-col items-center min-w-[80px] px-3 py-2 rounded-lg border transition-all text-center",
-                          isSelected 
-                            ? "bg-primary text-primary-foreground border-primary shadow-md" 
-                            : isPast 
-                              ? "bg-muted/50 text-muted-foreground border-muted hover:bg-muted"
-                              : "bg-background hover:bg-muted border-border hover:border-primary/50"
-                        )}
-                      >
-                        <span className={cn("text-lg font-semibold", isSelected ? "" : isPast ? "text-muted-foreground" : "text-foreground")}>
-                          {format(serviceDate, 'dd')}
-                        </span>
-                        <span className={cn("text-xs uppercase", isSelected ? "text-primary-foreground/80" : "text-muted-foreground")}>
-                          {format(serviceDate, 'MMM', { locale: ptBR })}
-                        </span>
-                        <span className={cn("text-xs mt-1 truncate max-w-[70px]", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                          {service.nome.split(' ')[0]}
-                        </span>
-                      </button>
-                    );
-                  })}
+              {selectedService && (
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-1.5 rounded-md">
+                    <span className="font-semibold">
+                      {format(new Date(selectedService.data_hora), 'dd MMM', { locale: ptBR })}
+                    </span>
+                  </div>
+                  <div className="truncate">
+                    <span className="font-medium">{selectedService.nome}</span>
+                    <span className="text-muted-foreground text-sm ml-2">
+                      {format(new Date(selectedService.data_hora), 'HH:mm')}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={goToNextService}
                 disabled={!canGoNext}
-                className="shrink-0"
+                className="shrink-0 h-8 w-8"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
-            
-            {/* Action Row */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {services.length} culto{services.length !== 1 ? 's' : ''} agendado{services.length !== 1 ? 's' : ''}
+              
+              <span className="text-xs text-muted-foreground shrink-0">
+                {currentServiceIndex + 1}/{services.length}
               </span>
+            </div>
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsBatchAutoScheduleOpen(true)}
-                className="gap-2"
+                className="gap-1.5"
               >
-                <CalendarDays className="h-4 w-4" />
-                Escalar Vários Cultos
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Vários</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAutoSchedulePreview}
+                disabled={isAutoScheduling}
+                className="gap-1.5"
+              >
+                {isAutoScheduling ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Wand2 className="h-3.5 w-3.5" />
+                )}
+                <span className="hidden sm:inline">Auto</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsExportOpen(true)}
+                disabled={schedules.length === 0}
+                className="gap-1.5"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Exportar</span>
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Selected Service Info */}
-      {selectedService && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-4">
-              <div className="text-center min-w-[60px]">
-                <div className="text-lg font-semibold text-primary">
-                  {format(new Date(selectedService.data_hora), 'dd')}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">
-                  {format(new Date(selectedService.data_hora), 'MMM', { locale: ptBR })}
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">{selectedService.nome}</h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {format(new Date(selectedService.data_hora), 'EEEE, HH:mm', { locale: ptBR })}
-                </div>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoSchedulePreview}
-                  disabled={isAutoScheduling}
-                >
-                  {isAutoScheduling ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Wand2 className="h-4 w-4 mr-1" />
-                  )}
-                  Escalar Automaticamente
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsExportOpen(true)}
-                  disabled={schedules.length === 0}
-                >
-                  <Share2 className="h-4 w-4 mr-1" />
-                  Exportar
-                </Button>
-                <Badge variant="outline" className="text-sm">
-                  {schedules.length} escalado{schedules.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Ministries and Positions with Drag and Drop */}
       {ministriesWithPositions.length === 0 ? (
