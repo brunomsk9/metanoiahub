@@ -18,7 +18,8 @@ import { PresentationPdfGenerator } from '@/components/admin/PresentationPdfGene
 import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart, Calendar } from 'lucide-react';
+import { PageBreadcrumb } from '@/components/PageBreadcrumb';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart, Calendar, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,7 +29,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
-import { Building2 } from 'lucide-react';
 
 type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules';
 
@@ -187,8 +187,11 @@ export default function Admin() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Breadcrumb */}
+        <PageBreadcrumb items={[{ label: 'Painel Admin' }]} />
+
+        <div>
           <h1 className="text-2xl font-bold text-foreground">
             {isAdmin ? 'Gerenciar Conteúdo' : isLiderMinisterial ? 'Escalas Ministeriais' : 'Discipulado'}
           </h1>

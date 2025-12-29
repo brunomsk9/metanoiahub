@@ -5,9 +5,9 @@ import { MentorChatButton } from "@/components/MentorChat";
 import { TrackCard } from "@/components/ContinueWatching";
 import { PageTransition } from "@/components/PageTransition";
 import { CelebrationModal } from "@/components/CelebrationModal";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-
 interface Track {
   id: string;
   titulo: string;
@@ -105,8 +105,11 @@ export default function Tracks() {
     <AppShell headerTitle="Trilhas" onLogout={handleLogout}>
       <PageTransition>
         <div className="space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={[{ label: 'Trilhas' }]} />
+
           {/* Header - visible on desktop */}
-          <header className="hidden lg:block pt-2">
+          <header className="hidden lg:block">
             <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
               Trilhas
             </h1>

@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { PageTransition } from '@/components/PageTransition';
-import { Loader2, ShieldAlert, ArrowLeft, LogOut, Heart } from 'lucide-react';
+import { PageBreadcrumb } from '@/components/PageBreadcrumb';
+import { Loader2, ShieldAlert, ArrowLeft, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 
@@ -71,6 +72,9 @@ export default function Discipleship() {
     <AppShell>
       <PageTransition>
         <div className="space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={[{ label: 'Discipulado' }]} />
+
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Heart className="h-7 w-7 text-primary" />

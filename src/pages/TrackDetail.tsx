@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Clock } from "lucide-react";
@@ -96,6 +97,14 @@ export default function TrackDetail() {
     >
       <PageTransition>
         <div className="max-w-5xl mx-auto space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb 
+            items={[
+              { label: 'Trilhas', href: '/trilhas' },
+              { label: track?.titulo || 'Trilha' }
+            ]} 
+          />
+
           {/* Header - visible on desktop */}
           {loading ? (
             <div className="hidden lg:block space-y-2">

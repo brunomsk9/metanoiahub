@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout";
 import { PageTransition } from "@/components/PageTransition";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -276,8 +277,11 @@ export default function MySchedules() {
   return (
     <PageTransition>
       <AppShell onLogout={handleLogout} userName={userName}>
-        <div className="pb-20 md:pb-0">
-          <div className="mb-8">
+        <div className="pb-20 md:pb-0 space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={[{ label: 'Minhas Escalas' }]} />
+
+          <div>
             <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
               Minhas Escalas
             </h1>

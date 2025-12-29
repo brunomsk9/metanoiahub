@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { DayProgressDots } from "@/components/ReadingPlanCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -154,8 +155,18 @@ export default function ReadingPlan() {
     <AppShell headerTitle={plan.titulo} showBack hideNavigation>
       <PageTransition>
         <div className="max-w-2xl mx-auto -mx-4 lg:mx-auto">
+          {/* Breadcrumb */}
+          <div className="px-4 pt-2 lg:px-0">
+            <PageBreadcrumb 
+              items={[
+                { label: 'Planos de Leitura', href: '/dashboard' },
+                { label: plan.titulo }
+              ]} 
+            />
+          </div>
+
           {/* Header with cover */}
-          <div className="relative">
+          <div className="relative mt-4">
             <div className="h-48 overflow-hidden rounded-b-2xl lg:rounded-2xl">
               <img
                 src={plan.cover_image || "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=800&auto=format&fit=crop"}
