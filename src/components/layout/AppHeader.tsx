@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   ChevronLeft, 
@@ -16,7 +16,10 @@ import {
   ShieldAlert,
   FolderOpen,
   Users,
-  ChevronDown
+  ChevronDown,
+  Network,
+  CalendarDays,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
@@ -51,6 +54,7 @@ export const AppHeader = memo(function AppHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userName, setUserName] = useState("");
   const [learningOpen, setLearningOpen] = useState(true);
+  const [ministryOpen, setMinistryOpen] = useState(true);
   
   const { isAdmin, isDiscipulador, isSuperAdmin, isLiderMinisterial, userId } = useUserRoles();
 
@@ -77,7 +81,7 @@ export const AppHeader = memo(function AppHeader({
     navigate(path);
   };
 
-  // Learning items - same as desktop sidebar
+  // Learning items
   const learningItems = [
     { path: "/trilhas", label: "Trilhas", icon: GraduationCap },
     { path: "/biblioteca", label: "Biblioteca", icon: BookMarked },
@@ -90,6 +94,53 @@ export const AppHeader = memo(function AppHeader({
 
   const isLearningActive = learningItems.some(
     (item) => location.pathname === item.path
+  );
+
+  // Ministry items - for leaders
+  const showMinistrySection = isAdmin || isLiderMinisterial;
+  const ministryItems = [
+    { 
+      path: "/admin?section=escalas", 
+      label: "Escalas", 
+      icon: CalendarDays,
+      active: location.pathname === "/admin" && location.search.includes("escalas")
+    },
+    { 
+      path: "/admin?section=ministerios", 
+      label: "Rede Ministerial", 
+      icon: Network,
+      active: location.pathname === "/admin" && location.search.includes("ministerios")
+    },
+  ];
+
+  const isMinistryActive = ministryItems.some((item) => item.active);
+
+  const NavButton = ({ 
+    onClick, 
+    active, 
+    icon: Icon, 
+    label, 
+    delay 
+  }: { 
+    onClick: () => void; 
+    active: boolean; 
+    icon: any; 
+    label: string; 
+    delay?: string;
+  }) => (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1 animate-fade-in",
+        active
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+      )}
+      style={delay ? { animationDelay: delay } : undefined}
+    >
+      <Icon className="w-5 h-5 transition-transform duration-200" />
+      <span>{label}</span>
+    </button>
   );
 
   return (
@@ -105,7 +156,7 @@ export const AppHeader = memo(function AppHeader({
       <div className="flex items-center justify-between h-full px-4 max-w-2xl mx-auto lg:max-w-7xl lg:px-6">
         {/* Left side */}
         <div className="flex items-center gap-3">
-          {/* Hamburger Menu - Left Side */}
+          {/* Hamburger Menu */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -132,21 +183,15 @@ export const AppHeader = memo(function AppHeader({
               <ScrollArea className="flex-1 h-[calc(100vh-140px)]">
                 <nav className="p-3 space-y-1">
                   {/* Home */}
-                  <button
+                  <NavButton
                     onClick={() => handleNavigate("/dashboard")}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1 animate-fade-in",
-                      location.pathname === "/dashboard"
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                    style={{ animationDelay: '75ms' }}
-                  >
-                    <Home className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-                    <span>Início</span>
-                  </button>
+                    active={location.pathname === "/dashboard"}
+                    icon={Home}
+                    label="Início"
+                    delay="75ms"
+                  />
 
-                  {/* Learning Section - Collapsible */}
+                  {/* Learning Section */}
                   <Collapsible open={learningOpen} onOpenChange={setLearningOpen}>
                     <CollapsibleTrigger
                       className={cn(
@@ -158,7 +203,7 @@ export const AppHeader = memo(function AppHeader({
                       style={{ animationDelay: '100ms' }}
                     >
                       <div className="flex items-center gap-3">
-                        <GraduationCap className="w-5 h-5" />
+                        <Sparkles className="w-5 h-5" />
                         <span>Aprendizado</span>
                       </div>
                       <ChevronDown
@@ -170,119 +215,129 @@ export const AppHeader = memo(function AppHeader({
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pl-6 mt-1 space-y-1 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
                       {learningItems.map((item, index) => (
-                        <button
+                        <NavButton
                           key={item.path}
                           onClick={() => handleNavigate(item.path)}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1",
-                            location.pathname === item.path
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          )}
-                          style={{ animationDelay: `${(index + 1) * 50}ms` }}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span>{item.label}</span>
-                        </button>
+                          active={location.pathname === item.path}
+                          icon={item.icon}
+                          label={item.label}
+                          delay={`${(index + 1) * 50}ms`}
+                        />
                       ))}
                     </CollapsibleContent>
                   </Collapsible>
 
-                  {/* Escalas */}
-                  <button
-                    onClick={() => handleNavigate(isAdmin || isLiderMinisterial ? "/admin?section=escalas" : "/minhas-escalas")}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1 animate-fade-in",
-                      location.pathname === "/minhas-escalas" || (location.pathname === "/admin" && location.search.includes("escalas"))
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                    style={{ animationDelay: '125ms' }}
-                  >
-                    <Calendar className="w-5 h-5" />
-                    <span>Escalas</span>
-                  </button>
+                  {/* Ministry Section - for leaders */}
+                  {showMinistrySection && (
+                    <Collapsible open={ministryOpen} onOpenChange={setMinistryOpen}>
+                      <CollapsibleTrigger
+                        className={cn(
+                          "flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1 animate-fade-in",
+                          isMinistryActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                        style={{ animationDelay: '125ms' }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Network className="w-5 h-5" />
+                          <span>Ministério</span>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "w-4 h-4 transition-transform duration-300",
+                            ministryOpen && "rotate-180"
+                          )}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pl-6 mt-1 space-y-1 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
+                        {ministryItems.map((item, index) => (
+                          <NavButton
+                            key={item.path}
+                            onClick={() => handleNavigate(item.path)}
+                            active={item.active}
+                            icon={item.icon}
+                            label={item.label}
+                            delay={`${(index + 1) * 50}ms`}
+                          />
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  {/* Escalas for regular volunteers */}
+                  {!showMinistrySection && (
+                    <NavButton
+                      onClick={() => handleNavigate("/minhas-escalas")}
+                      active={location.pathname === "/minhas-escalas"}
+                      icon={Calendar}
+                      label="Minhas Escalas"
+                      delay="125ms"
+                    />
+                  )}
+
+                  {/* Discipulado for discipuladores only */}
+                  {isDiscipulador && !isAdmin && (
+                    <NavButton
+                      onClick={() => handleNavigate("/admin")}
+                      active={
+                        location.pathname === "/admin" && 
+                        !location.search.includes("recursos") && 
+                        !location.search.includes("escalas") &&
+                        !location.search.includes("ministerios")
+                      }
+                      icon={Users}
+                      label="Discipulado"
+                      delay="150ms"
+                    />
+                  )}
 
                   {/* Perfil */}
-                  <button
+                  <NavButton
                     onClick={() => handleNavigate("/perfil")}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1 animate-fade-in",
-                      location.pathname === "/perfil"
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                    style={{ animationDelay: '150ms' }}
-                  >
-                    <User className="w-5 h-5" />
-                    <span>Meu Perfil</span>
-                  </button>
+                    active={location.pathname === "/perfil"}
+                    icon={User}
+                    label="Meu Perfil"
+                    delay="175ms"
+                  />
 
                   {/* Admin Section */}
-                  {(isAdmin || isDiscipulador || isLiderMinisterial || isSuperAdmin) && (
-                    <div className="pt-4 mt-4 border-t border-border/50 animate-fade-in" style={{ animationDelay: '175ms' }}>
+                  {(isAdmin || isDiscipulador || isSuperAdmin) && (
+                    <div className="pt-4 mt-4 border-t border-border/50 animate-fade-in" style={{ animationDelay: '200ms' }}>
                       <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Gestão
                       </p>
 
                       {(isAdmin || isDiscipulador) && (
-                        <button
+                        <NavButton
                           onClick={() => handleNavigate("/admin?section=recursos")}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1",
-                            location.pathname === "/admin" && location.search.includes("recursos")
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          )}
-                        >
-                          <FolderOpen className="w-5 h-5" />
-                          <span>Recursos</span>
-                        </button>
-                      )}
-
-                      {isDiscipulador && !isAdmin && (
-                        <button
-                          onClick={() => handleNavigate("/admin")}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1",
-                            location.pathname === "/admin" && !location.search.includes("recursos") && !location.search.includes("escalas")
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          )}
-                        >
-                          <Users className="w-5 h-5" />
-                          <span>Discipulado</span>
-                        </button>
+                          active={location.pathname === "/admin" && location.search.includes("recursos")}
+                          icon={FolderOpen}
+                          label="Recursos"
+                        />
                       )}
 
                       {isAdmin && (
-                        <button
+                        <NavButton
                           onClick={() => handleNavigate("/admin")}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1",
-                            location.pathname === "/admin" && !location.search.includes("recursos") && !location.search.includes("escalas")
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          )}
-                        >
-                          <Settings className="w-5 h-5" />
-                          <span>Painel Admin</span>
-                        </button>
+                          active={
+                            location.pathname === "/admin" && 
+                            !location.search.includes("recursos") && 
+                            !location.search.includes("escalas") &&
+                            !location.search.includes("ministerios")
+                          }
+                          icon={Settings}
+                          label="Painel Admin"
+                        />
                       )}
 
                       {isSuperAdmin && (
-                        <button
+                        <NavButton
                           onClick={() => handleNavigate("/super-admin")}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1",
-                            location.pathname === "/super-admin"
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          )}
-                        >
-                          <ShieldAlert className="w-5 h-5" />
-                          <span>Super Admin</span>
-                        </button>
+                          active={location.pathname === "/super-admin"}
+                          icon={ShieldAlert}
+                          label="Super Admin"
+                        />
                       )}
                     </div>
                   )}
@@ -290,7 +345,7 @@ export const AppHeader = memo(function AppHeader({
               </ScrollArea>
 
               {/* Footer */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background animate-fade-in" style={{ animationDelay: '225ms' }}>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-destructive hover:bg-destructive/10 transition-all duration-200 hover:translate-x-1"
