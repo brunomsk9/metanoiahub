@@ -25,12 +25,33 @@ interface Volunteer {
   }[];
 }
 
+type PdfColumn = 'nome' | 'email' | 'telefone' | 'ministerio' | 'funcao';
+
+const PDF_COLUMNS: { key: PdfColumn; label: string }[] = [
+  { key: 'nome', label: 'Nome' },
+  { key: 'email', label: 'Email' },
+  { key: 'telefone', label: 'Telefone' },
+  { key: 'ministerio', label: 'Ministério' },
+  { key: 'funcao', label: 'Função' },
+];
+
 export function VolunteersExportReport() {
   const { churchId } = useUserChurchId();
   const [selectedMinistry, setSelectedMinistry] = useState<string>("all");
   const [selectedGender, setSelectedGender] = useState<string>("all");
   const [selectedVolunteers, setSelectedVolunteers] = useState<Set<string>>(new Set());
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [pdfColumns, setPdfColumns] = useState<Set<PdfColumn>>(new Set(['nome', 'email', 'ministerio']));
+
+  const togglePdfColumn = (col: PdfColumn) => {
+    const newCols = new Set(pdfColumns);
+    if (newCols.has(col)) {
+      if (newCols.size > 1) newCols.delete(col);
+    } else {
+      newCols.add(col);
+    }
+    setPdfColumns(newCols);
+  };
 
   // Fetch ministries
   const { data: ministries = [] } = useQuery({
@@ -227,6 +248,19 @@ export function VolunteersExportReport() {
       const selectedMinistryName = getSelectedMinistryName();
       const dateStr = new Date().toLocaleDateString('pt-BR');
 
+      const getColumnValue = (v: Volunteer, col: PdfColumn): string => {
+        switch (col) {
+          case 'nome': return v.nome;
+          case 'email': return v.email || "-";
+          case 'telefone': return v.telefone || "-";
+          case 'ministerio': return v.ministries.map(m => m.nome).join(", ");
+          case 'funcao': return v.ministries.map(m => getFuncaoLabel(m.funcao)).join(", ");
+          default: return "-";
+        }
+      };
+
+      const selectedCols = PDF_COLUMNS.filter(c => pdfColumns.has(c.key));
+
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
@@ -238,17 +272,13 @@ export function VolunteersExportReport() {
           <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
             <thead>
               <tr style="background-color: #8B5CF6; color: white;">
-                <th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">Nome</th>
-                <th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">Ministério</th>
-                <th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">Email</th>
+                ${selectedCols.map(c => `<th style="border: 1px solid #7c4fe0; padding: 12px 10px; text-align: left; font-weight: 600;">${c.label}</th>`).join('')}
               </tr>
             </thead>
             <tbody>
               ${volunteersToExport.map((v, index) => `
                 <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-                  <td style="border: 1px solid #e5e7eb; padding: 10px; font-weight: 500;">${v.nome}</td>
-                  <td style="border: 1px solid #e5e7eb; padding: 10px;">${v.ministries.map(m => m.nome).join(", ")}</td>
-                  <td style="border: 1px solid #e5e7eb; padding: 10px; color: #6b7280;">${v.email || "-"}</td>
+                  ${selectedCols.map(c => `<td style="border: 1px solid #e5e7eb; padding: 10px;${c.key === 'nome' ? ' font-weight: 500;' : ''}">${getColumnValue(v, c.key)}</td>`).join('')}
                 </tr>
               `).join('')}
             </tbody>
@@ -334,12 +364,29 @@ export function VolunteersExportReport() {
               </Select>
             </div>
             
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="secondary" className="gap-1">
-                <Users className="h-3 w-3" />
-                {filteredVolunteers.length} voluntários
-              </Badge>
-              
+            <Badge variant="secondary" className="gap-1">
+              <Users className="h-3 w-3" />
+              {filteredVolunteers.length} voluntários
+            </Badge>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between border-t pt-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Colunas do PDF:</p>
+              <div className="flex flex-wrap gap-3">
+                {PDF_COLUMNS.map(col => (
+                  <label key={col.key} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={pdfColumns.has(col.key)}
+                      onCheckedChange={() => togglePdfColumn(col.key)}
+                    />
+                    <span className="text-sm">{col.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
               <Button onClick={exportToCSV} variant="outline" className="gap-2">
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
