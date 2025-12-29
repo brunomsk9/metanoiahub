@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { Loader2, ShieldAlert, ArrowLeft, Heart } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
+import { DiscipleshipSkeleton } from '@/components/skeletons/PageSkeletons';
 
 export default function Discipleship() {
   const navigate = useNavigate();
@@ -42,9 +43,9 @@ export default function Discipleship() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <AppShell>
+        <DiscipleshipSkeleton />
+      </AppShell>
     );
   }
 

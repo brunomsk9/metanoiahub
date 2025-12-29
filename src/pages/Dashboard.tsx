@@ -17,6 +17,7 @@ import { VolunteerSchedules } from "@/components/VolunteerSchedules";
 import { VolunteerPlaybooks } from "@/components/VolunteerPlaybooks";
 import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { DashboardSkeleton } from "@/components/skeletons/PageSkeletons";
 
 // Lazy load heavy components
 const DiscipuladorDashboardCards = lazy(() => import("@/components/DiscipuladorDashboardCards").then(m => ({ default: m.DiscipuladorDashboardCards })));
@@ -35,13 +36,6 @@ interface ReadingPlanWithProgress {
   completedDays: number[];
   hasProgress: boolean;
 }
-
-const SectionSkeleton = memo(() => (
-  <div className="space-y-2">
-    <Skeleton className="h-4 w-24" />
-    <Skeleton className="h-20 rounded-lg" />
-  </div>
-));
 
 export default function Dashboard() {
   const {
@@ -89,11 +83,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <AppShell onLogout={handleLogout} userName="">
-        <div className="space-y-6 pt-4">
-          <SectionSkeleton />
-          <SectionSkeleton />
-          <SectionSkeleton />
-        </div>
+        <DashboardSkeleton />
       </AppShell>
     );
   }
