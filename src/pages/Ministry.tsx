@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
+import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { Loader2, ShieldAlert, ArrowLeft, Building2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
@@ -80,6 +81,9 @@ export default function Ministry() {
     <AppShell>
       <PageTransition>
         <div className="space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={[{ label: 'Ministério' }]} />
+
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Building2 className="h-7 w-7 text-primary" />

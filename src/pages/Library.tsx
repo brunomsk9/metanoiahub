@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -111,9 +112,12 @@ export default function Library() {
   return (
     <AppShell headerTitle="Biblioteca" onLogout={handleLogout}>
       <PageTransition>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb items={[{ label: 'Biblioteca' }]} />
+
           {/* Header - visible on desktop */}
-          <header className="hidden lg:block pt-2 pb-6 text-center">
+          <header className="hidden lg:block text-center">
             <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
               Biblioteca
             </h1>

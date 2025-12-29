@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp } from "lucide-react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -12,6 +12,14 @@ import { toast } from "sonner";
 import { CelebrationModal } from "@/components/CelebrationModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XPGainToast } from "@/components/XPGainToast";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 const XP_PER_LESSON = 10;
 
@@ -338,38 +346,95 @@ export default function Lesson() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              {trackTitle && <p className="text-xs text-primary font-medium">{trackTitle}</p>}
-              {isCompleted && (
-                <span className="inline-flex items-center gap-1 text-xs text-emerald-500">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Concluída
-                </span>
-              )}
-            </div>
-            <h1 className="text-sm font-display font-semibold text-foreground truncate">
-              {lesson.titulo}
-            </h1>
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Breadcrumb */}
+          <div className="py-2 border-b border-border/50">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                      <Home className="h-3.5 w-3.5" />
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/trilhas" className="text-xs">Trilhas</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {lesson.course?.track?.titulo && (
+                  <>
+                    <BreadcrumbSeparator>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </BreadcrumbSeparator>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link to={`/trilha/${lesson.course.track_id}`} className="text-xs max-w-[100px] truncate">
+                          {lesson.course.track.titulo}
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </>
+                )}
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/curso/${lesson.course_id}`} className="text-xs max-w-[100px] truncate">
+                      {lesson.course?.titulo || 'Curso'}
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="text-xs max-w-[120px] truncate">
+                    {lesson.titulo}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          {nextLesson ? (
-            <Button variant="outline" size="sm" onClick={handleNextLesson}>
-              Próxima
-              <ChevronRight className="w-4 h-4 ml-1" />
+
+          {/* Title row */}
+          <div className="h-14 flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-5 h-5" />
             </Button>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => lesson?.course?.id && navigate(`/curso/${lesson.course.id}`)}>
-              Ver Curso
-            </Button>
-          )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {isCompleted && (
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-500">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Concluída
+                  </span>
+                )}
+              </div>
+              <h1 className="text-sm font-display font-semibold text-foreground truncate">
+                {lesson.titulo}
+              </h1>
+            </div>
+            {nextLesson ? (
+              <Button variant="outline" size="sm" onClick={handleNextLesson}>
+                Próxima
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => lesson?.course?.id && navigate(`/curso/${lesson.course.id}`)}>
+                Ver Curso
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 

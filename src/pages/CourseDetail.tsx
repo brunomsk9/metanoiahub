@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, FileText, CheckSquare, Clock, CheckCircle2 } from "lucide-react";
@@ -129,6 +130,15 @@ export default function CourseDetail() {
     >
       <PageTransition>
         <div className="max-w-3xl mx-auto space-y-6">
+          {/* Breadcrumb */}
+          <PageBreadcrumb 
+            items={[
+              { label: 'Trilhas', href: '/trilhas' },
+              { label: course?.track_titulo || 'Trilha', href: course ? `/trilha/${course.track_id}` : '/trilhas' },
+              { label: course?.titulo || 'Curso' }
+            ]} 
+          />
+
           {/* Header - visible on desktop */}
           {loading ? (
             <div className="hidden lg:block space-y-2">
@@ -138,7 +148,6 @@ export default function CourseDetail() {
             </div>
           ) : course && (
             <header className="hidden lg:block space-y-1">
-              <p className="text-xs text-muted-foreground">{course.track_titulo}</p>
               <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
                 {course.titulo}
               </h1>
