@@ -12,7 +12,7 @@ import { MinistrySkeleton } from '@/components/skeletons/PageSkeletons';
 
 export default function Ministry() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [isLiderMinisterial, setIsLiderMinisterial] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -43,10 +43,6 @@ export default function Ministry() {
     setIsLiderMinisterial(userIsLiderMinisterial);
     setIsAdmin(userIsAdmin);
     setLoading(false);
-  };
-
-  const navigateToSection = (section: string) => {
-    setSearchParams({ tab: section });
   };
 
   if (loading) {
@@ -82,36 +78,21 @@ export default function Ministry() {
       <PageTransition>
         <div className="space-y-6">
           {/* Breadcrumb */}
-          <PageBreadcrumb items={[{ label: 'Ministério' }]} />
+          <PageBreadcrumb items={[{ label: currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial' }]} />
 
-          <div>
+          <div className="mb-2">
             <div className="flex items-center gap-3 mb-2">
               <Building2 className="h-7 w-7 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Ministério</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                {currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial'}
+              </h1>
             </div>
             <p className="text-muted-foreground">
-              Gerencie escalas e a rede ministerial
+              {currentSection === 'escalas' 
+                ? 'Gerencie as escalas de voluntários para cultos e eventos'
+                : 'Gerencie ministérios, líderes e voluntários'
+              }
             </p>
-          </div>
-
-          {/* Section Navigation */}
-          <div className="flex gap-2 border-b border-border pb-4">
-            <Button
-              variant={currentSection === 'escalas' ? 'default' : 'ghost'}
-              onClick={() => navigateToSection('escalas')}
-              className="gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              Escalas
-            </Button>
-            <Button
-              variant={currentSection === 'rede' ? 'default' : 'ghost'}
-              onClick={() => navigateToSection('rede')}
-              className="gap-2"
-            >
-              <Building2 className="h-4 w-4" />
-              Rede Ministerial
-            </Button>
           </div>
 
           {/* Content */}
