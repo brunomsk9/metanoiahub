@@ -43,9 +43,45 @@ interface DiscipleshipChartsProps {
 
 type PeriodFilter = "30d" | "90d" | "180d" | "1y" | "all";
 
+// Paleta de cores harmoniosa baseada no tema
+const CHART_COLORS = {
+  primary: 'hsl(var(--primary))',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  info: '#06b6d4',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+  indigo: '#6366f1',
+};
+
+const FUNNEL_COLORS = [
+  '#06b6d4', // Conexão 1 - cyan
+  '#0891b2', // Conexão 2 - darker cyan
+  '#10b981', // Alicerce - green
+  '#8b5cf6', // Academia 1 - purple
+  '#7c3aed', // Academia 2 - darker purple
+  '#6366f1', // Academia 3 - indigo
+  '#4f46e5', // Academia 4 - darker indigo
+];
+
+const STATUS_COLORS = {
+  active: '#10b981',
+  completed: 'hsl(var(--primary))',
+  inactive: '#6b7280',
+};
+
+const CAPACITY_COLORS = [
+  '#ef4444', // 0% - red
+  '#f59e0b', // 1-25% - orange
+  '#eab308', // 26-50% - yellow
+  '#10b981', // 51-75% - green
+  'hsl(var(--primary))', // 76-100% - primary
+];
+
 const COLORS = [
   'hsl(var(--primary))',
-  'hsl(var(--chart-2))',
+  '#10b981',
   'hsl(var(--chart-3))',
   'hsl(var(--chart-4))',
   'hsl(var(--chart-5))',
@@ -230,29 +266,29 @@ export function DiscipleshipCharts({
     const inactive = relationships.filter(r => r.status !== 'active' && r.status !== 'completed').length;
 
     return [
-      { name: 'Ativos', value: active, color: COLORS[5] },
-      { name: 'Concluídos', value: completed, color: COLORS[0] },
-      { name: 'Inativos', value: inactive, color: COLORS[7] },
+      { name: 'Ativos', value: active, color: STATUS_COLORS.active },
+      { name: 'Concluídos', value: completed, color: STATUS_COLORS.completed },
+      { name: 'Inativos', value: inactive, color: STATUS_COLORS.inactive },
     ].filter(d => d.value > 0);
   }, [relationships]);
 
   // Capacity usage data
   const capacityData = useMemo(() => {
     const ranges = [
-      { range: '0%', min: 0, max: 0.01, color: COLORS[7] },
-      { range: '1-25%', min: 0.01, max: 0.26, color: COLORS[6] },
-      { range: '26-50%', min: 0.26, max: 0.51, color: COLORS[1] },
-      { range: '51-75%', min: 0.51, max: 0.76, color: COLORS[5] },
-      { range: '76-100%', min: 0.76, max: 1.01, color: COLORS[0] },
+      { range: '0%', min: 0, max: 0.01 },
+      { range: '1-25%', min: 0.01, max: 0.26 },
+      { range: '26-50%', min: 0.26, max: 0.51 },
+      { range: '51-75%', min: 0.51, max: 0.76 },
+      { range: '76-100%', min: 0.76, max: 1.01 },
     ];
 
-    return ranges.map(r => ({
+    return ranges.map((r, index) => ({
       range: r.range,
       count: discipuladores.filter(d => {
         const usage = (discipuladorDiscipleCount[d.id] || 0) / maxDisciplesLimit;
         return usage >= r.min && usage < r.max;
       }).length,
-      fill: r.color
+      fill: CAPACITY_COLORS[index]
     }));
   }, [discipuladores, discipuladorDiscipleCount, maxDisciplesLimit]);
 
@@ -429,19 +465,19 @@ export function DiscipleshipCharts({
         </Card>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Monthly Evolution */}
-        <Card className="lg:col-span-2">
+      {/* Charts Section */}
+      <div className="space-y-6">
+        {/* Row 1: Monthly Evolution - Full Width */}
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
+              <TrendingUp className="h-4 w-4 text-primary" />
               Evolução Mensal de Discipulados
             </CardTitle>
           </CardHeader>
           <CardContent>
             {monthlyEvolutionData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px]">
+              <ChartContainer config={chartConfig} className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={monthlyEvolutionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <defs>
@@ -450,162 +486,178 @@ export function DiscipleshipCharts({
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area type="monotone" dataKey="ativos" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorAtivos)" />
-                    <Line type="monotone" dataKey="novos" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="concluidos" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 4 }} />
-                    <Legend />
+                    <Area type="monotone" dataKey="ativos" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorAtivos)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="novos" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} />
+                    <Line type="monotone" dataKey="concluidos" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3, fill: '#8b5cf6' }} />
+                    <Legend 
+                      verticalAlign="bottom"
+                      formatter={(value) => <span className="text-sm text-muted-foreground capitalize">{value}</span>}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
                 Nenhum dado disponível para o período selecionado
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Program Funnel */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Funil de Progressão
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {programFunnelData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px]">
+        {/* Row 2: Top Discipuladores + Funil de Progressão */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Top 10 Discipuladores */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                Top 10 Discipuladores
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {disciplesPerDiscipuladorData.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={disciplesPerDiscipuladorData} layout="vertical" margin={{ left: 5, right: 40 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis type="number" domain={[0, maxDisciplesLimit]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis dataKey="nome" type="category" width={70} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value, name, props) => [
+                          `${value}/${maxDisciplesLimit}`,
+                          props.payload.fullName
+                        ]}
+                      />
+                      <Bar dataKey="discipulos" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              ) : (
+                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Program Funnel */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Target className="h-4 w-4 text-cyan-500" />
+                Funil de Progressão
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {programFunnelData.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={programFunnelData} layout="vertical" margin={{ left: 5, right: 50 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis dataKey="etapa" type="category" width={80} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value, name, props) => [`${value} (${props.payload.taxa}%)`, 'Quantidade']}
+                      />
+                      <Bar dataKey="quantidade" radius={[0, 6, 6, 0]}>
+                        {programFunnelData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[index]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              ) : (
+                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row 3: Status Distribution + Capacity Usage */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Status Distribution Pie */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="h-4 w-4 text-green-500" />
+                Distribuição por Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statusDistributionData.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={statusDistributionData}
+                        cx="50%"
+                        cy="45%"
+                        innerRadius={55}
+                        outerRadius={90}
+                        paddingAngle={3}
+                        dataKey="value"
+                        label={({ name, value, percent }) => `${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                      >
+                        {statusDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
+                        ))}
+                      </Pie>
+                      <Legend 
+                        verticalAlign="bottom"
+                        formatter={(value) => <span className="text-foreground text-xs">{value}</span>}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Capacity Usage */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-purple-500" />
+                Utilização da Capacidade
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={programFunnelData} layout="vertical" margin={{ left: 10, right: 50 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                    <XAxis type="number" />
-                    <YAxis dataKey="etapa" type="category" width={90} tick={{ fontSize: 11 }} />
+                  <BarChart data={capacityData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="range" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                     <ChartTooltip 
                       content={<ChartTooltipContent />}
-                      formatter={(value, name, props) => [`${value} (${props.payload.taxa}%)`, 'Quantidade']}
+                      formatter={(value) => [`${value} discipuladores`, 'Quantidade']}
                     />
-                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]}>
-                      {programFunnelData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                      {capacityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Status Distribution Pie */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Distribuição por Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {statusDistributionData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={statusDistributionData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                      labelLine={false}
-                    >
-                      {statusDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Disciples per Discipulador */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Top 10 Discipuladores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {disciplesPerDiscipuladorData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={disciplesPerDiscipuladorData} layout="vertical" margin={{ left: 10, right: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                    <XAxis type="number" domain={[0, maxDisciplesLimit]} />
-                    <YAxis dataKey="nome" type="category" width={80} tick={{ fontSize: 12 }} />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent />}
-                      formatter={(value, name, props) => [
-                        `${value}/${maxDisciplesLimit}`,
-                        props.payload.fullName
-                      ]}
-                    />
-                    <Bar dataKey="discipulos" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Capacity Usage */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Utilização da Capacidade
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={capacityData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="range" tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {capacityData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
