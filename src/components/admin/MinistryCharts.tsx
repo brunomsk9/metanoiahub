@@ -2,8 +2,22 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Legend, CartesianGrid } from "recharts";
-import { Users, Building2, TrendingUp, Crown, UserCheck, Calendar, ClipboardList, Award } from "lucide-react";
+import { Users, Building2, TrendingUp, Crown, UserCheck, Calendar, ClipboardList, Award, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+// Metric explanations for tooltips
+const METRIC_TOOLTIPS = {
+  ministerios: "Total de áreas ministeriais ativas cadastradas na igreja.",
+  voluntarios: "Número de pessoas únicas que participam de pelo menos um ministério.",
+  comLideres: "Ministérios que possuem um líder principal designado.",
+  multiArea: "Voluntários que servem em mais de uma área ministerial simultaneamente.",
+  escalas: "Total de escalas criadas para todos os cultos e eventos.",
+  confirmacao: "Percentual de escalas confirmadas pelos voluntários.",
+  mediaMinisterio: "Média de voluntários por ministério (total de vínculos / total de ministérios).",
+  confirmados: "Escalas que foram aceitas e confirmadas pelos voluntários.",
+  semVoluntarios: "Ministérios que ainda não possuem nenhum voluntário cadastrado.",
+  vinculosTotal: "Soma de todas as participações (um voluntário em 2 áreas = 2 vínculos).",
+};
 interface Ministry {
   id: string;
   nome: string;
@@ -213,113 +227,195 @@ export function MinistryCharts({ ministries, volunteers, schedules, users }: Min
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-        <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Ministérios</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.totalMinistries}</p>
-          </CardContent>
-        </Card>
+      <TooltipProvider>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+          <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Ministérios Ativos</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.ministerios}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.totalMinistries}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Voluntários</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.uniqueVolunteers}</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-green-500" />
+                <span className="text-xs text-muted-foreground">Voluntários Únicos</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.voluntarios}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.uniqueVolunteers}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Crown className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-muted-foreground">Com Líderes</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.ministriesWithLeaders}</p>
-            <p className="text-xs text-muted-foreground">de {stats.totalMinistries}</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-purple-500" />
+                <span className="text-xs text-muted-foreground">Com Liderança</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.comLideres}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.ministriesWithLeaders}</p>
+              <p className="text-xs text-muted-foreground">de {stats.totalMinistries}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-orange-500" />
-              <span className="text-xs text-muted-foreground">Multi-Área</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.multiMinistryVolunteers}</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-orange-500" />
+                <span className="text-xs text-muted-foreground">Servem Multi-Área</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.multiArea}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.multiMinistryVolunteers}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-cyan-500" />
-              <span className="text-xs text-muted-foreground">Escalas</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.totalSchedules}</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-cyan-500" />
+                <span className="text-xs text-muted-foreground">Total de Escalas</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.escalas}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.totalSchedules}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-blue-500" />
-              <span className="text-xs text-muted-foreground">Confirmação</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.confirmationRate}%</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
+                <span className="text-xs text-muted-foreground">Taxa Confirmação</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.confirmacao}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.confirmationRate}%</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Row 2 - Additional Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-amber-500" />
-              <span className="text-xs text-muted-foreground">Média/Ministério</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.avgVolunteersPerMinistry}</p>
-            <p className="text-xs text-muted-foreground">voluntários</p>
-          </CardContent>
-        </Card>
+        {/* Row 2 - Additional Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-amber-500" />
+                <span className="text-xs text-muted-foreground">Média por Ministério</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.mediaMinisterio}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.avgVolunteersPerMinistry}</p>
+              <p className="text-xs text-muted-foreground">voluntários</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Confirmados</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.confirmedSchedules}</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-green-500" />
+                <span className="text-xs text-muted-foreground">Escalas Confirmadas</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.confirmados}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.confirmedSchedules}</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-red-500" />
-              <span className="text-xs text-muted-foreground">Sem Voluntários</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{leadersWithoutVolunteers}</p>
-            <p className="text-xs text-muted-foreground">ministérios</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-red-500" />
+                <span className="text-xs text-muted-foreground">Áreas Vazias</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.semVoluntarios}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{leadersWithoutVolunteers}</p>
+              <p className="text-xs text-muted-foreground">ministérios</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-indigo-500" />
-              <span className="text-xs text-muted-foreground">Vínculos Total</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{volunteers.length}</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-indigo-500" />
+                <span className="text-xs text-muted-foreground">Total de Vínculos</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.vinculosTotal}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{volunteers.length}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
 
       {/* Charts Row 1: Volunteers per Ministry + Ministry Size */}
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
