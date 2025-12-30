@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, Plus, Search, Users, Trash2, Edit, UserPlus, Crown, User, Building2, Palette } from 'lucide-react';
+import { Loader2, Plus, Search, Users, Trash2, Edit, UserPlus, Crown, User, Building2, Palette, BarChart3 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { MinistryCharts } from './MinistryCharts';
 
 interface Ministry {
   id: string;
@@ -69,6 +70,7 @@ export function AdminMinistries() {
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [volunteers, setVolunteers] = useState<MinistryVolunteer[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -79,6 +81,7 @@ export function AdminMinistries() {
   const [volunteerSearch, setVolunteerSearch] = useState('');
   const [currentVolunteerSearch, setCurrentVolunteerSearch] = useState('');
   const [userLeaderMinistries, setUserLeaderMinistries] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('ministerios');
   
   // Form states
   const [formData, setFormData] = useState({
@@ -145,6 +148,16 @@ export function AdminMinistries() {
       toast.error('Erro ao carregar voluntários');
     } else {
       setVolunteers(volunteersData || []);
+    }
+
+    // Fetch schedules for analytics
+    const { data: schedulesData, error: schedulesError } = await supabase
+      .from('schedules')
+      .select('id, ministry_id, volunteer_id, status, service:services(data_hora)')
+      .eq('church_id', churchId);
+
+    if (!schedulesError) {
+      setSchedules(schedulesData || []);
     }
 
     setLoading(false);
@@ -328,10 +341,24 @@ export function AdminMinistries() {
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex justify-end">
-        <div className="flex items-center gap-3">
-          {isAdmin && (
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="ministerios" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Ministérios</span>
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="analytics" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Analytics</span>
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          {/* Header Actions - only show on ministerios tab */}
+          {activeTab === 'ministerios' && isAdmin && (
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2" onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
@@ -424,10 +451,8 @@ export function AdminMinistries() {
             </Dialog>
           )}
         </div>
-      </div>
 
-      {/* Ministries Content */}
-      <div className="mt-6">
+        <TabsContent value="ministerios" className="mt-6">
           {/* Search */}
           <div className="relative max-w-sm mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -521,7 +546,20 @@ export function AdminMinistries() {
               })}
             </div>
           )}
-      </div>
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        {isAdmin && (
+          <TabsContent value="analytics" className="mt-6">
+            <MinistryCharts 
+              ministries={ministries}
+              volunteers={volunteers}
+              schedules={schedules}
+              users={users}
+            />
+          </TabsContent>
+        )}
+      </Tabs>
 
       {/* Edit Ministry Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
