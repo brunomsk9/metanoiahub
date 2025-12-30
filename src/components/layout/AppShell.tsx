@@ -1,8 +1,10 @@
-import { ReactNode, useState, createContext, useContext } from "react";
+import { ReactNode, useState, useEffect, createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "./AppHeader";
 import { DesktopHeader } from "./DesktopHeader";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 // Context for sidebar state
 interface SidebarContextType {
@@ -36,15 +38,49 @@ export function AppShell({
   hideNavigation = false,
   className,
   onLogout,
-  userName,
+  userName: propUserName,
 }: AppShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [userName, setUserName] = useState(propUserName || "");
+  const navigate = useNavigate();
+
+  // Fetch user name if not provided via prop
+  useEffect(() => {
+    if (propUserName) {
+      setUserName(propUserName);
+      return;
+    }
+
+    const fetchUserName = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", session.user.id)
+        .single();
+
+      setUserName(data?.nome || "");
+    };
+
+    fetchUserName();
+  }, [propUserName]);
+
+  const handleLogout = async () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    }
+  };
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed }}>
       <div className="min-h-screen bg-background">
         {/* Desktop Header with logo + user */}
-        <DesktopHeader title={headerTitle} onLogout={onLogout} userName={userName} />
+        <DesktopHeader title={headerTitle} onLogout={handleLogout} userName={userName} />
 
         {/* Desktop Sidebar - below header, on the left */}
         <DesktopSidebar />
