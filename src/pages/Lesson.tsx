@@ -93,11 +93,17 @@ export default function Lesson() {
   const [videoStarted, setVideoStarted] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Handle scroll to show/hide scroll-to-top button
+  // Handle scroll to show/hide scroll-to-top button and calculate reading progress
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
+      
+      // Calculate scroll progress
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollHeight > 0 ? (window.scrollY / scrollHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -371,6 +377,14 @@ export default function Lesson() {
   return (
     <PageTransition>
     <div className="min-h-screen bg-background">
+      {/* Reading Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted/30">
+        <div 
+          className="h-full bg-primary transition-all duration-150 ease-out"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
+
       {/* Mobile Header */}
       <div className="md:hidden">
         <AppHeader title={lesson.titulo} showBack backTo={`/curso/${lesson.course_id}`} />
