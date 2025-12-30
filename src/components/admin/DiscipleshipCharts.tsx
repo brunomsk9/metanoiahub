@@ -2,11 +2,26 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Legend, CartesianGrid, Line, AreaChart, Area } from "recharts";
-import { Users, TrendingUp, Award, BookOpen, Flame, Target, Calendar, Filter, UserCheck, UserX, Clock, User } from "lucide-react";
+import { Users, TrendingUp, Award, BookOpen, Flame, Target, Calendar, Filter, UserCheck, UserX, Clock, User, HelpCircle } from "lucide-react";
 import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format, subDays, subMonths, isAfter, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+// Metric explanations for tooltips
+const METRIC_TOOLTIPS = {
+  discipuladosIniciados: "Total de relacionamentos de discipulado criados no período, independente do status atual.",
+  discipulosEmJornada: "Discípulos atualmente em processo ativo de discipulado com um mentor.",
+  jornadasConcluidas: "Discípulos que completaram todo o processo de discipulado com sucesso.",
+  mentoresAtuando: "Discipuladores que possuem pelo menos um discípulo ativo atribuído.",
+  sequenciaHabitos: "Média de dias consecutivos que os discípulos ativos mantêm seus hábitos diários.",
+  tempoDiscipulado: "Tempo médio (em dias) que os discípulos ativos estão no processo de discipulado.",
+  alicerceConcluido: "Discípulos ativos que já completaram o curso Alicerce presencialmente.",
+  conexaoCompleta: "Discípulos ativos que concluíram as duas etapas de Conexão Inicial.",
+  mentoresDisponiveis: "Discipuladores cadastrados que não possuem nenhum discípulo atribuído.",
+  discipulosPorMentor: "Média de discípulos ativos por discipulador que está atuando.",
+};
 
 interface Profile {
   id: string;
@@ -517,120 +532,202 @@ export function DiscipleshipCharts({
       </div>
 
       {/* Stats Cards - Row 1 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-        <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Discipulados Iniciados</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.totalRelationships}</p>
-          </CardContent>
-        </Card>
+      <TooltipProvider>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+          <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Discipulados Iniciados</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.discipuladosIniciados}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.totalRelationships}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Discípulos em Jornada</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.activeRelationships}</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-green-500" />
+                <span className="text-xs text-muted-foreground">Discípulos em Jornada</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.discipulosEmJornada}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.activeRelationships}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-blue-500" />
-              <span className="text-xs text-muted-foreground">Jornadas Concluídas</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.completedRelationships}</p>
-            <p className="text-xs text-muted-foreground">{stats.completionRate}% taxa</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-blue-500" />
+                <span className="text-xs text-muted-foreground">Jornadas Concluídas</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.jornadasConcluidas}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.completedRelationships}</p>
+              <p className="text-xs text-muted-foreground">{stats.completionRate}% taxa</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-muted-foreground">Mentores Atuando</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.activeDiscipuladores}</p>
-            <p className="text-xs text-muted-foreground">de {stats.totalDiscipuladores}</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-purple-500" />
+                <span className="text-xs text-muted-foreground">Mentores Atuando</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.mentoresAtuando}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.activeDiscipuladores}</p>
+              <p className="text-xs text-muted-foreground">de {stats.totalDiscipuladores}</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <span className="text-xs text-muted-foreground">Sequência de Hábitos</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.avgStreak}</p>
-            <p className="text-xs text-muted-foreground">dias (média)</p>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-orange-500" />
+                <span className="text-xs text-muted-foreground">Sequência de Hábitos</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.sequenciaHabitos}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.avgStreak}</p>
+              <p className="text-xs text-muted-foreground">dias (média)</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-cyan-500" />
-              <span className="text-xs text-muted-foreground">Tempo em Discipulado</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.avgDays}</p>
-            <p className="text-xs text-muted-foreground">dias (média)</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-cyan-500" />
+                <span className="text-xs text-muted-foreground">Tempo em Discipulado</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.tempoDiscipulado}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.avgDays}</p>
+              <p className="text-xs text-muted-foreground">dias (média)</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Stats Cards - Row 2 */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Alicerce Concluído</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.alicerceCompleted}</p>
-            <p className="text-xs text-muted-foreground">{stats.alicerceRate}% dos em jornada</p>
-          </CardContent>
-        </Card>
+        {/* Stats Cards - Row 2 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-green-500" />
+                <span className="text-xs text-muted-foreground">Alicerce Concluído</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.alicerceConcluido}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.alicerceCompleted}</p>
+              <p className="text-xs text-muted-foreground">{stats.alicerceRate}% dos em jornada</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-muted-foreground">Conexão Completa</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{stats.conexaoCompleted}</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-purple-500" />
+                <span className="text-xs text-muted-foreground">Conexão Completa</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.conexaoCompleta}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{stats.conexaoCompleted}</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <UserX className="h-4 w-4 text-red-500" />
-              <span className="text-xs text-muted-foreground">Mentores Disponíveis</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">{discipuladoresSemDiscipulos}</p>
-            <p className="text-xs text-muted-foreground">sem discípulos</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <UserX className="h-4 w-4 text-red-500" />
+                <span className="text-xs text-muted-foreground">Mentores Disponíveis</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.mentoresDisponiveis}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">{discipuladoresSemDiscipulos}</p>
+              <p className="text-xs text-muted-foreground">sem discípulos</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-yellow-500" />
-              <span className="text-xs text-muted-foreground">Discípulos por Mentor</span>
-            </div>
-            <p className="text-2xl font-bold mt-1">
-              {stats.activeDiscipuladores > 0 
-                ? (stats.activeRelationships / stats.activeDiscipuladores).toFixed(1) 
-                : 0}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-yellow-500" />
+                <span className="text-xs text-muted-foreground">Discípulos por Mentor</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    <p className="text-xs">{METRIC_TOOLTIPS.discipulosPorMentor}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <p className="text-2xl font-bold mt-1">
+                {stats.activeDiscipuladores > 0 
+                  ? (stats.activeRelationships / stats.activeDiscipuladores).toFixed(1) 
+                  : 0}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
 
       {/* Charts Section */}
       <div className="space-y-6">
