@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DiscipleshipHistory } from "./DiscipleshipHistory";
 import { DiscipleshipOrganogram } from "./DiscipleshipOrganogram";
 import { CreateUserModal } from "./CreateUserModal";
+import { BulkAssignDisciplesModal } from "./BulkAssignDisciplesModal";
 import { useChurch } from "@/contexts/ChurchContext";
 
 interface Profile {
@@ -95,6 +96,10 @@ export function AdminDiscipleship() {
   
   // Create user modal state
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+  
+  // Bulk assign modal state
+  const [bulkAssignModalOpen, setBulkAssignModalOpen] = useState(false);
+  const [bulkAssignDiscipulador, setBulkAssignDiscipulador] = useState<Profile | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -844,10 +849,40 @@ export function AdminDiscipleship() {
                 <Link className="w-4 h-4 mr-2" />
                 Associar
               </Button>
+              
+              <Button 
+                variant="secondary"
+                onClick={() => {
+                  if (selectedDiscipulador) {
+                    const discipulador = availableDiscipuladores.find(d => d.id === selectedDiscipulador);
+                    if (discipulador) {
+                      setBulkAssignDiscipulador(discipulador);
+                      setBulkAssignModalOpen(true);
+                    }
+                  } else {
+                    toast.error('Selecione um discipulador primeiro');
+                  }
+                }}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Vincular Vários
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Bulk assign modal */}
+      <BulkAssignDisciplesModal
+        open={bulkAssignModalOpen}
+        onOpenChange={setBulkAssignModalOpen}
+        discipulador={bulkAssignDiscipulador}
+        availableDisciples={allUnassignedDisciples}
+        currentDiscipleCount={bulkAssignDiscipulador ? (discipuladorDiscipleCount[bulkAssignDiscipulador.id] || 0) : 0}
+        maxDisciplesLimit={maxDisciplesLimit}
+        churchId={churchId}
+        onSuccess={fetchData}
+      />
 
       {/* Register user card for non-admins (discipuladores) */}
       {!isAdmin && (
