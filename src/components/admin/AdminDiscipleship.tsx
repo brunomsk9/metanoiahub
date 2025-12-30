@@ -971,22 +971,23 @@ export function AdminDiscipleship() {
                 <Collapsible key={rel.id} className="group">
                   <div className="rounded-lg border bg-card overflow-hidden">
                     {/* Compact header - always visible */}
-                    <div className="flex items-center gap-3 p-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-3">
                       {/* Avatar */}
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-primary font-semibold">
+                      <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-primary font-semibold text-sm md:text-base">
                           {(rel.discipulo?.nome || 'D')[0].toUpperCase()}
                         </span>
                       </div>
                       
                       {/* Main info */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{rel.discipulo?.nome || 'Sem nome'}</p>
+                        <p className="font-medium truncate text-sm md:text-base">{rel.discipulo?.nome || 'Sem nome'}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {isAdmin && rel.discipulador && (
                             <span className="flex items-center gap-1">
                               <Users className="w-3 h-3" />
-                              {rel.discipulador.nome}
+                              <span className="hidden md:inline">{rel.discipulador.nome}</span>
+                              <span className="md:hidden">{rel.discipulador.nome?.split(' ')[0]}</span>
                               <Badge 
                                 variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit ? "destructive" : "secondary"}
                                 className="text-[10px] px-1 py-0 h-4"
@@ -999,7 +1000,7 @@ export function AdminDiscipleship() {
                             <Flame className="w-3 h-3 text-orange-500" />
                             {rel.discipulo?.current_streak || 0} dias
                           </span>
-                          <span className="hidden sm:inline">{rel.discipulo?.xp_points || 0} XP</span>
+                          <span className="hidden md:inline">{rel.discipulo?.xp_points || 0} XP</span>
                         </div>
                       </div>
                       
@@ -1012,16 +1013,16 @@ export function AdminDiscipleship() {
                         )}
                         {getStatusBadge(rel.status)}
                         
-                        {/* Expand button for mobile */}
+                        {/* Expand button for mobile and tablet */}
                         <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 sm:hidden">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
                             <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
                           </Button>
                         </CollapsibleTrigger>
                       </div>
                       
-                      {/* Desktop: Jornadas inline */}
-                      <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/50">
+                      {/* Desktop: Jornadas inline - only on large screens */}
+                      <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/50">
                         {/* Conexão Inicial */}
                         <div className="flex items-center gap-1.5">
                           <Link className="w-3.5 h-3.5 text-accent" />
@@ -1063,8 +1064,8 @@ export function AdminDiscipleship() {
                         </div>
                       </div>
                       
-                      {/* Desktop: Action buttons */}
-                      <div className="hidden sm:flex items-center gap-1">
+                      {/* Desktop: Action buttons - only on large screens */}
+                      <div className="hidden lg:flex items-center gap-1">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
@@ -1301,16 +1302,16 @@ export function AdminDiscipleship() {
                       </div>
                     </div>
                     
-                    {/* Mobile: Expandable content */}
-                    <CollapsibleContent className="sm:hidden">
+                    {/* Mobile/Tablet: Expandable content */}
+                    <CollapsibleContent className="lg:hidden">
                       <div className="px-3 pb-3 pt-0 space-y-3 border-t border-border/50">
-                        {/* XP and extra info */}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                        {/* XP and extra info - show on tablet */}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 md:hidden">
                           <span>{rel.discipulo?.xp_points || 0} XP</span>
                         </div>
                         
-                        {/* Jornadas */}
-                        <div className="flex flex-col gap-3 p-3 rounded-lg bg-muted/50">
+                        {/* Jornadas - grid layout for tablet */}
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 p-3 rounded-lg bg-muted/50">
                           {/* Conexão Inicial */}
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 min-w-[110px]">
