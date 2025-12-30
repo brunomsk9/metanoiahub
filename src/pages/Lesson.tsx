@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, ArrowUp } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -92,6 +92,20 @@ export default function Lesson() {
   const [showXPGain, setShowXPGain] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Handle scroll to show/hide scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [quizCompleted, setQuizCompleted] = useState(false);
 
   useEffect(() => {
@@ -800,6 +814,19 @@ export default function Lesson() {
         }}
         trackTitle={lesson?.course?.titulo || 'Curso'}
       />
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={scrollToTop}
+          className="fixed bottom-20 right-4 z-40 h-10 w-10 rounded-full shadow-lg border border-border/50 bg-background/90 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground transition-all duration-300 animate-fade-in"
+          aria-label="Voltar ao topo"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </Button>
+      )}
       </div>
     </div>
     </PageTransition>
