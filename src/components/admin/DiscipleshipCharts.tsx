@@ -298,9 +298,9 @@ export function DiscipleshipCharts({
     const inactive = relationships.filter(r => r.status !== 'active' && r.status !== 'completed').length;
 
     return [
-      { name: 'Ativos', value: active, color: STATUS_COLORS.active },
-      { name: 'Concluídos', value: completed, color: STATUS_COLORS.completed },
-      { name: 'Inativos', value: inactive, color: STATUS_COLORS.inactive },
+      { name: 'Em Jornada', value: active, color: STATUS_COLORS.active },
+      { name: 'Formados', value: completed, color: STATUS_COLORS.completed },
+      { name: 'Pausados', value: inactive, color: STATUS_COLORS.inactive },
     ].filter(d => d.value > 0);
   }, [relationships]);
 
@@ -462,14 +462,14 @@ export function DiscipleshipCharts({
 
   const chartConfig = {
     discipulos: { label: "Discípulos", color: "hsl(var(--primary))" },
-    capacidade: { label: "Capacidade", color: "hsl(var(--muted))" },
-    count: { label: "Discipuladores", color: "hsl(var(--chart-2))" },
-    quantidade: { label: "Quantidade", color: "hsl(var(--chart-3))" },
-    novos: { label: "Novos", color: "hsl(var(--chart-2))" },
-    concluidos: { label: "Concluídos", color: "hsl(var(--chart-3))" },
-    ativos: { label: "Ativos", color: "hsl(var(--primary))" },
-    completo: { label: "Completo", color: "#10b981" },
-    pendente: { label: "Pendente", color: "#6b7280" },
+    capacidade: { label: "Limite de Vagas", color: "hsl(var(--muted))" },
+    count: { label: "Mentores", color: "hsl(var(--chart-2))" },
+    quantidade: { label: "Discípulos", color: "hsl(var(--chart-3))" },
+    novos: { label: "Novos Discipulados", color: "hsl(var(--chart-2))" },
+    concluidos: { label: "Jornadas Finalizadas", color: "hsl(var(--chart-3))" },
+    ativos: { label: "Em Jornada", color: "hsl(var(--primary))" },
+    completo: { label: "Etapa Concluída", color: "#10b981" },
+    pendente: { label: "Etapa Pendente", color: "#6b7280" },
   };
 
   return (
@@ -522,7 +522,7 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Total Vínculos</span>
+              <span className="text-xs text-muted-foreground">Discipulados Iniciados</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.totalRelationships}</p>
           </CardContent>
@@ -532,7 +532,7 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <UserCheck className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Ativos</span>
+              <span className="text-xs text-muted-foreground">Discípulos em Jornada</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.activeRelationships}</p>
           </CardContent>
@@ -542,7 +542,7 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-blue-500" />
-              <span className="text-xs text-muted-foreground">Concluídos</span>
+              <span className="text-xs text-muted-foreground">Jornadas Concluídas</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.completedRelationships}</p>
             <p className="text-xs text-muted-foreground">{stats.completionRate}% taxa</p>
@@ -553,7 +553,7 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-muted-foreground">Discipuladores</span>
+              <span className="text-xs text-muted-foreground">Mentores Atuando</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.activeDiscipuladores}</p>
             <p className="text-xs text-muted-foreground">de {stats.totalDiscipuladores}</p>
@@ -564,10 +564,10 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Flame className="h-4 w-4 text-orange-500" />
-              <span className="text-xs text-muted-foreground">Média Streak</span>
+              <span className="text-xs text-muted-foreground">Sequência de Hábitos</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.avgStreak}</p>
-            <p className="text-xs text-muted-foreground">dias</p>
+            <p className="text-xs text-muted-foreground">dias (média)</p>
           </CardContent>
         </Card>
 
@@ -575,10 +575,10 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-cyan-500" />
-              <span className="text-xs text-muted-foreground">Tempo Médio</span>
+              <span className="text-xs text-muted-foreground">Tempo em Discipulado</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.avgDays}</p>
-            <p className="text-xs text-muted-foreground">dias</p>
+            <p className="text-xs text-muted-foreground">dias (média)</p>
           </CardContent>
         </Card>
       </div>
@@ -589,10 +589,10 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-muted-foreground">Alicerce OK</span>
+              <span className="text-xs text-muted-foreground">Alicerce Concluído</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.alicerceCompleted}</p>
-            <p className="text-xs text-muted-foreground">{stats.alicerceRate}% dos ativos</p>
+            <p className="text-xs text-muted-foreground">{stats.alicerceRate}% dos em jornada</p>
           </CardContent>
         </Card>
 
@@ -600,7 +600,7 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-muted-foreground">Conexão OK</span>
+              <span className="text-xs text-muted-foreground">Conexão Completa</span>
             </div>
             <p className="text-2xl font-bold mt-1">{stats.conexaoCompleted}</p>
           </CardContent>
@@ -610,10 +610,10 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <UserX className="h-4 w-4 text-red-500" />
-              <span className="text-xs text-muted-foreground">Sem Discípulos</span>
+              <span className="text-xs text-muted-foreground">Mentores Disponíveis</span>
             </div>
             <p className="text-2xl font-bold mt-1">{discipuladoresSemDiscipulos}</p>
-            <p className="text-xs text-muted-foreground">discipuladores</p>
+            <p className="text-xs text-muted-foreground">sem discípulos</p>
           </CardContent>
         </Card>
 
@@ -621,7 +621,7 @@ export function DiscipleshipCharts({
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-yellow-500" />
-              <span className="text-xs text-muted-foreground">Média/Disc.</span>
+              <span className="text-xs text-muted-foreground">Discípulos por Mentor</span>
             </div>
             <p className="text-2xl font-bold mt-1">
               {stats.activeDiscipuladores > 0 
