@@ -582,10 +582,10 @@ export default function Lesson() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto p-4 lg:p-8">
-        <div className="grid lg:grid-cols-3 gap-6">
+      <main className="max-w-4xl mx-auto p-4 lg:p-8">
+        <div className="space-y-6">
           {/* Video Section */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             {lesson.video_url && (
               <div className="animate-fade-in">
                 <VideoPlayer
@@ -767,21 +767,19 @@ export default function Lesson() {
             </div>
           </div>
 
-          {/* Sidebar - Checklist */}
+          {/* Checklist Section */}
           {checklistItems.length > 0 && (
-            <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: '200ms' }}>
-              <div className="sticky top-24">
-                <ChecklistInterativo
-                  title="Aplicação Prática"
-                  items={checklistItems}
-                  onToggle={handleChecklistToggle}
-                />
-                
-                {/* XP Info */}
-                <div className="mt-4 p-4 rounded-xl bg-gradient-primary text-primary-foreground">
-                  <p className="text-sm font-medium">Complete o checklist para ganhar</p>
-                  <p className="text-2xl font-display font-bold">+50 XP</p>
-                </div>
+            <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <ChecklistInterativo
+                title="Aplicação Prática"
+                items={checklistItems}
+                onToggle={handleChecklistToggle}
+              />
+              
+              {/* XP Info */}
+              <div className="mt-4 p-4 rounded-xl bg-gradient-primary text-primary-foreground text-center">
+                <p className="text-sm font-medium">Complete o checklist para ganhar</p>
+                <p className="text-2xl font-display font-bold">+50 XP</p>
               </div>
             </div>
           )}
