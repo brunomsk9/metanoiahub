@@ -28,14 +28,32 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadChurches = async () => {
-    const { data, error } = await supabase
-      .from('churches')
-      .select('id, nome, slug, logo_url, cor_primaria, cor_secundaria')
-      .eq('is_active', true)
-      .order('nome');
+    // Check if user is authenticated
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (!error && data) {
-      setChurches(data);
+    if (session) {
+      // Authenticated users can query the table directly
+      const { data, error } = await supabase
+        .from('churches')
+        .select('id, nome, slug, logo_url, cor_primaria, cor_secundaria')
+        .eq('is_active', true)
+        .order('nome');
+      
+      if (!error && data) {
+        setChurches(data);
+      }
+    } else {
+      // Unauthenticated users use the public function (for signup flow)
+      const { data, error } = await supabase.rpc('get_public_churches');
+      
+      if (!error && data) {
+        // Map to full Church type with null values for non-public fields
+        setChurches(data.map(c => ({
+          ...c,
+          cor_primaria: null,
+          cor_secundaria: null
+        })));
+      }
     }
   };
 
