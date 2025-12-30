@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend, CartesianGrid, LineChart, Line, AreaChart, Area } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Legend, CartesianGrid, Line, AreaChart, Area } from "recharts";
 import { Users, TrendingUp, Award, BookOpen, Flame, Target, Calendar, Filter, UserCheck, UserX, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -475,11 +475,11 @@ export function DiscipleshipCharts({
               Evolução Mensal de Discipulados
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
             {monthlyEvolutionData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={monthlyEvolutionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <div className="w-full h-[280px]">
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <AreaChart data={monthlyEvolutionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorAtivos" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -488,7 +488,7 @@ export function DiscipleshipCharts({
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Area type="monotone" dataKey="ativos" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorAtivos)" strokeWidth={2} />
                     <Line type="monotone" dataKey="novos" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} />
@@ -498,8 +498,8 @@ export function DiscipleshipCharts({
                       formatter={(value) => <span className="text-sm text-muted-foreground capitalize">{value}</span>}
                     />
                   </AreaChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                </ChartContainer>
+              </div>
             ) : (
               <div className="h-[280px] flex items-center justify-center text-muted-foreground">
                 Nenhum dado disponível para o período selecionado
@@ -518,14 +518,14 @@ export function DiscipleshipCharts({
                 Top 10 Discipuladores
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-hidden">
               {disciplesPerDiscipuladorData.length > 0 ? (
-                <ChartContainer config={chartConfig} className="h-[320px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={disciplesPerDiscipuladorData} layout="vertical" margin={{ left: 5, right: 40 }}>
+                <div className="w-full h-[320px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <BarChart data={disciplesPerDiscipuladorData} layout="vertical" margin={{ left: 0, right: 20, top: 5, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
                       <XAxis type="number" domain={[0, maxDisciplesLimit]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis dataKey="nome" type="category" width={70} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} />
+                      <YAxis dataKey="nome" type="category" width={60} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
                       <ChartTooltip 
                         content={<ChartTooltipContent />}
                         formatter={(value, name, props) => [
@@ -535,8 +535,8 @@ export function DiscipleshipCharts({
                       />
                       <Bar dataKey="discipulos" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
                     </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                  </ChartContainer>
+                </div>
               ) : (
                 <div className="h-[320px] flex items-center justify-center text-muted-foreground">
                   Nenhum dado disponível
@@ -553,14 +553,14 @@ export function DiscipleshipCharts({
                 Funil de Progressão
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-hidden">
               {programFunnelData.length > 0 ? (
-                <ChartContainer config={chartConfig} className="h-[320px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={programFunnelData} layout="vertical" margin={{ left: 5, right: 50 }}>
+                <div className="w-full h-[320px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <BarChart data={programFunnelData} layout="vertical" margin={{ left: 0, right: 30, top: 5, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
                       <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis dataKey="etapa" type="category" width={80} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
+                      <YAxis dataKey="etapa" type="category" width={70} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }} />
                       <ChartTooltip 
                         content={<ChartTooltipContent />}
                         formatter={(value, name, props) => [`${value} (${props.payload.taxa}%)`, 'Quantidade']}
@@ -571,8 +571,8 @@ export function DiscipleshipCharts({
                         ))}
                       </Bar>
                     </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                  </ChartContainer>
+                </div>
               ) : (
                 <div className="h-[320px] flex items-center justify-center text-muted-foreground">
                   Nenhum dado disponível
@@ -592,20 +592,20 @@ export function DiscipleshipCharts({
                 Distribuição por Status
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-hidden">
               {statusDistributionData.length > 0 ? (
-                <ChartContainer config={chartConfig} className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
+                <div className="w-full h-[280px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                       <Pie
                         data={statusDistributionData}
                         cx="50%"
                         cy="45%"
-                        innerRadius={55}
-                        outerRadius={90}
+                        innerRadius={50}
+                        outerRadius={80}
                         paddingAngle={3}
                         dataKey="value"
-                        label={({ name, value, percent }) => `${(percent * 100).toFixed(0)}%`}
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                         labelLine={false}
                       >
                         {statusDistributionData.map((entry, index) => (
@@ -618,8 +618,8 @@ export function DiscipleshipCharts({
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                  </ChartContainer>
+                </div>
               ) : (
                 <div className="h-[280px] flex items-center justify-center text-muted-foreground">
                   Nenhum dado disponível
@@ -636,13 +636,13 @@ export function DiscipleshipCharts({
                 Utilização da Capacidade
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={capacityData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+            <CardContent className="overflow-hidden">
+              <div className="w-full h-[280px]">
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <BarChart data={capacityData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="range" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
                     <ChartTooltip 
                       content={<ChartTooltipContent />}
                       formatter={(value) => [`${value} discipuladores`, 'Quantidade']}
@@ -653,8 +653,8 @@ export function DiscipleshipCharts({
                       ))}
                     </Bar>
                   </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                </ChartContainer>
+              </div>
             </CardContent>
           </Card>
         </div>
