@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminTracks } from '@/components/admin/AdminTracks';
 import { AdminCourses } from '@/components/admin/AdminCourses';
 import { AdminLessons } from '@/components/admin/AdminLessons';
-import { AdminResources } from '@/components/admin/AdminResources';
+
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
@@ -30,13 +30,12 @@ import {
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'resources' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
   { id: 'courses' as const, label: 'Cursos', icon: GraduationCap },
   { id: 'lessons' as const, label: 'Aulas', icon: FileText },
-  { id: 'resources' as const, label: 'Recursos', icon: LifeBuoy },
   { id: 'reading-plans' as const, label: 'Planos de Leitura', icon: CalendarDays },
   { id: 'habits' as const, label: 'Hábitos Diários', icon: Sparkles },
   { id: 'weekly-checklist' as const, label: 'Checklist Semanal', icon: ClipboardList },
@@ -61,8 +60,8 @@ export default function Admin() {
   // Handle section from URL params
   useEffect(() => {
     const sectionParam = searchParams.get('section');
-    if (sectionParam === 'recursos') {
-      setActiveSection('resources');
+    if (sectionParam === 'escalas') {
+      setActiveSection('schedules');
     }
   }, [searchParams]);
 
@@ -90,8 +89,8 @@ export default function Admin() {
     
     // Check URL param first, then default based on role
     const sectionParam = searchParams.get('section');
-    if (sectionParam === 'recursos') {
-      setActiveSection('resources');
+    if (sectionParam === 'escalas') {
+      setActiveSection('schedules');
     } else if (userIsAdmin) {
       setActiveSection('dashboard');
     } else if (userIsLiderMinisterial) {
@@ -144,7 +143,6 @@ export default function Admin() {
       case 'tracks': return <AdminTracks />;
       case 'courses': return <AdminCourses />;
       case 'lessons': return <AdminLessons />;
-      case 'resources': return <AdminResources isAdmin={isAdmin} />;
       case 'users': return <AdminUsers />;
       case 'reading-plans': return <AdminReadingPlanDays />;
       case 'discipleship': return <AdminDiscipleship />;
@@ -230,9 +228,9 @@ export default function Admin() {
               </Button>
 
               <Button
-                variant={activeSection === 'resources' ? 'default' : 'outline'}
+                variant="outline"
                 size="sm"
-                onClick={() => setActiveSection('resources')}
+                onClick={() => navigate('/recursos')}
                 className="gap-2"
               >
                 <LifeBuoy className="h-4 w-4" />
@@ -350,9 +348,9 @@ export default function Admin() {
               {/* Recursos button for discipuladores who aren't admins or lider ministerial */}
               {!isAdmin && !isLiderMinisterial && (
                 <Button
-                  variant={activeSection === 'resources' ? 'default' : 'outline'}
+                  variant="outline"
                   size="sm"
-                  onClick={() => setActiveSection('resources')}
+                  onClick={() => navigate('/recursos')}
                   className="gap-2"
                 >
                   <LifeBuoy className="h-4 w-4" />
