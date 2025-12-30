@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { CheckCircle2, XCircle, HelpCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Question {
   pergunta: string;
@@ -14,13 +16,15 @@ interface LessonQuizProps {
   questions: Question[];
   onComplete: () => void;
   lessonTitle: string;
+  lessonId: string;
 }
 
-export function LessonQuiz({ questions, onComplete, lessonTitle }: LessonQuizProps) {
+export function LessonQuiz({ questions, onComplete, lessonTitle, lessonId }: LessonQuizProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showResult, setShowResult] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   if (!questions || questions.length === 0) {
     return null;
@@ -38,19 +42,6 @@ export function LessonQuiz({ questions, onComplete, lessonTitle }: LessonQuizPro
     }));
   };
 
-  const handleNext = () => {
-    if (isLastQuestion) {
-      setSubmitted(true);
-      setShowResult(true);
-    } else {
-      setCurrentIndex(prev => prev + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    setCurrentIndex(prev => Math.max(0, prev - 1));
-  };
-
   const calculateScore = () => {
     let correct = 0;
     questions.forEach((q, idx) => {
@@ -59,6 +50,62 @@ export function LessonQuiz({ questions, onComplete, lessonTitle }: LessonQuizPro
       }
     });
     return correct;
+  };
+
+  const saveQuizResponse = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const score = calculateScore();
+      const percentage = (score / questions.length) * 100;
+
+      // Build responses array with user answers
+      const respostas = questions.map((q, idx) => ({
+        pergunta: q.pergunta,
+        resposta_usuario: selectedAnswers[idx],
+        resposta_correta: q.resposta_correta,
+        acertou: selectedAnswers[idx] === q.resposta_correta
+      }));
+
+      const { error } = await supabase
+        .from('quiz_responses')
+        .insert({
+          user_id: user.id,
+          lesson_id: lessonId,
+          respostas,
+          acertos: score,
+          total_perguntas: questions.length,
+          porcentagem_acerto: percentage
+        });
+
+      if (error) {
+        console.error("Error saving quiz response:", error);
+        toast.error("Erro ao salvar respostas do quiz");
+      }
+    } catch (error) {
+      console.error("Error saving quiz response:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleNext = async () => {
+    if (isLastQuestion) {
+      setSubmitted(true);
+      setShowResult(true);
+      await saveQuizResponse();
+    } else {
+      setCurrentIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentIndex(prev => Math.max(0, prev - 1));
   };
 
   const getAnswerStatus = (questionIndex: number, answerIndex: number) => {
@@ -122,8 +169,13 @@ export function LessonQuiz({ questions, onComplete, lessonTitle }: LessonQuizPro
             ))}
           </div>
 
-          <Button onClick={onComplete} className="w-full mt-4">
-            {passed ? "Concluir Aula" : "Continuar mesmo assim"}
+          <Button onClick={onComplete} disabled={saving} className="w-full mt-4">
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : passed ? "Concluir Aula" : "Continuar mesmo assim"}
           </Button>
         </CardContent>
       </Card>

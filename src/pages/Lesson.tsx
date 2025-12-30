@@ -555,6 +555,7 @@ export default function Lesson() {
                 <LessonQuiz
                   questions={lesson.perguntas}
                   lessonTitle={lesson.titulo}
+                  lessonId={lesson.id}
                   onComplete={() => {
                     setQuizCompleted(true);
                     setShowQuiz(false);
