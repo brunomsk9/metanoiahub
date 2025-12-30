@@ -11,8 +11,9 @@ import { Plus, Pencil, Trash2, Loader2, BookOpen, Users, UserCheck, ChevronLeft,
 import { Database } from '@/integrations/supabase/types';
 import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
-
-const ITEMS_PER_PAGE = 10;
+import { SortableHeader } from '@/components/ui/sortable-header';
+import { useSorting } from '@/hooks/useSorting';
+import { usePagination } from '@/hooks/usePagination';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -33,7 +34,6 @@ export function AdminTracks() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Track | null>(null);
   const [saving, setSaving] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const { showSuccess, successMessage, triggerSuccess } = useSaveSuccess();
   const { churchId } = useUserChurchId();
   
@@ -47,11 +47,9 @@ export function AdminTracks() {
     is_base: false
   });
 
-  const totalPages = Math.ceil(tracks.length / ITEMS_PER_PAGE);
-  const paginatedTracks = tracks.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // Sorting and pagination
+  const sorting = useSorting({ data: tracks, defaultSortKey: 'ordem', defaultDirection: 'asc' });
+  const pagination = usePagination({ data: sorting.sortedData, pageSize: 10 });
 
   useEffect(() => {
     fetchTracks();
@@ -311,35 +309,56 @@ export function AdminTracks() {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-muted/50 border-b border-border">
               <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ordem</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Público</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden lg:table-cell">Tipo</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  <SortableHeader 
+                    sortState={sorting.getSortIcon('ordem')} 
+                    onClick={() => sorting.toggleSort('ordem')}
+                  >
+                    Ordem
+                  </SortableHeader>
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                  <SortableHeader 
+                    sortState={sorting.getSortIcon('titulo')} 
+                    onClick={() => sorting.toggleSort('titulo')}
+                  >
+                    Título
+                  </SortableHeader>
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                  <SortableHeader 
+                    sortState={sorting.getSortIcon('categoria')} 
+                    onClick={() => sorting.toggleSort('categoria')}
+                  >
+                    Categoria
+                  </SortableHeader>
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Público</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Tipo</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {paginatedTracks.map((track) => (
-                <tr key={track.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-500">{track.ordem}</td>
+            <tbody className="divide-y divide-border">
+              {pagination.paginatedData.map((track) => (
+                <tr key={track.id} className="hover:bg-muted/30">
+                  <td className="py-3 px-4 text-muted-foreground">{track.ordem}</td>
                   <td className="py-3 px-4">
                     <div>
-                      <p className="font-medium text-gray-900">{track.titulo}</p>
+                      <p className="font-medium text-foreground">{track.titulo}</p>
                       {track.descricao && (
-                        <p className="text-sm text-gray-500 truncate max-w-xs">{track.descricao}</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-xs">{track.descricao}</p>
                       )}
                     </div>
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell">
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700">
+                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                       {track.categoria}
                     </span>
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                       {getPublicoAlvoLabel(track.publico_alvo)}
                     </span>
                   </td>
@@ -352,10 +371,10 @@ export function AdminTracks() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(track)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(track)} className="h-8 w-8 text-muted-foreground hover:text-foreground">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(track.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(track.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -368,29 +387,29 @@ export function AdminTracks() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
-            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, tracks.length)} de {tracks.length}
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {pagination.startIndex + 1} a {pagination.endIndex} de {sorting.sortedData.length}
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={pagination.prevPage}
+              disabled={pagination.currentPage === 1}
               className="h-8"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-gray-600">
-              {currentPage} de {totalPages}
+            <span className="text-sm text-muted-foreground">
+              {pagination.currentPage} de {pagination.totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={pagination.nextPage}
+              disabled={pagination.currentPage === pagination.totalPages}
               className="h-8"
             >
               <ChevronRight className="h-4 w-4" />

@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { format, addDays, addWeeks, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { localDateTimeToUTC, utcToLocalDateTimeValue, localTimeToUTC } from '@/lib/timezone';
@@ -299,32 +300,32 @@ function ScheduleHistory({ schedules, services, ministries, filterMinistryIds }:
         {viewMode === 'history' && (
           <div className="flex flex-wrap gap-3">
             {availableMinistries.length > 1 && (
-              <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Filtrar por ministério" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="all">Todos os ministérios</SelectItem>
-                  {availableMinistries.map(ministry => (
-                    <SelectItem key={ministry.id} value={ministry.id}>
-                      {ministry.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: "all", label: "Todos os ministérios" },
+                  ...availableMinistries.map(ministry => ({ value: ministry.id, label: ministry.nome }))
+                ]}
+                value={selectedMinistry}
+                onValueChange={setSelectedMinistry}
+                placeholder="Filtrar por ministério"
+                searchPlaceholder="Buscar ministério..."
+                triggerClassName="w-[200px]"
+              />
             )}
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="confirmed">Confirmados</SelectItem>
-                <SelectItem value="declined">Recusados</SelectItem>
-                <SelectItem value="pending">Pendentes</SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[
+                { value: "all", label: "Todos os status" },
+                { value: "confirmed", label: "Confirmados" },
+                { value: "declined", label: "Recusados" },
+                { value: "pending", label: "Pendentes" },
+              ]}
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              placeholder="Filtrar por status"
+              searchPlaceholder="Buscar status..."
+              triggerClassName="w-[180px]"
+            />
           </div>
         )}
       </div>

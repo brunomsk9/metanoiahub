@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Legend, CartesianGrid, Line, AreaChart, Area } from "recharts";
 import { Users, TrendingUp, Award, BookOpen, Flame, Target, Calendar, Filter, UserCheck, UserX, Clock, User } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, subMonths, isAfter, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -142,13 +142,32 @@ export function DiscipleshipCharts({
     });
   }, [relationships, dateCutoff, statusFilter, selectedDiscipulador]);
 
-  // Sorted discipuladores for select
-  const sortedDiscipuladores = useMemo(() => {
-    return [...discipuladores].sort((a, b) => {
+  // Options for searchable selects
+  const periodOptions: SearchableSelectOption[] = PERIOD_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: opt.label,
+  }));
+
+  const statusOptions: SearchableSelectOption[] = [
+    { value: "all", label: "Todos" },
+    { value: "active", label: "Ativos" },
+    { value: "completed", label: "Concluídos" },
+  ];
+
+  const discipuladorOptions: SearchableSelectOption[] = useMemo(() => {
+    const sorted = [...discipuladores].sort((a, b) => {
       const countA = discipuladorDiscipleCount[a.id] || 0;
       const countB = discipuladorDiscipleCount[b.id] || 0;
-      return countB - countA; // Sort by number of disciples descending
+      return countB - countA;
     });
+    return [
+      { value: "all", label: "Todos discipuladores" },
+      ...sorted.map(d => ({
+        value: d.id,
+        label: d.nome?.split(' ')[0] || 'Sem nome',
+        description: `(${discipuladorDiscipleCount[d.id] || 0})`,
+      })),
+    ];
   }, [discipuladores, discipuladorDiscipleCount]);
 
   // Stats cards data
@@ -462,55 +481,35 @@ export function DiscipleshipCharts({
           <span className="text-sm font-medium">Filtros:</span>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodFilter)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              {PERIOD_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SearchableSelect
+          options={periodOptions}
+          value={period}
+          onValueChange={(v) => setPeriod(v as PeriodFilter)}
+          placeholder="Período"
+          searchPlaceholder="Buscar período..."
+          icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+          triggerClassName="w-[180px]"
+        />
 
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "completed")}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="completed">Concluídos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <SearchableSelect
+          options={statusOptions}
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as "all" | "active" | "completed")}
+          placeholder="Status"
+          searchPlaceholder="Buscar status..."
+          icon={<Users className="h-4 w-4 text-muted-foreground" />}
+          triggerClassName="w-[140px]"
+        />
 
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Discipulador" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos discipuladores</SelectItem>
-              {sortedDiscipuladores.map(d => (
-                <SelectItem key={d.id} value={d.id}>
-                  <span className="flex items-center gap-2">
-                    {d.nome?.split(' ')[0] || 'Sem nome'}
-                    <span className="text-muted-foreground text-xs">
-                      ({discipuladorDiscipleCount[d.id] || 0})
-                    </span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SearchableSelect
+          options={discipuladorOptions}
+          value={selectedDiscipulador}
+          onValueChange={setSelectedDiscipulador}
+          placeholder="Discipulador"
+          searchPlaceholder="Buscar discipulador..."
+          icon={<User className="h-4 w-4 text-muted-foreground" />}
+          triggerClassName="w-[200px]"
+        />
 
         <Badge variant="outline" className="ml-auto">
           {filteredRelationships.length} registros

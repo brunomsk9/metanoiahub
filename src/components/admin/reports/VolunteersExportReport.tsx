@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -339,30 +339,30 @@ export function VolunteersExportReport() {
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
               <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
-                <SelectTrigger className="w-full sm:w-[220px]">
-                  <SelectValue placeholder="Selecione um ministério" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Ministérios</SelectItem>
-                  {ministries.map(ministry => (
-                    <SelectItem key={ministry.id} value={ministry.id}>
-                      {ministry.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: "all", label: "Todos os Ministérios" },
+                  ...ministries.map(ministry => ({ value: ministry.id, label: ministry.nome }))
+                ]}
+                value={selectedMinistry}
+                onValueChange={setSelectedMinistry}
+                placeholder="Selecione um ministério"
+                searchPlaceholder="Buscar ministério..."
+                triggerClassName="w-full sm:w-[220px]"
+              />
               
-              <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="w-full sm:w-[160px]">
-                  <SelectValue placeholder="Gênero" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Gêneros</SelectItem>
-                  <SelectItem value="masculino">Masculino</SelectItem>
-                  <SelectItem value="feminino">Feminino</SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: "all", label: "Todos os Gêneros" },
+                  { value: "masculino", label: "Masculino" },
+                  { value: "feminino", label: "Feminino" },
+                ]}
+                value={selectedGender}
+                onValueChange={setSelectedGender}
+                placeholder="Gênero"
+                searchPlaceholder="Buscar gênero..."
+                triggerClassName="w-full sm:w-[160px]"
+              />
             </div>
             
             <Badge variant="secondary" className="gap-1">

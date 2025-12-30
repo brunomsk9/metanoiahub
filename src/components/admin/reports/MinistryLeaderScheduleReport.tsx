@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -443,19 +443,17 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
           </Button>
         </div>
 
-        <Select value={selectedMinistry} onValueChange={setSelectedMinistry}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por ministério" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os ministérios</SelectItem>
-            {ministries?.map((ministry) => (
-              <SelectItem key={ministry.id} value={ministry.id}>
-                {ministry.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          options={[
+            { value: "all", label: "Todos os ministérios" },
+            ...(ministries?.map(ministry => ({ value: ministry.id, label: ministry.nome })) || [])
+          ]}
+          value={selectedMinistry}
+          onValueChange={setSelectedMinistry}
+          placeholder="Filtrar por ministério"
+          searchPlaceholder="Buscar ministério..."
+          triggerClassName="w-[200px]"
+        />
 
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleExportCSV}>
