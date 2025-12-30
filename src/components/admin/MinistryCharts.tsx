@@ -213,7 +213,7 @@ export function MinistryCharts({ ministries, volunteers, schedules, users }: Min
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
         <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export function MinistryCharts({ ministries, volunteers, schedules, users }: Min
       </div>
 
       {/* Row 2 - Additional Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export function MinistryCharts({ ministries, volunteers, schedules, users }: Min
       </div>
 
       {/* Charts Row 1: Volunteers per Ministry + Ministry Size */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         {/* Volunteers per Ministry */}
         <Card>
           <CardHeader className="pb-2">
@@ -405,7 +405,7 @@ export function MinistryCharts({ ministries, volunteers, schedules, users }: Min
       </div>
 
       {/* Charts Row 2: Schedule Status + Multi-Ministry */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         {/* Schedule Status */}
         <Card>
           <CardHeader className="pb-2">

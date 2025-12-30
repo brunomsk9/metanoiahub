@@ -483,7 +483,7 @@ export function DiscipleshipCharts({
       </div>
 
       {/* Stats Cards - Row 1 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
         <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
@@ -550,7 +550,7 @@ export function DiscipleshipCharts({
       </div>
 
       {/* Stats Cards - Row 2 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2">
@@ -642,7 +642,7 @@ export function DiscipleshipCharts({
         </Card>
 
         {/* Row 2: Top Discipuladores + Funil de Progressão */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           {/* Top 10 Discipuladores */}
           <Card>
             <CardHeader className="pb-2">
@@ -716,7 +716,7 @@ export function DiscipleshipCharts({
         </div>
 
         {/* Row 3: Status Distribution + Capacity Usage */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           {/* Status Distribution Pie */}
           <Card>
             <CardHeader className="pb-2">
@@ -793,7 +793,7 @@ export function DiscipleshipCharts({
         </div>
 
         {/* Row 4: Streak Distribution + XP Distribution */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           {/* Streak Distribution */}
           <Card>
             <CardHeader className="pb-2">
@@ -868,7 +868,7 @@ export function DiscipleshipCharts({
         </div>
 
         {/* Row 5: Tenure Distribution + Time to Alicerce */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           {/* Tenure Distribution */}
           <Card>
             <CardHeader className="pb-2">

@@ -79,7 +79,7 @@ export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCar
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-4 h-4 text-primary" />
