@@ -774,6 +774,50 @@ export type Database = {
           },
         ]
       }
+      quiz_responses: {
+        Row: {
+          acertos: number
+          completed_at: string
+          created_at: string
+          id: string
+          lesson_id: string
+          porcentagem_acerto: number
+          respostas: Json
+          total_perguntas: number
+          user_id: string
+        }
+        Insert: {
+          acertos?: number
+          completed_at?: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          porcentagem_acerto?: number
+          respostas?: Json
+          total_perguntas?: number
+          user_id: string
+        }
+        Update: {
+          acertos?: number
+          completed_at?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          porcentagem_acerto?: number
+          respostas?: Json
+          total_perguntas?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_responses_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reading_plan_days: {
         Row: {
           church_id: string | null
