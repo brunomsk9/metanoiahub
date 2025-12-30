@@ -297,6 +297,137 @@ export function DiscipleshipCharts({
     return discipuladores.filter(d => !discipuladorDiscipleCount[d.id] || discipuladorDiscipleCount[d.id] === 0).length;
   }, [discipuladores, discipuladorDiscipleCount]);
 
+  // Streak distribution data
+  const streakDistributionData = useMemo(() => {
+    const active = filteredRelationships.filter(r => r.status === 'active' && r.discipulo);
+    const ranges = [
+      { range: '0 dias', min: 0, max: 1 },
+      { range: '1-7 dias', min: 1, max: 8 },
+      { range: '8-14 dias', min: 8, max: 15 },
+      { range: '15-30 dias', min: 15, max: 31 },
+      { range: '31-60 dias', min: 31, max: 61 },
+      { range: '60+ dias', min: 61, max: 999999 },
+    ];
+
+    return ranges.map((r, index) => ({
+      range: r.range,
+      count: active.filter(rel => {
+        const streak = rel.discipulo?.current_streak || 0;
+        return streak >= r.min && streak < r.max;
+      }).length,
+      fill: [
+        '#ef4444', // 0 - red
+        '#f59e0b', // 1-7 - orange
+        '#eab308', // 8-14 - yellow
+        '#84cc16', // 15-30 - lime
+        '#10b981', // 31-60 - green
+        'hsl(var(--primary))', // 60+ - primary
+      ][index]
+    }));
+  }, [filteredRelationships]);
+
+  // Time to complete Alicerce
+  const alicerceTimeData = useMemo(() => {
+    const withAlicerce = filteredRelationships.filter(r => 
+      r.alicerce_completed_at && r.started_at
+    );
+    
+    if (withAlicerce.length === 0) return [];
+
+    const ranges = [
+      { range: '< 30 dias', min: 0, max: 30 },
+      { range: '30-60 dias', min: 30, max: 60 },
+      { range: '60-90 dias', min: 60, max: 90 },
+      { range: '90-180 dias', min: 90, max: 180 },
+      { range: '180+ dias', min: 180, max: 999999 },
+    ];
+
+    return ranges.map((r, index) => ({
+      range: r.range,
+      count: withAlicerce.filter(rel => {
+        const days = differenceInDays(
+          parseISO(rel.alicerce_completed_at!),
+          parseISO(rel.started_at!)
+        );
+        return days >= r.min && days < r.max;
+      }).length,
+      fill: [
+        '#10b981', // < 30 - green (fast)
+        '#84cc16', // 30-60 - lime
+        '#eab308', // 60-90 - yellow
+        '#f59e0b', // 90-180 - orange
+        '#ef4444', // 180+ - red (slow)
+      ][index]
+    }));
+  }, [filteredRelationships]);
+
+  // XP distribution data
+  const xpDistributionData = useMemo(() => {
+    const active = filteredRelationships.filter(r => r.status === 'active' && r.discipulo);
+    const ranges = [
+      { range: '0-100', min: 0, max: 100 },
+      { range: '100-500', min: 100, max: 500 },
+      { range: '500-1000', min: 500, max: 1000 },
+      { range: '1000-2500', min: 1000, max: 2500 },
+      { range: '2500+', min: 2500, max: 999999 },
+    ];
+
+    return ranges.map((r, index) => ({
+      range: r.range,
+      count: active.filter(rel => {
+        const xp = rel.discipulo?.xp_points || 0;
+        return xp >= r.min && xp < r.max;
+      }).length,
+      fill: [
+        '#6b7280', // 0-100 - gray
+        '#06b6d4', // 100-500 - cyan
+        '#8b5cf6', // 500-1000 - purple
+        '#ec4899', // 1000-2500 - pink
+        'hsl(var(--primary))', // 2500+ - primary
+      ][index]
+    }));
+  }, [filteredRelationships]);
+
+  // Tenure distribution (time in discipleship)
+  const tenureDistributionData = useMemo(() => {
+    const active = filteredRelationships.filter(r => r.status === 'active' && r.started_at);
+    const ranges = [
+      { range: '< 30 dias', min: 0, max: 30 },
+      { range: '1-3 meses', min: 30, max: 90 },
+      { range: '3-6 meses', min: 90, max: 180 },
+      { range: '6-12 meses', min: 180, max: 365 },
+      { range: '1+ ano', min: 365, max: 999999 },
+    ];
+
+    return ranges.map((r, index) => ({
+      range: r.range,
+      count: active.filter(rel => {
+        const days = differenceInDays(new Date(), parseISO(rel.started_at!));
+        return days >= r.min && days < r.max;
+      }).length,
+      fill: [
+        '#06b6d4', // < 30 - cyan (new)
+        '#10b981', // 1-3 - green
+        '#8b5cf6', // 3-6 - purple
+        '#ec4899', // 6-12 - pink
+        'hsl(var(--primary))', // 1+ - primary (veteran)
+      ][index]
+    }));
+  }, [filteredRelationships]);
+
+  // Academia progression comparison
+  const academiaProgressionData = useMemo(() => {
+    const active = filteredRelationships.filter(r => r.status === 'active');
+    if (active.length === 0) return [];
+    
+    return [
+      { nivel: 'Nível 1', completo: active.filter(r => r.academia_nivel_1).length, pendente: active.filter(r => !r.academia_nivel_1).length },
+      { nivel: 'Nível 2', completo: active.filter(r => r.academia_nivel_2).length, pendente: active.filter(r => !r.academia_nivel_2).length },
+      { nivel: 'Nível 3', completo: active.filter(r => r.academia_nivel_3).length, pendente: active.filter(r => !r.academia_nivel_3).length },
+      { nivel: 'Nível 4', completo: active.filter(r => r.academia_nivel_4).length, pendente: active.filter(r => !r.academia_nivel_4).length },
+    ];
+  }, [filteredRelationships]);
+
   const chartConfig = {
     discipulos: { label: "Discípulos", color: "hsl(var(--primary))" },
     capacidade: { label: "Capacidade", color: "hsl(var(--muted))" },
@@ -305,6 +436,8 @@ export function DiscipleshipCharts({
     novos: { label: "Novos", color: "hsl(var(--chart-2))" },
     concluidos: { label: "Concluídos", color: "hsl(var(--chart-3))" },
     ativos: { label: "Ativos", color: "hsl(var(--primary))" },
+    completo: { label: "Completo", color: "#10b981" },
+    pendente: { label: "Pendente", color: "#6b7280" },
   };
 
   return (
@@ -658,6 +791,190 @@ export function DiscipleshipCharts({
             </CardContent>
           </Card>
         </div>
+
+        {/* Row 4: Streak Distribution + XP Distribution */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Streak Distribution */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Flame className="h-4 w-4 text-orange-500" />
+                Distribuição de Streak dos Discípulos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              {streakDistributionData.length > 0 ? (
+                <div className="w-full h-[280px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <BarChart data={streakDistributionData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value) => [`${value} discípulos`, 'Quantidade']}
+                      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {streakDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* XP Distribution */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Award className="h-4 w-4 text-purple-500" />
+                Distribuição de XP dos Discípulos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              {xpDistributionData.length > 0 ? (
+                <div className="w-full h-[280px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <BarChart data={xpDistributionData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value) => [`${value} discípulos`, 'Quantidade']}
+                      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {xpDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row 5: Tenure Distribution + Time to Alicerce */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Tenure Distribution */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Clock className="h-4 w-4 text-cyan-500" />
+                Tempo no Discipulado (Ativos)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              {tenureDistributionData.length > 0 ? (
+                <div className="w-full h-[280px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <BarChart data={tenureDistributionData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value) => [`${value} discípulos`, 'Quantidade']}
+                      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {tenureDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Time to Complete Alicerce */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-green-500" />
+                Tempo para Completar Alicerce
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              {alicerceTimeData.length > 0 ? (
+                <div className="w-full h-[280px]">
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <BarChart data={alicerceTimeData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
+                      <ChartTooltip 
+                        content={<ChartTooltipContent />}
+                        formatter={(value) => [`${value} discípulos`, 'Quantidade']}
+                      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {alicerceTimeData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado de Alicerce completado
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row 6: Academia Progression - Full Width */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Target className="h-4 w-4 text-indigo-500" />
+              Progressão na Academia (Completo vs Pendente)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-hidden">
+            {academiaProgressionData.length > 0 ? (
+              <div className="w-full h-[280px]">
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                  <BarChart data={academiaProgressionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="nivel" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="completo" fill="#10b981" stackId="a" radius={[0, 0, 0, 0]} name="Completo" />
+                    <Bar dataKey="pendente" fill="#6b7280" stackId="a" radius={[6, 6, 0, 0]} name="Pendente" />
+                    <Legend 
+                      verticalAlign="bottom"
+                      formatter={(value) => <span className="text-sm text-muted-foreground capitalize">{value}</span>}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            ) : (
+              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                Nenhum dado disponível
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
