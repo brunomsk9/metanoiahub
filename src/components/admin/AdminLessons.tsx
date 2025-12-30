@@ -7,12 +7,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FileText, X, Upload, Paperclip, FileImage, FileSpreadsheet, Presentation, File, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 import { SaveSuccess, useSaveSuccess } from '@/components/ui/save-success';
 import { useUserChurchId } from '@/hooks/useUserChurchId';
+import { LessonQuestionsEditor } from './LessonQuestionsEditor';
+import type { Json } from '@/integrations/supabase/types';
 
 const ITEMS_PER_PAGE = 10;
+
+interface Question {
+  pergunta: string;
+  alternativas: string[];
+  resposta_correta: number;
+}
 
 interface Lesson {
   id: string;
@@ -27,6 +35,7 @@ interface Lesson {
   materiais: string[];
   url_pdf: string | null;
   tipo_material: string | null;
+  perguntas: Question[];
 }
 
 interface Course {
@@ -69,7 +78,8 @@ export function AdminLessons() {
     ordem: 0,
     materiais: [] as string[],
     url_pdf: '',
-    tipo_material: 'pdf' as 'pdf' | 'ebook' | 'livro'
+    tipo_material: 'pdf' as 'pdf' | 'ebook' | 'livro',
+    perguntas: [] as Question[]
   });
 
   const totalPages = Math.ceil(lessons.length / ITEMS_PER_PAGE);
@@ -94,6 +104,9 @@ export function AdminLessons() {
         ...lesson,
         materiais: Array.isArray(lesson.materiais) 
           ? (lesson.materiais as unknown as string[]) 
+          : [],
+        perguntas: Array.isArray(lesson.perguntas)
+          ? (lesson.perguntas as unknown as Question[])
           : []
       })) as Lesson[];
       setLessons(lessonsData);
@@ -119,7 +132,8 @@ export function AdminLessons() {
         ordem: lesson.ordem,
         materiais: Array.isArray(lesson.materiais) ? lesson.materiais : [],
         url_pdf: lesson.url_pdf || '',
-        tipo_material: (lesson.tipo_material as 'pdf' | 'ebook' | 'livro') || 'pdf'
+        tipo_material: (lesson.tipo_material as 'pdf' | 'ebook' | 'livro') || 'pdf',
+        perguntas: Array.isArray(lesson.perguntas) ? lesson.perguntas : []
       });
     } else {
       setEditing(null);
@@ -134,7 +148,8 @@ export function AdminLessons() {
         ordem: lessons.length,
         materiais: [],
         url_pdf: '',
-        tipo_material: 'pdf'
+        tipo_material: 'pdf',
+        perguntas: []
       });
     }
     setDialogOpen(true);
@@ -257,10 +272,11 @@ export function AdminLessons() {
       checklist_items: checklistParsed,
       duracao_minutos: form.duracao_minutos,
       ordem: form.ordem,
-      materiais: form.materiais,
+      materiais: form.materiais as unknown as Json,
       url_pdf: form.url_pdf || null,
       tipo_material: form.tipo_material,
-      church_id: churchId
+      church_id: churchId,
+      perguntas: form.perguntas as unknown as Json
     };
 
     if (editing) {
@@ -542,6 +558,12 @@ export function AdminLessons() {
                   Formatos aceitos: PDF, Word, PowerPoint, Excel, Imagens. Máximo 10MB por arquivo.
                 </p>
               </div>
+
+              {/* Questions Editor */}
+              <LessonQuestionsEditor
+                questions={form.perguntas}
+                onChange={(perguntas) => setForm({ ...form, perguntas })}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -445,6 +445,7 @@ export type Database = {
           id: string
           materiais: Json | null
           ordem: number
+          perguntas: Json | null
           texto_apoio: string | null
           tipo: Database["public"]["Enums"]["lesson_type"]
           tipo_material: string | null
@@ -461,6 +462,7 @@ export type Database = {
           id?: string
           materiais?: Json | null
           ordem?: number
+          perguntas?: Json | null
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
           tipo_material?: string | null
@@ -477,6 +479,7 @@ export type Database = {
           id?: string
           materiais?: Json | null
           ordem?: number
+          perguntas?: Json | null
           texto_apoio?: string | null
           tipo?: Database["public"]["Enums"]["lesson_type"]
           tipo_material?: string | null
