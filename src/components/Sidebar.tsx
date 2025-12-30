@@ -185,13 +185,13 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Recursos (Admin and Discipulador) */}
-            {(isAdmin || isDiscipulador) && (
+            {/* Recursos (Admin, Discipulador, Líder Ministerial) */}
+            {(isAdmin || isDiscipulador || isLiderMinisterial) && (
               <NavLink
-                to="/admin?section=recursos"
+                to="/recursos"
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  location.pathname === '/admin' && location.search.includes('recursos')
+                  location.pathname === '/recursos'
                     ? "bg-primary/10 text-primary" 
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
@@ -402,13 +402,13 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
                   <p className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Gestão
                   </p>
-                  {/* Recursos for both admin and discipulador */}
-                  {(isAdmin || isDiscipulador) && (
+                  {/* Recursos for admin, discipulador and lider ministerial */}
+                  {(isAdmin || isDiscipulador || isLiderMinisterial) && (
                     <NavLink
-                      to="/admin?section=recursos"
+                      to="/recursos"
                       className={cn(
                         "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors",
-                        location.pathname === '/admin' && location.search.includes('recursos')
+                        location.pathname === '/recursos'
                           ? "bg-primary/10 text-primary" 
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       )}
