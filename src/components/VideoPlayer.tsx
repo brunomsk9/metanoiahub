@@ -155,7 +155,7 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
             className="absolute inset-0 flex items-center justify-center z-10"
             aria-label="Reproduzir vídeo"
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-primary">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-primary animate-[pulse_2s_ease-in-out_infinite]">
               <Play className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground ml-1" fill="currentColor" />
             </div>
           </button>
