@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, ChevronDown } from "lucide-react";
+import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, ChevronDown, BarChart3 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ActionButtons } from "@/components/ui/action-buttons";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ import { DiscipleshipHistory } from "./DiscipleshipHistory";
 import { DiscipleshipOrganogram } from "./DiscipleshipOrganogram";
 import { CreateUserModal } from "./CreateUserModal";
 import { BulkAssignDisciplesModal } from "./BulkAssignDisciplesModal";
+import { DiscipleshipCharts } from "./DiscipleshipCharts";
 import { useChurch } from "@/contexts/ChurchContext";
 
 interface Profile {
@@ -706,11 +707,18 @@ export function AdminDiscipleship() {
                 <span className="sm:hidden">Org.</span>
               </TabsTrigger>
               {isAdmin && (
-                <TabsTrigger value="history" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 flex-1 sm:flex-none">
-                  <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Histórico</span>
-                  <span className="sm:hidden">Hist.</span>
-                </TabsTrigger>
+                <>
+                  <TabsTrigger value="analytics" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 flex-1 sm:flex-none">
+                    <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Analytics</span>
+                    <span className="sm:hidden">Stats</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 flex-1 sm:flex-none">
+                    <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Histórico</span>
+                    <span className="sm:hidden">Hist.</span>
+                  </TabsTrigger>
+                </>
               )}
             </TabsList>
           </div>
@@ -1472,9 +1480,19 @@ export function AdminDiscipleship() {
       </TabsContent>
 
       {isAdmin && (
-        <TabsContent value="history">
-          <DiscipleshipHistory />
-        </TabsContent>
+        <>
+          <TabsContent value="analytics">
+            <DiscipleshipCharts
+              relationships={relationships}
+              discipuladores={availableDiscipuladores}
+              discipuladorDiscipleCount={discipuladorDiscipleCount}
+              maxDisciplesLimit={maxDisciplesLimit}
+            />
+          </TabsContent>
+          <TabsContent value="history">
+            <DiscipleshipHistory />
+          </TabsContent>
+        </>
       )}
 
       {/* Transfer Dialog */}
