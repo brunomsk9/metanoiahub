@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { Play } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useMemo } from "react";
+import { ExternalLink, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface VideoPlayerProps {
   videoUrl?: string;
@@ -12,18 +12,40 @@ interface VideoPlayerProps {
 // Extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
   if (!url) return null;
-  
+
+  // Playlist-only URLs (no single video id)
+  const playlistId = new URL(url, window.location.origin).searchParams.get("list");
+  const hasVideoId = new URL(url, window.location.origin).searchParams.get("v");
+  if (playlistId && !hasVideoId) return null;
+
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /youtube\.com\/shorts\/([^&\n?#]+)/,
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#/]+)/,
+    /youtube\.com\/shorts\/([^&\n?#/]+)/,
+    /youtube\.com\/live\/([^&\n?#/]+)/,
+    /youtube-nocookie\.com\/embed\/([^&\n?#/]+)/,
   ];
-  
+
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return match[1];
   }
-  
-  return null;
+
+  // Fallback to v= param
+  try {
+    const u = new URL(url, window.location.origin);
+    return u.searchParams.get("v");
+  } catch {
+    return null;
+  }
+}
+
+function getYouTubePlaylistId(url: string): string | null {
+  try {
+    const u = new URL(url, window.location.origin);
+    return u.searchParams.get("list");
+  } catch {
+    return null;
+  }
 }
 
 // Check if URL is a Vimeo video
@@ -34,25 +56,33 @@ function getVimeoVideoId(url: string): string | null {
 }
 
 export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-
   const videoEmbed = useMemo(() => {
     if (!videoUrl) return null;
 
+    const playlistId = getYouTubePlaylistId(videoUrl);
     const youtubeId = getYouTubeVideoId(videoUrl);
+
     if (youtubeId) {
       return {
-        type: 'youtube',
-        embedUrl: `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`,
+        type: "youtube" as const,
+        embedUrl: `https://www.youtube.com/embed/${youtubeId}?rel=0`,
         thumbnailUrl: thumbnail || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+      };
+    }
+
+    if (playlistId) {
+      return {
+        type: "youtube_playlist" as const,
+        embedUrl: `https://www.youtube.com/embed/videoseries?list=${playlistId}&rel=0`,
+        thumbnailUrl: thumbnail,
       };
     }
 
     const vimeoId = getVimeoVideoId(videoUrl);
     if (vimeoId) {
       return {
-        type: 'vimeo',
-        embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+        type: "vimeo" as const,
+        embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
         thumbnailUrl: thumbnail,
       };
     }
@@ -60,7 +90,7 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
     // Direct video URL (mp4, webm, etc.)
     if (videoUrl.match(/\.(mp4|webm|ogg)$/i)) {
       return {
-        type: 'native',
+        type: "native" as const,
         embedUrl: videoUrl,
         thumbnailUrl: thumbnail,
       };
@@ -78,64 +108,52 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
   }
 
   return (
-    <div className="video-container group">
-      {isPlaying ? (
-        // Embedded player
-        videoEmbed.type === 'native' ? (
+    <div className="space-y-3">
+      <div className="video-container">
+        {videoEmbed.type === "native" ? (
           <video
             src={videoEmbed.embedUrl}
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 h-full w-full"
             controls
-            autoPlay
+            poster={videoEmbed.thumbnailUrl || undefined}
             onEnded={onComplete}
           />
         ) : (
           <iframe
             src={videoEmbed.embedUrl}
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             title={title}
           />
-        )
-      ) : (
-        <>
-          {/* Thumbnail */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-background">
-            {videoEmbed.thumbnailUrl ? (
-              <img 
-                src={videoEmbed.thumbnailUrl} 
-                alt={title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted">
-                <Play className="w-20 h-20 text-muted-foreground/30" />
-              </div>
-            )}
+        )}
+
+        {/* Title overlay */}
+        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-background/80 to-transparent z-10 pointer-events-none">
+          <h2 className="font-display font-semibold text-foreground text-lg line-clamp-2">{title}</h2>
+        </div>
+
+        {/* Fallback visual (when no thumbnail is available and iframe hasn't rendered yet) */}
+        {!videoEmbed.thumbnailUrl && videoEmbed.type === "native" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted">
+            <Play className="w-20 h-20 text-muted-foreground/30" />
           </div>
+        )}
+      </div>
 
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-          {/* Play Button */}
-          <button
-            onClick={() => setIsPlaying(true)}
-            className="absolute inset-0 flex items-center justify-center z-10"
+      {videoUrl && (
+        <div className="flex items-center justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(videoUrl, "_blank", "noopener,noreferrer")}
+            className="gap-2"
           >
-            <div className={cn(
-              "w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center transition-all duration-300",
-              "shadow-glow hover:scale-110"
-            )}>
-              <Play className="w-8 h-8 text-primary-foreground ml-1" fill="currentColor" />
-            </div>
-          </button>
-
-          {/* Title Overlay */}
-          <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-background/80 to-transparent z-10">
-            <h2 className="font-display font-semibold text-foreground text-lg">{title}</h2>
-          </div>
-        </>
+            <ExternalLink className="h-4 w-4" />
+            Abrir no YouTube/Vimeo
+          </Button>
+        </div>
       )}
     </div>
   );
