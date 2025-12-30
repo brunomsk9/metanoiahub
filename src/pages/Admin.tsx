@@ -19,6 +19,7 @@ import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
+import { AppShell } from '@/components/layout/AppShell';
 import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart, Calendar, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +29,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
 type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules';
 
@@ -159,51 +159,26 @@ export default function Admin() {
   };
 
   return (
-    <PageTransition>
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowLeft className="h-5 w-5" />
-                <span className="hidden sm:inline text-sm">Voltar</span>
-              </Link>
-              <div className="h-6 w-px bg-border" />
-              <div className="flex items-center gap-2">
-                <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
-                <span className="font-semibold text-foreground">Admin</span>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+    <AppShell>
+      <PageTransition>
+        <div className="space-y-6">
+          {/* Header */}
+          <div>
+            <PageBreadcrumb items={[{ label: 'Painel Admin' }]} />
+            <h1 className="text-2xl font-bold text-foreground mt-4">
+              {isAdmin ? 'Gerenciar Conteúdo' : isLiderMinisterial ? 'Escalas Ministeriais' : 'Discipulado'}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              {isAdmin 
+                ? 'Adicione e edite trilhas, cursos, lições e recursos' 
+                : isLiderMinisterial 
+                  ? 'Gerencie as escalas do seu ministério'
+                  : 'Acompanhe o progresso dos seus discípulos'}
+            </p>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Breadcrumb */}
-        <PageBreadcrumb items={[{ label: 'Painel Admin' }]} />
-
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {isAdmin ? 'Gerenciar Conteúdo' : isLiderMinisterial ? 'Escalas Ministeriais' : 'Discipulado'}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {isAdmin 
-              ? 'Adicione e edite trilhas, cursos, lições e recursos' 
-              : isLiderMinisterial 
-                ? 'Gerencie as escalas do seu ministério'
-                : 'Acompanhe o progresso dos seus discípulos'}
-          </p>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6">
+          {/* Navigation */}
+          <div className="flex flex-wrap gap-2">
           {/* Líder Ministerial Navigation */}
           {isLiderMinisterial && !isAdmin && (
             <>
@@ -365,8 +340,8 @@ export default function Admin() {
         <div className="mt-6">
           {renderContent()}
         </div>
-      </main>
-    </div>
+      </div>
     </PageTransition>
+    </AppShell>
   );
 }

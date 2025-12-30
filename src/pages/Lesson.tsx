@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, Menu } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -13,6 +13,9 @@ import { CelebrationModal } from "@/components/CelebrationModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XPGainToast } from "@/components/XPGainToast";
 import { LessonQuiz } from "@/components/LessonQuiz";
+import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
+import { DesktopHeader } from "@/components/layout/DesktopHeader";
+import { AppHeader } from "@/components/layout/AppHeader";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -356,11 +359,24 @@ export default function Lesson() {
   return (
     <PageTransition>
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Breadcrumb */}
-          <div className="py-2 border-b border-border/50">
+      {/* Desktop Header */}
+      <DesktopHeader />
+      
+      {/* Desktop Sidebar */}
+      <DesktopSidebar />
+      
+      {/* Mobile Header */}
+      <div className="md:hidden">
+        <AppHeader title={lesson.titulo} showBack backTo={`/curso/${lesson.course_id}`} />
+      </div>
+
+      {/* Main Content - offset for sidebar on desktop */}
+      <div className="pt-14 md:pt-16 md:ml-56">
+        {/* Lesson Header with breadcrumb */}
+        <header className="sticky top-14 md:top-16 z-30 bg-background/80 backdrop-blur-md border-b border-border">
+          <div className="max-w-5xl mx-auto px-4 md:px-6">
+            {/* Breadcrumb */}
+            <div className="py-2 border-b border-border/50 hidden md:block">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -453,7 +469,7 @@ export default function Lesson() {
       {/* Course Progress Bar */}
       {courseProgress.total > 0 && (
         <div className="bg-muted/50 border-b border-border">
-          <div className="max-w-7xl mx-auto px-4 py-2">
+          <div className="max-w-5xl mx-auto px-6 py-2">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -792,6 +808,7 @@ export default function Lesson() {
         }}
         trackTitle={lesson?.course?.titulo || 'Curso'}
       />
+      </div>
     </div>
     </PageTransition>
   );
