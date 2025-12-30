@@ -290,15 +290,12 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
             <div className={cn("pt-4 mt-4 border-t border-border/50", isCollapsed && "pt-2 mt-2")}>
               <SectionHeader label="Gestão" />
 
-              {(isAdmin || isDiscipulador) && (
+              {(isAdmin || isDiscipulador || isLiderMinisterial) && (
                 <NavItem
-                  to="/admin?section=recursos"
+                  to="/recursos"
                   icon={FolderOpen}
                   label="Recursos"
-                  active={
-                    location.pathname === "/admin" &&
-                    location.search.includes("recursos")
-                  }
+                  active={location.pathname === "/recursos"}
                 />
               )}
 

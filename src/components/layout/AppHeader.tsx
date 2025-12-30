@@ -303,10 +303,10 @@ export const AppHeader = memo(function AppHeader({
                         Gestão
                       </p>
 
-                      {(isAdmin || isDiscipulador) && (
+                      {(isAdmin || isDiscipulador || isLiderMinisterial) && (
                         <NavButton
-                          onClick={() => handleNavigate("/admin?section=recursos")}
-                          active={location.pathname === "/admin" && location.search.includes("recursos")}
+                          onClick={() => handleNavigate("/recursos")}
+                          active={location.pathname === "/recursos"}
                           icon={FolderOpen}
                           label="Recursos"
                         />
