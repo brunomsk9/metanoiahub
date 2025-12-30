@@ -9,7 +9,13 @@ import {
   Users,
   Compass,
   Heart,
-  Globe
+  Globe,
+  Calendar,
+  Trophy,
+  ClipboardCheck,
+  Bell,
+  BarChart3,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
@@ -21,7 +27,6 @@ export default function Index() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check session without blocking render
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate('/dashboard', { replace: true });
@@ -30,7 +35,6 @@ export default function Index() {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate('/dashboard', { replace: true });
@@ -40,7 +44,6 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Show content immediately, only hide if we're still checking AND redirecting
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -49,36 +52,69 @@ export default function Index() {
     );
   }
 
-  const features = [
+  const mainFeatures = [
     {
       icon: Compass,
       title: "Trilhas de Formação",
-      description: "Conteúdo estruturado para cada etapa do discipulado.",
+      description: "Cursos estruturados com vídeos, materiais de apoio e quizzes interativos para cada etapa do discipulado.",
+    },
+    {
+      icon: BookOpen,
+      title: "Planos de Leitura Bíblica",
+      description: "De 7 dias a 1 ano completo. Acompanhe seu progresso e receba lembretes diários.",
     },
     {
       icon: Flame,
-      title: "Hábitos Diários",
-      description: "Acompanhe leitura bíblica, oração e devocionais.",
+      title: "Hábitos Espirituais",
+      description: "Registre leitura bíblica, oração e devocionais. Mantenha sua sequência e conquiste badges.",
     },
     {
       icon: LifeBuoy,
       title: "S.O.S. Discipulador",
-      description: "Recursos práticos para situações desafiadoras.",
+      description: "Biblioteca de recursos para situações desafiadoras com busca inteligente por tema.",
     },
     {
       icon: MessageCircle,
       title: "Mentor IA",
-      description: "Assistente inteligente para tirar dúvidas.",
+      description: "Assistente inteligente treinado com os recursos da plataforma para tirar dúvidas.",
     },
     {
       icon: Users,
       title: "Gestão de Discípulos",
-      description: "Acompanhe o progresso de quem você discipula.",
+      description: "Acompanhe progresso, registre encontros e veja o histórico de cada discípulo.",
+    },
+  ];
+
+  const advancedFeatures = [
+    {
+      icon: Calendar,
+      title: "Escalas de Voluntários",
+      description: "Sistema completo para gestão de escalas ministeriais com confirmação automática.",
     },
     {
-      icon: BookOpen,
-      title: "Planos de Leitura",
-      description: "Planos bíblicos de 7 dias a 1 ano.",
+      icon: ClipboardCheck,
+      title: "Checklist Semanal",
+      description: "Discipuladores registram atividades semanais: oração, mensagens e encontros.",
+    },
+    {
+      icon: Trophy,
+      title: "Gamificação & Rankings",
+      description: "Ganhe XP ao completar aulas, conquiste badges e apareça no ranking.",
+    },
+    {
+      icon: Bell,
+      title: "Notificações por Email",
+      description: "Alertas automáticos para escalas, lembretes de leitura e boas-vindas.",
+    },
+    {
+      icon: BarChart3,
+      title: "Relatórios Gerenciais",
+      description: "Dashboards com métricas de engajamento, compliance e performance.",
+    },
+    {
+      icon: Shield,
+      title: "Multi-Igreja",
+      description: "Isolamento completo de dados entre igrejas com controle de acesso por papel.",
     },
   ];
 
@@ -108,13 +144,11 @@ export default function Index() {
         {/* Hero Section */}
         <section className="min-h-screen flex flex-col items-center justify-center px-4 pt-14">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Badge de lançamento */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm text-primary font-medium">Plataforma de Lançamento</span>
+              <span className="text-sm text-primary font-medium">Plataforma Completa de Discipulado</span>
             </div>
 
-            {/* Logo e Título */}
             <div className="space-y-4">
               <img 
                 src={metanoiaLogo} 
@@ -129,7 +163,6 @@ export default function Index() {
               </p>
             </div>
 
-            {/* Citação destaque */}
             <blockquote className="border-l-4 border-primary pl-6 py-3 text-left max-w-2xl mx-auto bg-primary/5 rounded-r-lg">
               <p className="text-xl sm:text-2xl text-foreground/90 font-serif italic leading-relaxed">
                 "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
@@ -137,7 +170,6 @@ export default function Index() {
               <footer className="text-sm text-muted-foreground mt-3 font-medium">— N. T. Wright</footer>
             </blockquote>
 
-            {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
               <Button size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
                 Começar Agora
@@ -148,13 +180,11 @@ export default function Index() {
               </Button>
             </div>
 
-            {/* Comunidade */}
             <p className="text-sm text-muted-foreground pt-4">
               Uma iniciativa da <span className="text-primary font-semibold">Comunidade das Nações de Goiânia</span>
             </p>
           </div>
 
-          {/* Scroll indicator */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
             <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1">
               <div className="w-1.5 h-3 rounded-full bg-muted-foreground/50" />
@@ -197,20 +227,20 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Main Features Section */}
         <section className="py-20 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Tudo que você precisa em um só lugar
+                Recursos Principais
               </h2>
               <p className="text-muted-foreground max-w-xl mx-auto">
-                Ferramentas práticas para cuidar, formar e multiplicar através de relacionamentos consistentes
+                Ferramentas essenciais para cuidar, formar e multiplicar discípulos
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature) => (
+              {mainFeatures.map((feature) => (
                 <div 
                   key={feature.title} 
                   className="bg-background border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group"
@@ -226,8 +256,37 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Sobre a Comunidade */}
+        {/* Advanced Features Section */}
         <section className="py-20 px-4 bg-muted/30">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                Recursos Avançados
+              </h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Funcionalidades para gestão completa da sua igreja
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {advancedFeatures.map((feature) => (
+                <div 
+                  key={feature.title} 
+                  className="bg-background border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-accent/50 flex items-center justify-center mb-4 group-hover:bg-accent transition-colors">
+                    <feature.icon className="w-6 h-6 text-accent-foreground" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Sobre a Comunidade */}
+        <section className="py-20 px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
@@ -267,13 +326,28 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Versículo tema */}
             <blockquote className="mt-12 border-l-4 border-primary pl-6 py-4 text-left max-w-2xl mx-auto bg-primary/5 rounded-r-lg">
               <p className="text-lg sm:text-xl text-foreground/90 font-serif italic leading-relaxed">
                 "Portanto, vão e façam discípulos de todas as nações, batizando-os em nome do Pai, do Filho e do Espírito Santo, ensinando-os a obedecer a tudo o que eu ordenei a vocês."
               </p>
               <footer className="text-sm text-muted-foreground mt-3 font-medium">— Mateus 28:19-20</footer>
             </blockquote>
+          </div>
+        </section>
+
+        {/* CTA Final */}
+        <section className="py-20 px-4 bg-primary/5">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Pronto para transformar o discipulado na sua igreja?
+            </h2>
+            <p className="text-muted-foreground">
+              Junte-se a dezenas de discipuladores que já estão usando o Metanoia Hub
+            </p>
+            <Button size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
+              Começar Agora
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
         </section>
 
