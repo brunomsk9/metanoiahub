@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CelebrationModal } from "@/components/CelebrationModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XPGainToast } from "@/components/XPGainToast";
+import { LessonQuiz } from "@/components/LessonQuiz";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,6 +30,12 @@ interface ChecklistItem {
   completed: boolean;
 }
 
+interface LessonQuestion {
+  pergunta: string;
+  alternativas: string[];
+  resposta_correta: number;
+}
+
 interface LessonData {
   id: string;
   titulo: string;
@@ -38,6 +45,7 @@ interface LessonData {
   url_pdf: string | null;
   tipo_material: string | null;
   materiais: string[] | null;
+  perguntas: LessonQuestion[] | null;
   course_id: string;
   ordem: number;
   course: {
@@ -81,6 +89,9 @@ export default function Lesson() {
   const [courseLessonsList, setCourseLessonsList] = useState<CourseLesson[]>([]);
   const [showLessonsList, setShowLessonsList] = useState(false);
   const [showXPGain, setShowXPGain] = useState(false);
+  const [videoStarted, setVideoStarted] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -109,6 +120,7 @@ export default function Lesson() {
           url_pdf,
           tipo_material,
           materiais,
+          perguntas,
           course_id,
           ordem,
           course:courses(
@@ -528,6 +540,26 @@ export default function Lesson() {
                 <VideoPlayer
                   title={lesson.titulo}
                   videoUrl={lesson.video_url}
+                  onComplete={() => {
+                    if (lesson.perguntas && lesson.perguntas.length > 0 && !quizCompleted) {
+                      setShowQuiz(true);
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Quiz Section */}
+            {showQuiz && lesson.perguntas && lesson.perguntas.length > 0 && !quizCompleted && (
+              <div className="animate-fade-in">
+                <LessonQuiz
+                  questions={lesson.perguntas}
+                  lessonTitle={lesson.titulo}
+                  onComplete={() => {
+                    setQuizCompleted(true);
+                    setShowQuiz(false);
+                    handleMarkCompleted();
+                  }}
                 />
               </div>
             )}
