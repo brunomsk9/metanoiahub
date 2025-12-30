@@ -1,6 +1,5 @@
-import { useMemo } from "react";
-import { ExternalLink, Play } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
+import { Play } from "lucide-react";
 
 interface VideoPlayerProps {
   videoUrl?: string;
@@ -56,6 +55,8 @@ function getVimeoVideoId(url: string): string | null {
 }
 
 export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const videoEmbed = useMemo(() => {
     if (!videoUrl) return null;
 
@@ -65,7 +66,7 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
     if (youtubeId) {
       return {
         type: "youtube" as const,
-        embedUrl: `https://www.youtube.com/embed/${youtubeId}?rel=0`,
+        embedUrl: `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`,
         thumbnailUrl: thumbnail || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
       };
     }
@@ -73,7 +74,7 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
     if (playlistId) {
       return {
         type: "youtube_playlist" as const,
-        embedUrl: `https://www.youtube.com/embed/videoseries?list=${playlistId}&rel=0`,
+        embedUrl: `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`,
         thumbnailUrl: thumbnail,
       };
     }
@@ -82,7 +83,7 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
     if (vimeoId) {
       return {
         type: "vimeo" as const,
-        embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+        embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
         thumbnailUrl: thumbnail,
       };
     }
@@ -108,13 +109,14 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
   }
 
   return (
-    <div className="space-y-3">
-      <div className="video-container">
-        {videoEmbed.type === "native" ? (
+    <div className="video-container group">
+      {isPlaying ? (
+        videoEmbed.type === "native" ? (
           <video
             src={videoEmbed.embedUrl}
             className="absolute inset-0 h-full w-full"
             controls
+            autoPlay
             poster={videoEmbed.thumbnailUrl || undefined}
             onEnded={onComplete}
           />
@@ -126,34 +128,45 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onComplete }: VideoPla
             allowFullScreen
             title={title}
           />
-        )}
-
-        {/* Title overlay */}
-        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-background/80 to-transparent z-10 pointer-events-none">
-          <h2 className="font-display font-semibold text-foreground text-lg line-clamp-2">{title}</h2>
-        </div>
-
-        {/* Fallback visual (when no thumbnail is available and iframe hasn't rendered yet) */}
-        {!videoEmbed.thumbnailUrl && videoEmbed.type === "native" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted">
-            <Play className="w-20 h-20 text-muted-foreground/30" />
+        )
+      ) : (
+        <>
+          {/* Thumbnail */}
+          <div className="absolute inset-0">
+            {videoEmbed.thumbnailUrl ? (
+              <img
+                src={videoEmbed.thumbnailUrl}
+                alt={title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-muted flex items-center justify-center">
+                <Play className="w-16 h-16 text-muted-foreground/30" />
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {videoUrl && (
-        <div className="flex items-center justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(videoUrl, "_blank", "noopener,noreferrer")}
-            className="gap-2"
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-background/40 group-hover:from-background/90 transition-all duration-300" />
+
+          {/* Play button */}
+          <button
+            onClick={() => setIsPlaying(true)}
+            className="absolute inset-0 flex items-center justify-center z-10"
+            aria-label="Reproduzir vídeo"
           >
-            <ExternalLink className="h-4 w-4" />
-            Abrir no YouTube/Vimeo
-          </Button>
-        </div>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:bg-primary">
+              <Play className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground ml-1" fill="currentColor" />
+            </div>
+          </button>
+
+          {/* Title overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+            <h2 className="font-display font-semibold text-foreground text-base sm:text-lg line-clamp-2 drop-shadow-md">
+              {title}
+            </h2>
+          </div>
+        </>
       )}
     </div>
   );
