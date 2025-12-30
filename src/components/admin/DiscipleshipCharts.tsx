@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Legend, CartesianGrid, Line, AreaChart, Area } from "recharts";
-import { Users, TrendingUp, Award, BookOpen, Flame, Target, Calendar, Filter, UserCheck, UserX, Clock } from "lucide-react";
+import { Users, TrendingUp, Award, BookOpen, Flame, Target, Calendar, Filter, UserCheck, UserX, Clock, User } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, subMonths, isAfter, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, differenceInDays } from "date-fns";
@@ -108,6 +108,7 @@ export function DiscipleshipCharts({
 }: DiscipleshipChartsProps) {
   const [period, setPeriod] = useState<PeriodFilter>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all");
+  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>("all");
 
   // Calculate date cutoff based on period
   const dateCutoff = useMemo(() => {
@@ -121,9 +122,12 @@ export function DiscipleshipCharts({
     }
   }, [period]);
 
-  // Filter relationships by period and status
+  // Filter relationships by period, status, and discipulador
   const filteredRelationships = useMemo(() => {
     return relationships.filter(r => {
+      // Discipulador filter
+      if (selectedDiscipulador !== "all" && r.discipulador_id !== selectedDiscipulador) return false;
+      
       // Status filter
       if (statusFilter === "active" && r.status !== "active") return false;
       if (statusFilter === "completed" && r.status !== "completed") return false;
@@ -136,7 +140,16 @@ export function DiscipleshipCharts({
       
       return true;
     });
-  }, [relationships, dateCutoff, statusFilter]);
+  }, [relationships, dateCutoff, statusFilter, selectedDiscipulador]);
+
+  // Sorted discipuladores for select
+  const sortedDiscipuladores = useMemo(() => {
+    return [...discipuladores].sort((a, b) => {
+      const countA = discipuladorDiscipleCount[a.id] || 0;
+      const countB = discipuladorDiscipleCount[b.id] || 0;
+      return countB - countA; // Sort by number of disciples descending
+    });
+  }, [discipuladores, discipuladorDiscipleCount]);
 
   // Stats cards data
   const stats = useMemo(() => {
@@ -466,13 +479,35 @@ export function DiscipleshipCharts({
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "completed")}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="active">Ativos</SelectItem>
               <SelectItem value="completed">Concluídos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedDiscipulador} onValueChange={setSelectedDiscipulador}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Discipulador" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos discipuladores</SelectItem>
+              {sortedDiscipuladores.map(d => (
+                <SelectItem key={d.id} value={d.id}>
+                  <span className="flex items-center gap-2">
+                    {d.nome?.split(' ')[0] || 'Sem nome'}
+                    <span className="text-muted-foreground text-xs">
+                      ({discipuladorDiscipleCount[d.id] || 0})
+                    </span>
+                  </span>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
