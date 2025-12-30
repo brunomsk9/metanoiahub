@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, ArrowUp } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, ArrowUp, Focus, Minimize2 } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
@@ -112,7 +112,9 @@ export default function Lesson() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   useEffect(() => {
     const fetchLesson = async () => {
@@ -385,109 +387,122 @@ export default function Lesson() {
         />
       </div>
 
-      {/* Mobile Header */}
-      <div className="md:hidden">
-        <AppHeader title={lesson.titulo} showBack backTo={`/curso/${lesson.course_id}`} />
-      </div>
+      {/* Mobile Header - hidden in focus mode */}
+      {!focusMode && (
+        <div className="md:hidden">
+          <AppHeader title={lesson.titulo} showBack backTo={`/curso/${lesson.course_id}`} />
+        </div>
+      )}
 
       {/* Main Content */}
-      <div className="pt-14 md:pt-0">
-        {/* Lesson Header with breadcrumb */}
-        <header className="sticky top-0 md:top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border">
-          <div className="max-w-5xl mx-auto px-4 md:px-6">
-            {/* Breadcrumb */}
-            <div className="py-2 border-b border-border/50 hidden md:block">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                      <Home className="h-3.5 w-3.5" />
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </BreadcrumbSeparator>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/trilhas" className="text-xs">Trilhas</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                {lesson.course?.track?.titulo && (
-                  <>
-                    <BreadcrumbSeparator>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </BreadcrumbSeparator>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink asChild>
-                        <Link to={`/trilha/${lesson.course.track_id}`} className="text-xs max-w-[100px] truncate">
-                          {lesson.course.track.titulo}
-                        </Link>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                  </>
-                )}
-                <BreadcrumbSeparator>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </BreadcrumbSeparator>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to={`/curso/${lesson.course_id}`} className="text-xs max-w-[100px] truncate">
-                      {lesson.course?.titulo || 'Curso'}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </BreadcrumbSeparator>
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="text-xs max-w-[120px] truncate">
-                    {lesson.titulo}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-
-          {/* Title row */}
-          <div className="h-14 flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                {isCompleted && (
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-500">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Concluída
-                  </span>
-                )}
-              </div>
-              <h1 className="text-sm font-display font-semibold text-foreground truncate">
-                {lesson.titulo}
-              </h1>
+      <div className={focusMode ? "pt-0" : "pt-14 md:pt-0"}>
+        {/* Lesson Header with breadcrumb - hidden in focus mode */}
+        {!focusMode && (
+          <header className="sticky top-0 md:top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border">
+            <div className="max-w-5xl mx-auto px-4 md:px-6">
+              {/* Breadcrumb */}
+              <div className="py-2 border-b border-border/50 hidden md:block">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                        <Home className="h-3.5 w-3.5" />
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/trilhas" className="text-xs">Trilhas</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {lesson.course?.track?.titulo && (
+                    <>
+                      <BreadcrumbSeparator>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </BreadcrumbSeparator>
+                      <BreadcrumbItem>
+                        <BreadcrumbLink asChild>
+                          <Link to={`/trilha/${lesson.course.track_id}`} className="text-xs max-w-[100px] truncate">
+                            {lesson.course.track.titulo}
+                          </Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                  <BreadcrumbSeparator>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={`/curso/${lesson.course_id}`} className="text-xs max-w-[100px] truncate">
+                        {lesson.course?.titulo || 'Curso'}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="text-xs max-w-[120px] truncate">
+                      {lesson.titulo}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
             </div>
-            {nextLesson ? (
-              <Button variant="outline" size="sm" onClick={handleNextLesson}>
-                Próxima
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" onClick={() => lesson?.course?.id && navigate(`/curso/${lesson.course.id}`)}>
-                Ver Curso
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
 
-      {/* Course Progress Bar */}
-      {courseProgress.total > 0 && (
+            {/* Title row */}
+            <div className="h-14 flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(-1)}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  {isCompleted && (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-500">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Concluída
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-sm font-display font-semibold text-foreground truncate">
+                  {lesson.titulo}
+                </h1>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setFocusMode(true)}
+                title="Modo leitura focada"
+                className="hidden md:flex"
+              >
+                <Focus className="w-4 h-4" />
+              </Button>
+              {nextLesson ? (
+                <Button variant="outline" size="sm" onClick={handleNextLesson}>
+                  Próxima
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => lesson?.course?.id && navigate(`/curso/${lesson.course.id}`)}>
+                  Ver Curso
+                </Button>
+              )}
+            </div>
+          </div>
+        </header>
+        )}
+
+      {/* Course Progress Bar - hidden in focus mode */}
+      {courseProgress.total > 0 && !focusMode && (
         <div className="bg-muted/50 border-b border-border">
           <div className="max-w-5xl mx-auto px-6 py-2">
             <div className="flex items-center gap-3">
@@ -830,7 +845,7 @@ export default function Lesson() {
       />
 
       {/* Scroll to Top Button */}
-      {showScrollTop && (
+      {showScrollTop && !focusMode && (
         <Button
           variant="secondary"
           size="icon"
@@ -839,6 +854,19 @@ export default function Lesson() {
           aria-label="Voltar ao topo"
         >
           <ArrowUp className="w-5 h-5" />
+        </Button>
+      )}
+
+      {/* Exit Focus Mode Button */}
+      {focusMode && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setFocusMode(false)}
+          className="fixed top-4 right-4 z-50 gap-2 shadow-lg border border-border/50 bg-background/90 backdrop-blur-sm hover:bg-primary hover:text-primary-foreground transition-all duration-300 animate-fade-in"
+        >
+          <Minimize2 className="w-4 h-4" />
+          Sair do Foco
         </Button>
       )}
       </div>
