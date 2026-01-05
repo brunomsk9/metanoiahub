@@ -75,10 +75,12 @@ export function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 section-pattern">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+            <div key={i} className="glass-effect rounded-xl p-4">
+              <Skeleton className="h-16 w-full" />
+            </div>
           ))}
         </div>
       </div>
@@ -107,11 +109,11 @@ export function AdminDashboard() {
           return (
             <div 
               key={index}
-              className="p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+              className="p-4 rounded-xl glass-effect hover:border-primary/30 transition-all duration-300 hover:scale-[1.02]"
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg bg-${stat.color}/10 flex items-center justify-center`}>
-                  <Icon className={`w-5 h-5 text-${stat.color}`} />
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">{stat.value}</p>
@@ -126,29 +128,29 @@ export function AdminDashboard() {
       {/* Additional Info */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Average Streak Card */}
-        <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20">
+        <div className="p-6 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-orange-500/20 flex items-center justify-center">
-              <Flame className="w-7 h-7 text-orange-500" />
+            <div className="w-14 h-14 rounded-xl bg-primary/30 flex items-center justify-center">
+              <Flame className="w-7 h-7 text-primary" />
             </div>
             <div>
-              <p className="text-3xl font-bold text-foreground">{stats.avgStreak}</p>
+              <p className="text-3xl font-bold text-gradient">{stats.avgStreak}</p>
               <p className="text-sm text-muted-foreground">Média de dias em streak</p>
             </div>
           </div>
         </div>
 
         {/* Recent Users */}
-        <div className="p-6 rounded-xl bg-card border border-border">
+        <div className="p-6 rounded-xl glass-effect">
           <h3 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" />
             Usuários Recentes
           </h3>
           <div className="space-y-3">
             {recentUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between">
+              <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-primary/5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-medium text-primary">
                     {user.nome?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                   <span className="text-sm text-foreground">{user.nome || 'Sem nome'}</span>

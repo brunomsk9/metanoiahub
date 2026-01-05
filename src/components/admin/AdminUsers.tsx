@@ -197,19 +197,19 @@ export function AdminUsers() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 animate-pulse" />
       </div>
     );
   }
 
   return (
     <Tabs defaultValue="list" className="space-y-6">
-      <TabsList className="bg-muted/50">
-        <TabsTrigger value="list" className="gap-2">
+      <TabsList className="glass-effect p-1">
+        <TabsTrigger value="list" className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
           <Users className="w-4 h-4" />
           Lista de Usuários
         </TabsTrigger>
-        <TabsTrigger value="import" className="gap-2">
+        <TabsTrigger value="import" className="gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
           <Upload className="w-4 h-4" />
           Importar CSV
         </TabsTrigger>
@@ -220,7 +220,7 @@ export function AdminUsers() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4">
               <p className="text-muted-foreground">{filteredUsers.length} de {users.length} usuário(s)</p>
-              <Button onClick={() => setCreateModalOpen(true)} size="sm" className="gap-2">
+              <Button onClick={() => setCreateModalOpen(true)} size="sm" className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
                 <UserPlus className="h-4 w-4" />
                 Novo Usuário
               </Button>
@@ -326,23 +326,26 @@ export function AdminUsers() {
           getRoleLabel={getRoleLabel}
         />
 
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-          <h4 className="font-medium text-foreground mb-2">Sobre as Roles</h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-500" />
+        <div className="glass-effect rounded-xl p-4">
+          <h4 className="font-medium text-foreground mb-2 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
+            Sobre as Roles
+          </h4>
+          <ul className="text-sm text-muted-foreground space-y-2">
+            <li className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/5 transition-colors">
+              <Users className="h-4 w-4 text-primary" />
               <strong>Discípulo:</strong> Acesso às trilhas e cursos para discípulos
             </li>
-            <li className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-blue-500" />
+            <li className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/5 transition-colors">
+              <UserCheck className="h-4 w-4 text-primary" />
               <strong>Discipulador:</strong> Acesso às trilhas e cursos para discipuladores
             </li>
-            <li className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-purple-500" />
+            <li className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/5 transition-colors">
+              <Building2 className="h-4 w-4 text-primary" />
               <strong>Líder Ministerial:</strong> Gerencia ministérios e voluntários
             </li>
-            <li className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-red-500" />
+            <li className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/5 transition-colors">
+              <Shield className="h-4 w-4 text-primary" />
               <strong>Admin:</strong> Acesso total ao painel administrativo
             </li>
           </ul>
@@ -372,9 +375,9 @@ function UsersTable({ users, search, saving, toggleRole, getRoleIcon, getRoleCol
 
   if (users.length === 0) {
     return (
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="glass-effect rounded-xl overflow-hidden">
         <div className="p-12 text-center">
-          <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <Users className="h-12 w-12 text-primary/30 mx-auto mb-4" />
           <p className="text-muted-foreground">
             {search ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado ainda.'}
           </p>
@@ -384,10 +387,10 @@ function UsersTable({ users, search, saving, toggleRole, getRoleIcon, getRoleCol
   }
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
+    <div className="glass-effect rounded-xl overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
-          <thead className="bg-muted/50 border-b border-border">
+          <thead className="bg-primary/5 border-b border-border">
             <tr>
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
                 <SortableHeader sortState={sorting.getSortIcon("nome")} onClick={() => sorting.toggleSort("nome")}>
@@ -403,10 +406,10 @@ function UsersTable({ users, search, saving, toggleRole, getRoleIcon, getRoleCol
           </thead>
           <tbody className="divide-y divide-border">
             {pagination.paginatedData.map((user) => (
-              <tr key={user.id} className="hover:bg-muted/30">
+              <tr key={user.id} className="hover:bg-primary/5 transition-colors">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary text-sm font-medium">
                       {user.nome.charAt(0).toUpperCase()}
                     </div>
                     <p className="font-medium text-foreground">{user.nome}</p>
