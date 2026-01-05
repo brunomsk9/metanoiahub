@@ -143,40 +143,42 @@ export default function SOS() {
         <div className="max-w-3xl mx-auto">
           {/* Header - visible on desktop */}
           <header className="hidden lg:block pt-2 pb-8 text-center">
-            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
-              S.O.S. do Discipulador
+            <h1 className="text-2xl lg:text-3xl font-display font-semibold mb-1">
+              <span className="text-gradient">S.O.S. do Discipulador</span>
             </h1>
             <p className="text-sm text-muted-foreground">
               Recursos e orientações para ajudar seus discípulos em situações difíceis
             </p>
           </header>
 
-            {/* Search */}
+          {/* Search Section with glass effect */}
+          <div className="glass-effect rounded-2xl p-6 mb-6">
             <SearchSOS 
               resources={resources}
               onSelect={handleResourceSelect}
               loading={loading}
               initialQuery={selectedTag}
             />
-
-            {/* Quick Tags */}
-            {!loading && quickTags.length > 0 && (
-              <div className="mt-8 flex flex-wrap gap-1.5 justify-center">
-                {quickTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handleQuickTagClick(tag)}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-        </PageTransition>
 
-        <MentorChatButton />
-      </AppShell>
+          {/* Quick Tags */}
+          {!loading && quickTags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2 justify-center">
+              {quickTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleQuickTagClick(tag)}
+                  className="px-4 py-2 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/40 transition-all duration-200"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </PageTransition>
+
+      <MentorChatButton />
+    </AppShell>
   );
 }
