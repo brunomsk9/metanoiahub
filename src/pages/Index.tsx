@@ -99,7 +99,7 @@ export default function Index() {
 
   const journeySteps = [
     { step: "01", title: "Conexão Inicial", description: "Primeiros encontros e acolhimento" },
-    { step: "02", title: "Alicerce", description: "Fundamentos da fé cristã" },
+    { step: "02", title: "Jornada Metanoia", description: "Fundamentos da fé cristã" },
     { step: "03", title: "Academia", description: "4 níveis de formação avançada" },
     { step: "04", title: "Multiplicação", description: "Forme novos discipuladores" },
   ];

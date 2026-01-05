@@ -17,7 +17,7 @@ const METRIC_TOOLTIPS = {
   mentoresAtuando: "Discipuladores que possuem pelo menos um discípulo ativo atribuído.",
   sequenciaHabitos: "Média de dias consecutivos que os discípulos ativos mantêm seus hábitos diários.",
   tempoDiscipulado: "Tempo médio (em dias) que os discípulos ativos estão no processo de discipulado.",
-  alicerceConcluido: "Discípulos ativos que já completaram o curso Alicerce presencialmente.",
+  jornadaConcluido: "Discípulos ativos que já completaram a Jornada Metanoia presencialmente.",
   conexaoCompleta: "Discípulos ativos que concluíram as duas etapas de Conexão Inicial.",
   mentoresDisponiveis: "Discipuladores cadastrados que não possuem nenhum discípulo atribuído.",
   discipulosPorMentor: "Média de discípulos ativos por discipulador que está atuando.",
@@ -73,7 +73,7 @@ const CHART_COLORS = {
 const FUNNEL_COLORS = [
   '#06b6d4', // Conexão 1 - cyan
   '#0891b2', // Conexão 2 - darker cyan
-  '#10b981', // Alicerce - green
+  '#10b981', // Jornada Metanoia - green
   '#8b5cf6', // Academia 1 - purple
   '#7c3aed', // Academia 2 - darker purple
   '#6366f1', // Academia 3 - indigo
@@ -189,7 +189,7 @@ export function DiscipleshipCharts({
   const stats = useMemo(() => {
     const active = filteredRelationships.filter(r => r.status === 'active');
     const completed = filteredRelationships.filter(r => r.status === 'completed');
-    const alicerceCompleted = active.filter(r => r.alicerce_completed_presencial).length;
+    const jornadaCompleted = active.filter(r => r.alicerce_completed_presencial).length;
     
     const avgStreak = active.length > 0
       ? Math.round(active.reduce((sum, r) => sum + (r.discipulo?.current_streak || 0), 0) / active.length)
@@ -214,9 +214,9 @@ export function DiscipleshipCharts({
       completedRelationships: completed.length,
       totalDiscipuladores: discipuladores.length,
       activeDiscipuladores,
-      alicerceCompleted,
-      alicerceRate: active.length > 0 
-        ? Math.round((alicerceCompleted / active.length) * 100) 
+      jornadaCompleted,
+      jornadaRate: active.length > 0 
+        ? Math.round((jornadaCompleted / active.length) * 100) 
         : 0,
       avgStreak,
       conexaoCompleted,
@@ -289,7 +289,7 @@ export function DiscipleshipCharts({
 
     const conexao1 = active.filter(r => r.conexao_inicial_1).length;
     const conexao2 = active.filter(r => r.conexao_inicial_2).length;
-    const alicerce = active.filter(r => r.alicerce_completed_presencial).length;
+    const jornada = active.filter(r => r.alicerce_completed_presencial).length;
     const academia1 = active.filter(r => r.academia_nivel_1).length;
     const academia2 = active.filter(r => r.academia_nivel_2).length;
     const academia3 = active.filter(r => r.academia_nivel_3).length;
@@ -298,7 +298,7 @@ export function DiscipleshipCharts({
     return [
       { etapa: 'Conexão 1', quantidade: conexao1, taxa: Math.round((conexao1/active.length)*100) },
       { etapa: 'Conexão 2', quantidade: conexao2, taxa: Math.round((conexao2/active.length)*100) },
-      { etapa: 'Alicerce', quantidade: alicerce, taxa: Math.round((alicerce/active.length)*100) },
+      { etapa: 'Jornada', quantidade: jornada, taxa: Math.round((jornada/active.length)*100) },
       { etapa: 'Academia 1', quantidade: academia1, taxa: Math.round((academia1/active.length)*100) },
       { etapa: 'Academia 2', quantidade: academia2, taxa: Math.round((academia2/active.length)*100) },
       { etapa: 'Academia 3', quantidade: academia3, taxa: Math.round((academia3/active.length)*100) },
@@ -373,13 +373,13 @@ export function DiscipleshipCharts({
     }));
   }, [filteredRelationships]);
 
-  // Time to complete Alicerce
-  const alicerceTimeData = useMemo(() => {
-    const withAlicerce = filteredRelationships.filter(r => 
+  // Time to complete Jornada Metanoia
+  const jornadaTimeData = useMemo(() => {
+    const withJornada = filteredRelationships.filter(r => 
       r.alicerce_completed_at && r.started_at
     );
     
-    if (withAlicerce.length === 0) return [];
+    if (withJornada.length === 0) return [];
 
     const ranges = [
       { range: '< 30 dias', min: 0, max: 30 },
@@ -391,7 +391,7 @@ export function DiscipleshipCharts({
 
     return ranges.map((r, index) => ({
       range: r.range,
-      count: withAlicerce.filter(rel => {
+      count: withJornada.filter(rel => {
         const days = differenceInDays(
           parseISO(rel.alicerce_completed_at!),
           parseISO(rel.started_at!)
@@ -653,18 +653,18 @@ export function DiscipleshipCharts({
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-green-500" />
-                <span className="text-xs text-muted-foreground">Alicerce Concluído</span>
+                <span className="text-xs text-muted-foreground">Jornada Concluída</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <HelpCircle className="h-3 w-3 text-muted-foreground/50 cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[250px]">
-                    <p className="text-xs">{METRIC_TOOLTIPS.alicerceConcluido}</p>
+                    <p className="text-xs">{METRIC_TOOLTIPS.jornadaConcluido}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <p className="text-2xl font-bold mt-1">{stats.alicerceCompleted}</p>
-              <p className="text-xs text-muted-foreground">{stats.alicerceRate}% dos em jornada</p>
+              <p className="text-2xl font-bold mt-1">{stats.jornadaCompleted}</p>
+              <p className="text-xs text-muted-foreground">{stats.jornadaRate}% dos em jornada</p>
             </CardContent>
           </Card>
 
@@ -998,7 +998,7 @@ export function DiscipleshipCharts({
           </Card>
         </div>
 
-        {/* Row 5: Tenure Distribution + Time to Alicerce */}
+        {/* Row 5: Tenure Distribution + Time to Jornada Metanoia */}
         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           {/* Tenure Distribution */}
           <Card>
@@ -1041,14 +1041,14 @@ export function DiscipleshipCharts({
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-green-500" />
-                Tempo para Completar Alicerce
+                Tempo para Completar Jornada Metanoia
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-hidden">
-              {alicerceTimeData.length > 0 ? (
+              {jornadaTimeData.length > 0 ? (
                 <div className="w-full h-[280px]">
                   <ChartContainer config={chartConfig} className="w-full h-full">
-                    <BarChart data={alicerceTimeData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
+                    <BarChart data={jornadaTimeData} margin={{ top: 10, right: 10, left: -10, bottom: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                       <XAxis dataKey="range" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={30} />
@@ -1057,7 +1057,7 @@ export function DiscipleshipCharts({
                         formatter={(value) => [`${value} discípulos`, 'Quantidade']}
                       />
                       <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                        {alicerceTimeData.map((entry, index) => (
+                        {jornadaTimeData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
                       </Bar>
@@ -1066,7 +1066,7 @@ export function DiscipleshipCharts({
                 </div>
               ) : (
                 <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-                  Nenhum dado de Alicerce completado
+                  Nenhum dado de Jornada Metanoia completada
                 </div>
               )}
             </CardContent>
