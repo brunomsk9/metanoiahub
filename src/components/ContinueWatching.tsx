@@ -139,7 +139,7 @@ export function TrackCard({ id, title, description, thumbnail, coursesCount, onC
         {isBase && !isLocked && (
           <div className="absolute top-3 left-3">
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground">
-              Alicerce
+              Jornada Metanoia
             </span>
           </div>
         )}
@@ -154,7 +154,7 @@ export function TrackCard({ id, title, description, thumbnail, coursesCount, onC
         <div className="flex items-center gap-2">
           {isLocked ? (
             <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-              Complete o Alicerce primeiro
+              Complete a Jornada Metanoia primeiro
             </span>
           ) : (
             <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">

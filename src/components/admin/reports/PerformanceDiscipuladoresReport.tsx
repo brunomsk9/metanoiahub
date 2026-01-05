@@ -317,7 +317,7 @@ function DiscipuladoresTable({ discipuladores }: { discipuladores: DiscipuladorS
             </TableHead>
             <TableHead className="text-center">
               <SortableHeader sortState={sorting.getSortIcon("alicerceCompleted")} onClick={() => sorting.toggleSort("alicerceCompleted")} className="justify-center">
-                Alicerce OK
+                Jornada OK
               </SortableHeader>
             </TableHead>
             <TableHead className="text-center">
