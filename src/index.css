@@ -250,7 +250,7 @@
 
   .section-pattern::before {
     content: '';
-    @apply absolute inset-0 opacity-5;
+    @apply absolute inset-0 opacity-5 pointer-events-none;
     background-image: radial-gradient(circle at 25% 25%, hsl(var(--primary)) 1px, transparent 1px);
     background-size: 50px 50px;
   }
