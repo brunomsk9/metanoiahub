@@ -256,7 +256,237 @@ export function MeetingsManager({
     );
   }
 
-  const displayMeetings = maxItems ? meetings.slice(0, maxItems) : meetings;
+  const displayMeetings = maxItems !== undefined && maxItems > 0 
+    ? meetings.slice(0, maxItems) 
+    : maxItems === 0 
+      ? [] 
+      : meetings;
+
+  // If maxItems is 0, only render the dialog (no list)
+  if (maxItems === 0) {
+    return (
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl">Novo Encontro</DialogTitle>
+                <DialogDescription>
+                  Registre um encontro individual ou de célula
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-5 pt-4">
+            {/* Type Selection */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Tipo de Encontro</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setTipo('individual')}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                    tipo === 'individual'
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                    tipo === 'individual' ? "bg-primary/20" : "bg-muted"
+                  )}>
+                    <User className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-medium">Individual</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipo('celula')}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                    tipo === 'celula'
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border bg-card hover:border-primary/50 hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                    tipo === 'celula' ? "bg-primary/20" : "bg-muted"
+                  )}>
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-medium">Célula</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Disciple Selection */}
+            {tipo === 'individual' ? (
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Discípulo</Label>
+                {disciples.length === 0 ? (
+                  <div className="p-4 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                    Nenhum discípulo vinculado
+                  </div>
+                ) : (
+                  <div className="grid gap-2 max-h-32 overflow-y-auto p-1">
+                    {disciples.map(d => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setSelectedDisciple(d.id)}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
+                          selectedDisciple === d.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50 hover:bg-muted/30"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
+                          selectedDisciple === d.id ? "bg-primary text-primary-foreground" : "bg-muted"
+                        )}>
+                          {d.nome?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium">{d.nome}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Presentes
+                    {selectedAttendees.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        {selectedAttendees.length}
+                      </Badge>
+                    )}
+                  </Label>
+                  {disciples.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={selectAllAttendees}
+                    >
+                      {selectedAttendees.length === disciples.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                    </Button>
+                  )}
+                </div>
+                {disciples.length === 0 ? (
+                  <div className="p-4 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                    Nenhum discípulo vinculado
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border bg-card/50 divide-y divide-border max-h-40 overflow-y-auto">
+                    {disciples.map(d => (
+                      <label
+                        key={d.id}
+                        className={cn(
+                          "flex items-center gap-3 p-3 cursor-pointer transition-colors",
+                          selectedAttendees.includes(d.id) ? "bg-primary/5" : "hover:bg-muted/30"
+                        )}
+                      >
+                        <Checkbox
+                          id={d.id}
+                          checked={selectedAttendees.includes(d.id)}
+                          onCheckedChange={() => toggleAttendee(d.id)}
+                        />
+                        <div className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium",
+                          selectedAttendees.includes(d.id) ? "bg-primary text-primary-foreground" : "bg-muted"
+                        )}>
+                          {d.nome?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm">{d.nome}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Date & Time */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                Data e Hora
+              </Label>
+              <Input
+                type="datetime-local"
+                value={dataEncontro}
+                onChange={(e) => setDataEncontro(e.target.value)}
+                className="h-11"
+              />
+            </div>
+
+            {/* Location */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                Local
+                <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
+                placeholder="Ex: Igreja, casa, café..."
+                className="h-11"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                Notas
+                <span className="text-xs text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Textarea
+                value={notas}
+                onChange={(e) => setNotas(e.target.value)}
+                placeholder="Observações sobre o encontro..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-border mt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar Encontro'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <div className="space-y-4">
