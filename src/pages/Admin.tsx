@@ -109,22 +109,22 @@ export default function Admin() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 animate-pulse" />
       </div>
     );
   }
 
   if (!isAdmin && !isDiscipulador && !isLiderMinisterial) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="text-center space-y-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 section-pattern">
+        <div className="text-center space-y-4 glass-effect p-8 rounded-2xl max-w-md">
           <ShieldAlert className="h-16 w-16 text-destructive mx-auto" />
-          <h1 className="text-2xl font-bold text-foreground">Acesso Negado</h1>
+          <h1 className="text-2xl font-bold text-gradient">Acesso Negado</h1>
           <p className="text-muted-foreground">
             Você não tem permissão para acessar esta área.
           </p>
           <Link to="/dashboard">
-            <Button variant="outline" className="mt-4">
+            <Button className="mt-4 bg-gradient-to-r from-primary to-primary/80">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar ao app
             </Button>
@@ -161,11 +161,11 @@ export default function Admin() {
   return (
     <AppShell>
       <PageTransition>
-        <div className="space-y-6">
+        <div className="space-y-6 section-pattern">
           {/* Header */}
           <div>
             <PageBreadcrumb items={[{ label: 'Painel Admin' }]} />
-            <h1 className="text-2xl font-bold text-foreground mt-4">
+            <h1 className="text-2xl font-bold text-gradient mt-4">
               {isAdmin ? 'Gerenciar Conteúdo' : isLiderMinisterial ? 'Escalas Ministeriais' : 'Discipulado'}
             </h1>
             <p className="text-muted-foreground mt-1">
