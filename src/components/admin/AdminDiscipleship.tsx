@@ -582,7 +582,7 @@ export function AdminDiscipleship() {
       return;
     }
 
-    toast.success(`Alicerce de ${discipleName} marcado como concluído presencialmente!`);
+    toast.success(`Jornada Metanoia de ${discipleName} marcada como concluída presencialmente!`);
     fetchData();
   };
 
@@ -1083,12 +1083,12 @@ export function AdminDiscipleship() {
                             </DialogHeader>
                             {discipleProgress && viewingProgress === rel.discipulo_id && (
                               <div className="space-y-6 pt-4">
-                                {/* Alicerce Progress */}
+                                {/* Jornada Metanoia Progress */}
                                 <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
                                   <div className="flex items-center justify-between">
                                     <span className="font-semibold text-foreground flex items-center gap-2">
                                       <Award className="w-4 h-4 text-primary" />
-                                      Progresso Alicerce
+                                      Progresso Jornada Metanoia
                                     </span>
                                     {rel.alicerce_completed_presencial ? (
                                       <Badge className="bg-success/10 text-success border-success/20">
@@ -1119,7 +1119,7 @@ export function AdminDiscipleship() {
                                         <AlertDialogHeader>
                                           <AlertDialogTitle>Confirmar Conclusão Presencial</AlertDialogTitle>
                                           <AlertDialogDescription>
-                                            Ao confirmar, você está atestando que {rel.discipulo?.nome} completou a jornada Alicerce presencialmente com você. 
+                                            Ao confirmar, você está atestando que {rel.discipulo?.nome} completou a Jornada Metanoia presencialmente com você. 
                                             Isso irá desbloquear todas as trilhas para o discípulo.
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>
