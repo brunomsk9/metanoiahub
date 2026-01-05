@@ -117,29 +117,25 @@ export default function Discipleship() {
             </div>
           </header>
 
-          {/* Encontros Recentes - apenas para discipuladores */}
-          {isDiscipulador && (
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">Encontros Recentes</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <MeetingsManager 
-                  externalDialogOpen={showMeetingDialog}
-                  onExternalDialogChange={setShowMeetingDialog}
-                  showHeader={false}
-                  maxItems={5}
-                />
-              </CardContent>
-            </Card>
-          )}
-
           <AdminDiscipleship />
+
+          {/* Log de Encontros Recentes - apenas para discipuladores */}
+          {isDiscipulador && (
+            <section className="mt-8 pt-6 border-t border-border/50">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  Histórico de Encontros
+                </h3>
+              </div>
+              <MeetingsManager 
+                externalDialogOpen={showMeetingDialog}
+                onExternalDialogChange={setShowMeetingDialog}
+                showHeader={false}
+                maxItems={5}
+              />
+            </section>
+          )}
         </div>
       </PageTransition>
     </AppShell>
