@@ -281,7 +281,7 @@ export function AdminTracks() {
                   onCheckedChange={(checked) => setForm({ ...form, is_base: !!checked })}
                 />
                 <label htmlFor="is_base" className="text-sm text-foreground cursor-pointer">
-                  <span className="font-medium">Trilha Alicerce</span>
+                  <span className="font-medium">Jornada Metanoia</span>
                   <p className="text-xs text-muted-foreground">Marque se esta é a trilha inicial obrigatória</p>
                 </label>
               </div>
@@ -365,7 +365,7 @@ export function AdminTracks() {
                   <td className="py-3 px-4 hidden lg:table-cell">
                     {track.is_base && (
                       <span className="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-primary/20 text-primary border border-primary/30">
-                        Alicerce
+                        Jornada Metanoia
                       </span>
                     )}
                   </td>
