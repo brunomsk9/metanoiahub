@@ -5,7 +5,7 @@ import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { ShieldAlert, ArrowLeft, Building2, Calendar } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Building2, Calendar, Users2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { MinistrySkeleton } from '@/components/skeletons/PageSkeletons';
@@ -55,15 +55,21 @@ export default function Ministry() {
 
   if (!isLiderMinisterial && !isAdmin) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="text-center space-y-4">
-          <ShieldAlert className="h-16 w-16 text-destructive mx-auto" />
-          <h1 className="text-2xl font-bold text-foreground">Acesso Negado</h1>
-          <p className="text-muted-foreground">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Background effects */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-destructive/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-destructive/10 rounded-full blur-3xl" />
+        
+        <div className="glass-effect rounded-2xl p-8 border border-border/50 text-center max-w-md relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert className="h-8 w-8 text-destructive" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Acesso Negado</h1>
+          <p className="text-muted-foreground mb-6">
             Você não tem permissão para acessar esta área.
           </p>
           <Link to="/dashboard">
-            <Button variant="outline" className="mt-4">
+            <Button variant="outline" className="rounded-xl">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar ao app
             </Button>
@@ -80,20 +86,31 @@ export default function Ministry() {
           {/* Breadcrumb */}
           <PageBreadcrumb items={[{ label: currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial' }]} />
 
-          <div className="mb-2">
-            <div className="flex items-center gap-3 mb-2">
-              <Building2 className="h-7 w-7 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">
-                {currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial'}
-              </h1>
+          {/* Header */}
+          <header className="section-pattern rounded-2xl p-6 border border-border/50">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                {currentSection === 'escalas' ? (
+                  <Calendar className="w-7 h-7 text-primary" />
+                ) : (
+                  <Users2 className="w-7 h-7 text-primary" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                  <span className="text-gradient">
+                    {currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial'}
+                  </span>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {currentSection === 'escalas' 
+                    ? 'Gerencie as escalas de voluntários para cultos e eventos'
+                    : 'Gerencie ministérios, líderes e voluntários'
+                  }
+                </p>
+              </div>
             </div>
-            <p className="text-muted-foreground">
-              {currentSection === 'escalas' 
-                ? 'Gerencie as escalas de voluntários para cultos e eventos'
-                : 'Gerencie ministérios, líderes e voluntários'
-              }
-            </p>
-          </div>
+          </header>
 
           {/* Content */}
           {currentSection === 'escalas' && <AdminSchedules />}

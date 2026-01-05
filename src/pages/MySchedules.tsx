@@ -4,11 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout";
 import { PageTransition } from "@/components/PageTransition";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Users, CheckCircle, XCircle, Loader2, CalendarCheck, CalendarX, MessageSquare } from "lucide-react";
+import { Calendar, Clock, Users, CheckCircle, XCircle, Loader2, CalendarCheck, CalendarX, Sparkles, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -142,7 +141,6 @@ export default function MySchedules() {
     if (!churchId) return;
     
     try {
-      // Fetch upcoming services
       const { data: services, error: servicesError } = await supabase
         .from('services')
         .select('id, nome, data_hora, descricao')
@@ -154,7 +152,6 @@ export default function MySchedules() {
       if (servicesError) throw servicesError;
       setUpcomingServices(services || []);
 
-      // Fetch user's availabilities
       const { data: userAvailabilities, error: availError } = await supabase
         .from('volunteer_availability')
         .select('id, service_id, is_available, notes')
@@ -263,11 +260,11 @@ export default function MySchedules() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <Badge className="bg-green-500/20 text-green-600 border-green-500/30">Confirmado</Badge>;
+        return <Badge className="bg-green-500/20 text-green-500 border-green-500/30 font-medium">Confirmado</Badge>;
       case 'declined':
-        return <Badge className="bg-red-500/20 text-red-600 border-red-500/30">Recusado</Badge>;
+        return <Badge className="bg-red-500/20 text-red-500 border-red-500/30 font-medium">Recusado</Badge>;
       default:
-        return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">Pendente</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30 font-medium">Pendente</Badge>;
     }
   };
 
@@ -281,150 +278,166 @@ export default function MySchedules() {
           {/* Breadcrumb */}
           <PageBreadcrumb items={[{ label: 'Minhas Escalas' }]} />
 
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
-              Minhas Escalas
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Visualize e confirme suas escalas de serviço
-            </p>
-          </div>
+          {/* Header */}
+          <header className="section-pattern rounded-2xl p-6 border border-border/50">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <CalendarDays className="w-7 h-7 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                  <span className="text-gradient">Minhas Escalas</span>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Visualize e confirme suas escalas de serviço
+                </p>
+              </div>
+            </div>
+          </header>
 
           {/* Availability Section */}
           {upcomingServices.length > 0 && (
-            <div className="mb-8">
+            <section className="glass-effect rounded-2xl p-5 border border-border/50">
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <CalendarCheck className="w-5 h-5 text-primary" />
                 Informar Disponibilidade
               </h2>
-              <div className="grid gap-3">
+              <div className="space-y-3">
                 {upcomingServices.map((service) => {
                   const availability = availabilities.get(service.id);
                   const isUpdating = updatingAvailability === service.id;
                   
                   return (
-                    <Card key={service.id} className="bg-card/50 border-border/50">
-                      <CardContent className="py-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground">{service.nome}</p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {format(new Date(service.data_hora), "dd/MM/yyyy", { locale: ptBR })}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                {format(new Date(service.data_hora), "HH:mm", { locale: ptBR })}
-                              </span>
+                    <div 
+                      key={service.id} 
+                      className="rounded-xl bg-secondary/30 border border-border/30 p-4 hover:border-border/50 transition-colors"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{service.nome}</p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {format(new Date(service.data_hora), "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5" />
+                              {format(new Date(service.data_hora), "HH:mm", { locale: ptBR })}
+                            </span>
+                          </div>
+                          {availability && (
+                            <div className="mt-3">
+                              <Textarea
+                                placeholder="Observações (opcional)"
+                                value={availabilityNotes.get(service.id) || ''}
+                                onChange={(e) => setAvailabilityNotes(prev => {
+                                  const newMap = new Map(prev);
+                                  newMap.set(service.id, e.target.value);
+                                  return newMap;
+                                })}
+                                className="text-sm h-16 resize-none rounded-xl bg-secondary/50 border-border/50"
+                              />
                             </div>
-                            {availability && (
-                              <div className="mt-2">
-                                <Textarea
-                                  placeholder="Observações (opcional)"
-                                  value={availabilityNotes.get(service.id) || ''}
-                                  onChange={(e) => setAvailabilityNotes(prev => {
-                                    const newMap = new Map(prev);
-                                    newMap.set(service.id, e.target.value);
-                                    return newMap;
-                                  })}
-                                  className="text-sm h-16 resize-none"
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              size="sm"
-                              variant={availability?.is_available === true ? "default" : "outline"}
-                              onClick={() => handleAvailabilityChange(service.id, true)}
-                              disabled={isUpdating}
-                              className={`flex-1 sm:flex-none ${availability?.is_available === true 
-                                ? "bg-green-600 hover:bg-green-700" 
-                                : "border-green-500/30 text-green-600 hover:bg-green-500/10"}`}
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <CalendarCheck className="w-4 h-4 mr-1" />
-                                  <span className="hidden xs:inline">Disponível</span>
-                                  <span className="xs:hidden">Disp.</span>
-                                </>
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={availability?.is_available === false ? "default" : "outline"}
-                              onClick={() => handleAvailabilityChange(service.id, false)}
-                              disabled={isUpdating}
-                              className={`flex-1 sm:flex-none ${availability?.is_available === false 
-                                ? "bg-red-600 hover:bg-red-700" 
-                                : "border-red-500/30 text-red-600 hover:bg-red-500/10"}`}
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <CalendarX className="w-4 h-4 mr-1" />
-                                  <span className="hidden xs:inline">Indisponível</span>
-                                  <span className="xs:hidden">Indisp.</span>
-                                </>
-                              )}
-                            </Button>
-                          </div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant={availability?.is_available === true ? "default" : "outline"}
+                            onClick={() => handleAvailabilityChange(service.id, true)}
+                            disabled={isUpdating}
+                            className={`flex-1 sm:flex-none rounded-lg ${availability?.is_available === true 
+                              ? "bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20" 
+                              : "border-green-500/30 text-green-500 hover:bg-green-500/10"}`}
+                          >
+                            {isUpdating ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <CalendarCheck className="w-4 h-4 mr-1.5" />
+                                <span className="hidden xs:inline">Disponível</span>
+                                <span className="xs:hidden">Disp.</span>
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={availability?.is_available === false ? "default" : "outline"}
+                            onClick={() => handleAvailabilityChange(service.id, false)}
+                            disabled={isUpdating}
+                            className={`flex-1 sm:flex-none rounded-lg ${availability?.is_available === false 
+                              ? "bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20" 
+                              : "border-red-500/30 text-red-500 hover:bg-red-500/10"}`}
+                          >
+                            {isUpdating ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <CalendarX className="w-4 h-4 mr-1.5" />
+                                <span className="hidden xs:inline">Indisponível</span>
+                                <span className="xs:hidden">Indisp.</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            </div>
+            </section>
           )}
 
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center py-16">
+              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
+                <Sparkles className="w-8 h-8 text-primary" />
+              </div>
             </div>
           ) : schedules.length === 0 ? (
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="py-12 text-center">
-                <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Nenhuma escala encontrada
-                </h3>
-                <p className="text-muted-foreground">
-                  Você ainda não foi escalado para nenhum serviço futuro.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="glass-effect rounded-2xl p-12 border border-border/50 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-primary/50" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Nenhuma escala encontrada
+              </h3>
+              <p className="text-muted-foreground">
+                Você ainda não foi escalado para nenhum serviço futuro.
+              </p>
+            </div>
           ) : (
             <div className="space-y-6">
               {upcomingSchedules.length > 0 && (
-                <div>
+                <section>
                   <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />
-                    Próximas Escalas ({upcomingSchedules.length})
+                    Próximas Escalas
+                    <Badge variant="secondary" className="ml-2">{upcomingSchedules.length}</Badge>
                   </h2>
                   <div className="space-y-4">
                     {upcomingSchedules.map((schedule) => (
-                      <Card key={schedule.id} className="bg-card/50 border-border/50 overflow-hidden">
+                      <div 
+                        key={schedule.id} 
+                        className="glass-effect rounded-2xl border border-border/50 overflow-hidden hover:border-primary/30 transition-all duration-300"
+                      >
                         <div 
-                          className="h-1" 
-                          style={{ backgroundColor: schedule.ministry.cor || '#8B5CF6' }}
+                          className="h-1.5" 
+                          style={{ backgroundColor: schedule.ministry.cor || 'hsl(var(--primary))' }}
                         />
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-4">
+                        <div className="p-5">
+                          <div className="flex items-start justify-between gap-4 mb-4">
                             <div>
-                              <CardTitle className="text-lg font-semibold text-foreground">
+                              <h3 className="text-lg font-semibold text-foreground">
                                 {schedule.service.nome}
-                              </CardTitle>
+                              </h3>
                               <div className="flex flex-wrap items-center gap-2 mt-2">
                                 <Badge 
                                   variant="outline" 
+                                  className="rounded-lg"
                                   style={{ 
-                                    borderColor: schedule.ministry.cor || '#8B5CF6',
-                                    color: schedule.ministry.cor || '#8B5CF6'
+                                    borderColor: schedule.ministry.cor || 'hsl(var(--primary))',
+                                    color: schedule.ministry.cor || 'hsl(var(--primary))'
                                   }}
                                 >
                                   {schedule.ministry.nome}
@@ -433,24 +446,23 @@ export default function MySchedules() {
                               </div>
                             </div>
                           </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Calendar className="w-4 h-4" />
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
+                              <Calendar className="w-4 h-4 text-primary" />
                               <span>
-                                {format(new Date(schedule.service.data_hora), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                                {format(new Date(schedule.service.data_hora), "dd 'de' MMM", { locale: ptBR })}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="w-4 h-4" />
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
+                              <Clock className="w-4 h-4 text-primary" />
                               <span>
                                 {format(new Date(schedule.service.data_hora), "HH:mm", { locale: ptBR })}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Users className="w-4 h-4" />
-                              <span>Função: {schedule.position.nome}</span>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
+                              <Users className="w-4 h-4 text-primary" />
+                              <span>{schedule.position.nome}</span>
                             </div>
                           </div>
 
@@ -461,12 +473,11 @@ export default function MySchedules() {
                           )}
 
                           {schedule.status === 'pending' && (
-                            <div className="flex gap-2 pt-2 border-t border-border/50">
+                            <div className="flex gap-3 pt-4 border-t border-border/50">
                               <Button
-                                size="sm"
                                 onClick={() => handleUpdateStatus(schedule.id, 'confirmed')}
                                 disabled={updatingSchedule === schedule.id}
-                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                className="flex-1 bg-green-600 hover:bg-green-700 rounded-xl h-11 shadow-lg shadow-green-600/20"
                               >
                                 {updatingSchedule === schedule.id ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -478,11 +489,10 @@ export default function MySchedules() {
                                 )}
                               </Button>
                               <Button
-                                size="sm"
                                 variant="outline"
                                 onClick={() => handleUpdateStatus(schedule.id, 'declined')}
                                 disabled={updatingSchedule === schedule.id}
-                                className="flex-1 border-red-500/30 text-red-600 hover:bg-red-500/10"
+                                className="flex-1 border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl h-11"
                               >
                                 {updatingSchedule === schedule.id ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -497,8 +507,10 @@ export default function MySchedules() {
                           )}
 
                           {schedule.status === 'confirmed' && (
-                            <div className="flex items-center gap-2 pt-2 border-t border-border/50 text-green-600">
-                              <CheckCircle className="w-4 h-4" />
+                            <div className="flex items-center gap-2 pt-4 border-t border-border/50 text-green-500">
+                              <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                                <CheckCircle className="w-4 h-4" />
+                              </div>
                               <span className="text-sm font-medium">
                                 Presença confirmada
                                 {schedule.confirmed_at && (
@@ -509,37 +521,36 @@ export default function MySchedules() {
                               </span>
                             </div>
                           )}
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
+                </section>
               )}
 
               {declinedSchedules.length > 0 && (
-                <div>
+                <section>
                   <h2 className="text-lg font-semibold text-muted-foreground mb-4 flex items-center gap-2">
                     <XCircle className="w-5 h-5" />
-                    Escalas Recusadas ({declinedSchedules.length})
+                    Escalas Recusadas
+                    <Badge variant="secondary" className="ml-2">{declinedSchedules.length}</Badge>
                   </h2>
                   <div className="space-y-3 opacity-60">
                     {declinedSchedules.map((schedule) => (
-                      <Card key={schedule.id} className="bg-card/30 border-border/30">
-                        <CardContent className="py-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-foreground">{schedule.service.nome}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {format(new Date(schedule.service.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} • {schedule.position.nome}
-                              </p>
-                            </div>
-                            {getStatusBadge(schedule.status)}
+                      <div key={schedule.id} className="rounded-xl bg-secondary/20 border border-border/30 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-foreground">{schedule.service.nome}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(schedule.service.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} • {schedule.position.nome}
+                            </p>
                           </div>
-                        </CardContent>
-                      </Card>
+                          {getStatusBadge(schedule.status)}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
+                </section>
               )}
             </div>
           )}
