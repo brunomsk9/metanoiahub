@@ -82,10 +82,21 @@ export default function Tracks() {
       const isCompleted = completedData.data === true || !!presencialData.data;
       setCompletedBaseTrack(isCompleted);
 
-      const celebrationShown = sessionStorage.getItem('alicerce_celebration_shown');
+      const celebrationKey = `alicerce_celebration_shown:${session.user.id}`;
+      let celebrationShown: string | null = null;
+      try {
+        celebrationShown = localStorage.getItem(celebrationKey);
+      } catch {
+        celebrationShown = sessionStorage.getItem(celebrationKey);
+      }
+
       if (isCompleted && !celebrationShown) {
         setShowCelebration(true);
-        sessionStorage.setItem('alicerce_celebration_shown', 'true');
+        try {
+          localStorage.setItem(celebrationKey, 'true');
+        } catch {
+          sessionStorage.setItem(celebrationKey, 'true');
+        }
       }
 
       setLoading(false);
