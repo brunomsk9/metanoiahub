@@ -33,15 +33,31 @@ interface Meeting {
   attendance?: { discipulo_id: string; presente: boolean; discipulo: { nome: string } }[];
 }
 
-export function MeetingsManager() {
+interface MeetingsManagerProps {
+  externalDialogOpen?: boolean;
+  onExternalDialogChange?: (open: boolean) => void;
+  showHeader?: boolean;
+  maxItems?: number;
+}
+
+export function MeetingsManager({ 
+  externalDialogOpen, 
+  onExternalDialogChange,
+  showHeader = true,
+  maxItems
+}: MeetingsManagerProps = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [disciples, setDisciples] = useState<Disciple[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [internalDialogOpen, setInternalDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { churchId } = useUserChurchId();
+
+  // Use external control if provided, otherwise internal state
+  const isDialogOpen = externalDialogOpen !== undefined ? externalDialogOpen : internalDialogOpen;
+  const setIsDialogOpen = onExternalDialogChange || setInternalDialogOpen;
 
   // Form state
   const [tipo, setTipo] = useState<'individual' | 'celula'>('individual');
@@ -55,15 +71,15 @@ export function MeetingsManager() {
     fetchData();
   }, []);
 
-  // Open dialog if URL param is set
+  // Open dialog if URL param is set (only if not externally controlled)
   useEffect(() => {
-    if (searchParams.get('novoEncontro') === 'true') {
-      setIsDialogOpen(true);
+    if (externalDialogOpen === undefined && searchParams.get('novoEncontro') === 'true') {
+      setInternalDialogOpen(true);
       // Remove the param from URL
       searchParams.delete('novoEncontro');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, externalDialogOpen]);
 
   const fetchData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -240,17 +256,21 @@ export function MeetingsManager() {
     );
   }
 
+  const displayMeetings = maxItems ? meetings.slice(0, maxItems) : meetings;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Encontros</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={resetForm}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Encontro
-            </Button>
-          </DialogTrigger>
+      {showHeader && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Encontros</h2>
+          <Button size="sm" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Encontro
+          </Button>
+        </div>
+      )}
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader className="pb-4 border-b border-border">
               <div className="flex items-center gap-3">
@@ -465,10 +485,9 @@ export function MeetingsManager() {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
-      </div>
+      </Dialog>
 
-      {meetings.length === 0 ? (
+      {displayMeetings.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-10 text-center">
             <div className="w-12 h-12 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
@@ -480,7 +499,7 @@ export function MeetingsManager() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {meetings.map(meeting => (
+          {displayMeetings.map(meeting => (
             <Card key={meeting.id} className="overflow-hidden hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">

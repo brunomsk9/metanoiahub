@@ -4,15 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { ShieldAlert, ArrowLeft, Heart, Plus, Sparkles } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Heart, Plus, Sparkles, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
+import { MeetingsManager } from '@/components/MeetingsManager';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Discipleship() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isDiscipulador, setIsDiscipulador] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
 
   useEffect(() => {
     checkAccess();
@@ -38,10 +41,6 @@ export default function Discipleship() {
     setIsDiscipulador(userIsDiscipulador);
     setIsAdmin(userIsAdmin);
     setLoading(false);
-  };
-
-  const handleNewMeeting = () => {
-    navigate('/dashboard?novoEncontro=true');
   };
 
   if (loading) {
@@ -108,7 +107,7 @@ export default function Discipleship() {
               
               {isDiscipulador && (
                 <Button 
-                  onClick={handleNewMeeting}
+                  onClick={() => setShowMeetingDialog(true)}
                   className="shrink-0"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -117,6 +116,28 @@ export default function Discipleship() {
               )}
             </div>
           </header>
+
+          {/* Encontros Recentes - apenas para discipuladores */}
+          {isDiscipulador && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">Encontros Recentes</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <MeetingsManager 
+                  externalDialogOpen={showMeetingDialog}
+                  onExternalDialogChange={setShowMeetingDialog}
+                  showHeader={false}
+                  maxItems={5}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <AdminDiscipleship />
         </div>
