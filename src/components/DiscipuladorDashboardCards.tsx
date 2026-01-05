@@ -8,7 +8,7 @@ interface DiscipleInfo {
   nome: string;
   current_streak: number;
   xp_points: number;
-  alicerce_completed: boolean;
+  jornadaCompleted: boolean;
 }
 
 async function fetchDisciples(): Promise<DiscipleInfo[]> {
@@ -34,7 +34,7 @@ async function fetchDisciples(): Promise<DiscipleInfo[]> {
 
   return profiles.map(p => ({
     ...p,
-    alicerce_completed: relationships.find(r => r.discipulo_id === p.id)?.alicerce_completed_presencial || false
+    jornadaCompleted: relationships.find(r => r.discipulo_id === p.id)?.alicerce_completed_presencial || false
   }));
 }
 
@@ -69,8 +69,8 @@ export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCar
     [disciples]
   );
 
-  const alicerceCompleted = useMemo(() => 
-    disciples.filter(d => d.alicerce_completed).length, 
+  const jornadaCompleted = useMemo(() => 
+    disciples.filter(d => d.jornadaCompleted).length, 
     [disciples]
   );
 
@@ -100,7 +100,7 @@ export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCar
           <div className="flex items-center gap-2 mb-1">
             <BookOpen className="w-4 h-4 text-green-500" />
           </div>
-          <p className="text-xl font-bold text-foreground">{alicerceCompleted}</p>
+          <p className="text-xl font-bold text-foreground">{jornadaCompleted}</p>
           <p className="text-[10px] text-muted-foreground">Jornada OK</p>
         </div>
       </div>

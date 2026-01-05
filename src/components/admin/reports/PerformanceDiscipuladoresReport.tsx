@@ -19,7 +19,7 @@ interface DiscipuladorStats {
   nome: string;
   totalDiscipulos: number;
   avgStreak: number;
-  alicerceCompleted: number;
+  jornadaCompleted: number;
   meetingsCount: number;
   checklistCompliance: number;
 }
@@ -124,8 +124,8 @@ export function PerformanceDiscipuladoresReport() {
           ? Math.round(streaks.reduce((a, b) => a + b, 0) / streaks.length)
           : 0;
 
-        // Alicerce completed count
-        const alicerceCompleted = discRels.filter(r => r.alicerce_completed_presencial).length;
+        // Jornada Metanoia completed count
+        const jornadaCompleted = discRels.filter(r => r.alicerce_completed_presencial).length;
 
         // Checklist compliance (percentage of items completed on average)
         let checklistCompliance = 0;
@@ -150,7 +150,7 @@ export function PerformanceDiscipuladoresReport() {
           nome: disc.nome || 'Sem nome',
           totalDiscipulos: discRels.length,
           avgStreak,
-          alicerceCompleted,
+          jornadaCompleted,
           meetingsCount: discMeetings.length,
           checklistCompliance
         };
@@ -316,7 +316,7 @@ function DiscipuladoresTable({ discipuladores }: { discipuladores: DiscipuladorS
               </SortableHeader>
             </TableHead>
             <TableHead className="text-center">
-              <SortableHeader sortState={sorting.getSortIcon("alicerceCompleted")} onClick={() => sorting.toggleSort("alicerceCompleted")} className="justify-center">
+              <SortableHeader sortState={sorting.getSortIcon("jornadaCompleted")} onClick={() => sorting.toggleSort("jornadaCompleted")} className="justify-center">
                 Jornada OK
               </SortableHeader>
             </TableHead>
@@ -346,8 +346,8 @@ function DiscipuladoresTable({ discipuladores }: { discipuladores: DiscipuladorS
                 </div>
               </TableCell>
               <TableCell className="text-center">
-                <Badge variant={disc.alicerceCompleted > 0 ? "default" : "outline"}>
-                  {disc.alicerceCompleted}/{disc.totalDiscipulos}
+                <Badge variant={disc.jornadaCompleted > 0 ? "default" : "outline"}>
+                  {disc.jornadaCompleted}/{disc.totalDiscipulos}
                 </Badge>
               </TableCell>
               <TableCell className="text-center">{disc.meetingsCount}</TableCell>

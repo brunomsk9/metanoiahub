@@ -57,8 +57,8 @@ interface DiscipleProgress {
   totalLessons: number;
   readingPlansProgress: number;
   habitsThisWeek: number;
-  alicerceCompleted: number;
-  alicerceTotal: number;
+  jornadaCompleted: number;
+  jornadaTotal: number;
 }
 
 const DEFAULT_MAX_DISCIPLES = 15;
@@ -500,8 +500,8 @@ export function AdminDiscipleship() {
       .eq('is_base', true)
       .maybeSingle();
     
-    let alicerceCompleted = 0;
-    let alicerceTotal = 0;
+    let jornadaCompleted = 0;
+    let jornadaTotal = 0;
     
     if (baseTrack) {
       const { data: courses } = await supabase
@@ -516,7 +516,7 @@ export function AdminDiscipleship() {
           .select('id')
           .in('course_id', courseIds);
         
-        alicerceTotal = lessons?.length || 0;
+        jornadaTotal = lessons?.length || 0;
         
         if (lessons && lessons.length > 0) {
           const lessonIds = lessons.map(l => l.id);
@@ -527,7 +527,7 @@ export function AdminDiscipleship() {
             .eq('completed', true)
             .in('lesson_id', lessonIds);
           
-          alicerceCompleted = count || 0;
+          jornadaCompleted = count || 0;
         }
       }
     }
@@ -562,12 +562,12 @@ export function AdminDiscipleship() {
       totalLessons: totalLessonsRes.data?.length || 1,
       readingPlansProgress: completedDays,
       habitsThisWeek: habitsRes.data?.length || 0,
-      alicerceCompleted,
-      alicerceTotal
+      jornadaCompleted,
+      jornadaTotal
     });
   };
 
-  const handleMarkAlicerceComplete = async (relationshipId: string, discipleName: string) => {
+  const handleMarkJornadaComplete = async (relationshipId: string, discipleName: string) => {
     const { error } = await supabase
       .from('discipleship_relationships')
       .update({
@@ -577,7 +577,7 @@ export function AdminDiscipleship() {
       .eq('id', relationshipId);
 
     if (error) {
-      console.error('Error marking alicerce complete:', error);
+      console.error('Error marking jornada complete:', error);
       toast.error('Erro ao marcar conclusão');
       return;
     }
@@ -1099,12 +1099,12 @@ export function AdminDiscipleship() {
                                     )}
                                   </div>
                                   <Progress 
-                                    value={discipleProgress.alicerceTotal > 0 
-                                      ? (discipleProgress.alicerceCompleted / discipleProgress.alicerceTotal) * 100 
+                                    value={discipleProgress.jornadaTotal > 0 
+                                      ? (discipleProgress.jornadaCompleted / discipleProgress.jornadaTotal) * 100 
                                       : 0} 
                                   />
                                   <p className="text-sm text-muted-foreground">
-                                    {discipleProgress.alicerceCompleted}/{discipleProgress.alicerceTotal} aulas concluídas
+                                    {discipleProgress.jornadaCompleted}/{discipleProgress.jornadaTotal} aulas concluídas
                                   </p>
                                   
                                   {!rel.alicerce_completed_presencial && (
@@ -1125,7 +1125,7 @@ export function AdminDiscipleship() {
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleMarkAlicerceComplete(rel.id, rel.discipulo?.nome || '')}>
+                                          <AlertDialogAction onClick={() => handleMarkJornadaComplete(rel.id, rel.discipulo?.nome || '')}>
                                             Confirmar Conclusão
                                           </AlertDialogAction>
                                         </AlertDialogFooter>
@@ -1392,17 +1392,17 @@ export function AdminDiscipleship() {
                                     <div className="flex items-center justify-between">
                                       <span className="text-sm flex items-center gap-2">
                                         <Award className="w-4 h-4 text-primary" />
-                                        Alicerce
+                                        Jornada Metanoia
                                       </span>
                                       {rel.alicerce_completed_presencial ? (
                                         <Badge className="bg-success/10 text-success text-xs">Concluído</Badge>
                                       ) : (
-                                        <span className="text-xs">{discipleProgress.alicerceCompleted}/{discipleProgress.alicerceTotal}</span>
+                                        <span className="text-xs">{discipleProgress.jornadaCompleted}/{discipleProgress.jornadaTotal}</span>
                                       )}
                                     </div>
                                     <Progress 
-                                      value={discipleProgress.alicerceTotal > 0 
-                                        ? (discipleProgress.alicerceCompleted / discipleProgress.alicerceTotal) * 100 
+                                      value={discipleProgress.jornadaTotal > 0 
+                                        ? (discipleProgress.jornadaCompleted / discipleProgress.jornadaTotal) * 100 
                                         : 0} 
                                       className="h-2"
                                     />
