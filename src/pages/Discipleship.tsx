@@ -4,10 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { ShieldAlert, ArrowLeft, Heart, Users, Sparkles } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Heart, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
-import { DiscipleshipSkeleton } from '@/components/skeletons/PageSkeletons';
 
 export default function Discipleship() {
   const navigate = useNavigate();
@@ -39,6 +38,10 @@ export default function Discipleship() {
     setIsDiscipulador(userIsDiscipulador);
     setIsAdmin(userIsAdmin);
     setLoading(false);
+  };
+
+  const handleNewMeeting = () => {
+    navigate('/dashboard?novoEncontro=true');
   };
 
   if (loading) {
@@ -88,18 +91,30 @@ export default function Discipleship() {
 
           {/* Header */}
           <header className="section-pattern rounded-2xl p-6 border border-border/50">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Heart className="w-7 h-7 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Heart className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                    <span className="text-gradient">Discipulado</span>
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Acompanhe o progresso dos seus discípulos e gerencie relacionamentos
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-display font-bold">
-                  <span className="text-gradient">Discipulado</span>
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Acompanhe o progresso dos seus discípulos e gerencie relacionamentos
-                </p>
-              </div>
+              
+              {isDiscipulador && (
+                <Button 
+                  onClick={handleNewMeeting}
+                  className="shrink-0"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Encontro
+                </Button>
+              )}
             </div>
           </header>
 
