@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Play, FileText, CheckSquare, Clock, CheckCircle2, BookOpen, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, FileText, CheckSquare, Clock, CheckCircle2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Lesson {
   id: string;
@@ -139,7 +140,7 @@ export default function CourseDetail() {
             ]} 
           />
 
-          {/* Header - visible on desktop */}
+          {/* Header */}
           {loading ? (
             <div className="hidden lg:block space-y-2">
               <Skeleton className="h-4 w-32" />
@@ -147,92 +148,105 @@ export default function CourseDetail() {
               <Skeleton className="h-4 w-96" />
             </div>
           ) : course && (
-            <header className="hidden lg:block space-y-1">
-              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
-                {course.titulo}
-              </h1>
-              {course.descricao && (
-                <p className="text-sm text-muted-foreground">{course.descricao}</p>
-              )}
+            <header className="hidden lg:block section-pattern rounded-2xl p-6 border border-border/50">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <BookOpen className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                    <span className="text-gradient">{course.titulo}</span>
+                  </h1>
+                  {course.descricao && (
+                    <p className="text-sm text-muted-foreground mt-1">{course.descricao}</p>
+                  )}
+                </div>
+              </div>
             </header>
           )}
 
-            {/* Progress */}
-            {!loading && lessons.length > 0 && (
-              <div className="bg-card border border-border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Progresso</span>
-                  <span className="text-sm font-medium">{completedCount}/{lessons.length} aulas</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
+          {/* Progress Card */}
+          {!loading && lessons.length > 0 && (
+            <div className="glass-effect rounded-2xl p-5 border border-border/50">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-foreground">Seu progresso</span>
+                <span className="text-sm font-semibold text-primary">{progressPercent}%</span>
               </div>
-            )}
+              <Progress value={progressPercent} className="h-2.5" />
+              <p className="text-xs text-muted-foreground mt-2">
+                {completedCount} de {lessons.length} aulas concluídas
+              </p>
+            </div>
+          )}
 
-            {/* Loading */}
-            {loading && (
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-16 rounded-lg" />
-                ))}
-              </div>
-            )}
+          {/* Loading */}
+          {loading && (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-20 rounded-xl" />
+              ))}
+            </div>
+          )}
 
-            {/* Lessons List */}
-            {!loading && (
-              <div className="space-y-2">
-                {lessons.map((lesson, index) => (
-                  <div
-                    key={lesson.id}
-                    onClick={() => navigate(`/aula/${lesson.id}`)}
-                    className="group cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200"
-                  >
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+          {/* Lessons List */}
+          {!loading && (
+            <div className="space-y-3">
+              {lessons.map((lesson, index) => (
+                <div
+                  key={lesson.id}
+                  onClick={() => navigate(`/aula/${lesson.id}`)}
+                  className={`group cursor-pointer flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 hover:-translate-y-0.5 ${
+                    lesson.completed 
+                      ? 'bg-primary/5 border-primary/20 hover:border-primary/40' 
+                      : 'bg-card border-border/50 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5'
+                  }`}
+                >
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                    lesson.completed 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-secondary/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
+                  }`}>
+                    {lesson.completed ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      getLessonIcon(lesson.tipo)
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium transition-colors line-clamp-1 ${
                       lesson.completed 
-                        ? 'bg-primary/20 text-primary' 
-                        : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
-                    } transition-colors`}>
-                      {lesson.completed ? (
-                        <CheckCircle2 className="w-5 h-5" />
-                      ) : (
-                        getLessonIcon(lesson.tipo)
+                        ? 'text-foreground' 
+                        : 'text-foreground group-hover:text-primary'
+                    }`}>
+                      {index + 1}. {lesson.titulo}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                      <span className="px-2 py-0.5 rounded-full bg-secondary/50">
+                        {lesson.tipo === 'video' ? 'Vídeo' : 
+                         lesson.tipo === 'texto' ? 'Texto' : 'Checklist'}
+                      </span>
+                      {lesson.duracao_minutos && lesson.duracao_minutos > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {lesson.duracao_minutos} min
+                        </span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium group-hover:text-primary transition-colors line-clamp-1 ${
-                        lesson.completed ? 'text-muted-foreground' : 'text-foreground'
-                      }`}>
-                        {index + 1}. {lesson.titulo}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize">
-                          {lesson.tipo === 'video' ? 'Vídeo' : 
-                           lesson.tipo === 'texto' ? 'Texto' : 'Checklist'}
-                        </span>
-                        {lesson.duracao_minutos && lesson.duracao_minutos > 0 && (
-                          <>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {lesson.duracao_minutos} min
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  {lesson.completed && (
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                      Concluída
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {!loading && lessons.length === 0 && (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-sm text-muted-foreground">Nenhuma aula encontrada neste curso</p>
+            <div className="text-center py-16 section-pattern rounded-2xl border border-border/50">
+              <Sparkles className="w-12 h-12 mx-auto text-primary/50 mb-3" />
+              <p className="text-muted-foreground">Nenhuma aula encontrada neste curso</p>
             </div>
           )}
         </div>

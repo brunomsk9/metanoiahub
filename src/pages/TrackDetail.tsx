@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BookOpen, Clock, Sparkles, GraduationCap } from "lucide-react";
 import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Clock } from "lucide-react";
 
 interface Course {
   id: string;
@@ -105,85 +105,93 @@ export default function TrackDetail() {
             ]} 
           />
 
-          {/* Header - visible on desktop */}
+          {/* Header */}
           {loading ? (
             <div className="hidden lg:block space-y-2">
               <Skeleton className="h-8 w-64" />
               <Skeleton className="h-4 w-96" />
             </div>
           ) : track && (
-            <header className="hidden lg:block">
-              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
-                {track.titulo}
-              </h1>
-              {track.descricao && (
-                <p className="text-sm text-muted-foreground mt-1">{track.descricao}</p>
-              )}
+            <header className="hidden lg:block section-pattern rounded-2xl p-6 border border-border/50">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <GraduationCap className="w-7 h-7 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                    <span className="text-gradient">{track.titulo}</span>
+                  </h1>
+                  {track.descricao && (
+                    <p className="text-sm text-muted-foreground mt-1">{track.descricao}</p>
+                  )}
+                </div>
+              </div>
             </header>
           )}
 
-            {/* Loading */}
-            {loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-48 rounded-xl" />
-                ))}
-              </div>
-            )}
+          {/* Loading */}
+          {loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-56 rounded-2xl" />
+              ))}
+            </div>
+          )}
 
-            {/* Courses Grid */}
-            {!loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {courses.map((course) => (
-                  <div
-                    key={course.id}
-                    onClick={() => navigate(`/curso/${course.id}`)}
-                    className="group cursor-pointer rounded-xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all duration-300"
-                  >
-                    <div className="aspect-video relative overflow-hidden bg-muted">
-                      {course.thumbnail ? (
-                        <img
-                          src={course.thumbnail}
-                          alt={course.titulo}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <BookOpen className="w-12 h-12 text-muted-foreground/50" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <h3 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                        {course.titulo}
-                      </h3>
-                      {course.descricao && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {course.descricao}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="w-3 h-3" />
-                          {course.lessonsCount} aulas
-                        </span>
-                        {course.duracao_minutos && course.duracao_minutos > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {course.duracao_minutos} min
-                          </span>
-                        )}
+          {/* Courses Grid */}
+          {!loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {courses.map((course) => (
+                <div
+                  key={course.id}
+                  onClick={() => navigate(`/curso/${course.id}`)}
+                  className="group cursor-pointer rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5"
+                >
+                  <div className="aspect-video relative overflow-hidden bg-secondary/50">
+                    {course.thumbnail ? (
+                      <img
+                        src={course.thumbnail}
+                        alt={course.titulo}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BookOpen className="w-12 h-12 text-muted-foreground/30" />
                       </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  <div className="p-5 space-y-3">
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      {course.titulo}
+                    </h3>
+                    {course.descricao && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {course.descricao}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+                      <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        {course.lessonsCount} aulas
+                      </span>
+                      {course.duracao_minutos && course.duracao_minutos > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          {course.duracao_minutos} min
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {!loading && courses.length === 0 && (
-            <div className="text-center py-12">
-              <BookOpen className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-sm text-muted-foreground">Nenhum curso encontrado nesta trilha</p>
+            <div className="text-center py-16 section-pattern rounded-2xl border border-border/50">
+              <Sparkles className="w-12 h-12 mx-auto text-primary/50 mb-3" />
+              <p className="text-muted-foreground">Nenhum curso encontrado nesta trilha</p>
             </div>
           )}
         </div>

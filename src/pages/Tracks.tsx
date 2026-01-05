@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Sparkles, BookOpen } from "lucide-react";
 import { AppShell } from "@/components/layout";
 import { MentorChatButton } from "@/components/MentorChat";
 import { TrackCard } from "@/components/ContinueWatching";
@@ -109,61 +110,69 @@ export default function Tracks() {
           {/* Breadcrumb */}
           <PageBreadcrumb items={[{ label: 'Trilhas' }]} />
 
-          {/* Header - visible on desktop */}
-          <header className="hidden lg:block">
-            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground">
-              Trilhas
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">Sua jornada de aprendizado</p>
+          {/* Header */}
+          <header className="hidden lg:block section-pattern rounded-2xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                  <span className="text-gradient">Trilhas</span>
+                </h1>
+                <p className="text-sm text-muted-foreground">Sua jornada de aprendizado</p>
+              </div>
+            </div>
           </header>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-1.5">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    selectedCategory === category 
-                      ? "bg-primary text-primary-foreground" 
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === category 
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                    : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {/* Loading */}
+          {loading && <TracksSkeleton />}
+
+          {/* Grid */}
+          {!loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredTracks.map((track) => {
+                const hasBaseTrack = tracks.some(t => t.is_base);
+                const isLocked = hasBaseTrack && !track.is_base && !completedBaseTrack;
+                
+                return (
+                  <TrackCard
+                    key={track.id}
+                    id={track.id}
+                    title={track.titulo}
+                    description={track.descricao || ''}
+                    thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
+                    coursesCount={track.coursesCount}
+                    onClick={(id) => navigate(`/trilha/${id}`)}
+                    isBase={track.is_base}
+                    isLocked={isLocked}
+                  />
+                );
+              })}
             </div>
-
-            {/* Loading */}
-            {loading && <TracksSkeleton />}
-
-            {/* Grid */}
-            {!loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredTracks.map((track) => {
-                  const hasBaseTrack = tracks.some(t => t.is_base);
-                  const isLocked = hasBaseTrack && !track.is_base && !completedBaseTrack;
-                  
-                  return (
-                    <TrackCard
-                      key={track.id}
-                      id={track.id}
-                      title={track.titulo}
-                      description={track.descricao || ''}
-                      thumbnail={track.cover_image || 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop'}
-                      coursesCount={track.coursesCount}
-                      onClick={(id) => navigate(`/trilha/${id}`)}
-                      isBase={track.is_base}
-                      isLocked={isLocked}
-                    />
-                  );
-                })}
-              </div>
-            )}
+          )}
 
           {!loading && filteredTracks.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">Nenhuma trilha encontrada</p>
+            <div className="text-center py-16 section-pattern rounded-2xl border border-border/50">
+              <Sparkles className="w-12 h-12 mx-auto text-primary/50 mb-3" />
+              <p className="text-muted-foreground">Nenhuma trilha encontrada</p>
             </div>
           )}
         </div>
