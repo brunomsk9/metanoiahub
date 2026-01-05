@@ -33,9 +33,9 @@ const onboardingSteps = [
     icon: GraduationCap,
     title: "Trilhas de Aprendizado",
     subtitle: "Formação estruturada e progressiva",
-    description: "Comece pelo Alicerce, nossa trilha fundamental obrigatória. Após concluí-la, desbloqueie trilhas avançadas com cursos em vídeo, textos e checklists práticos.",
+    description: "Comece pela Jornada Metanoia, nossa trilha fundamental obrigatória. Após concluí-la, desbloqueie trilhas avançadas com cursos em vídeo, textos e checklists práticos.",
     features: [
-      "Trilha Alicerce obrigatória para todos",
+      "Jornada Metanoia obrigatória para todos",
       "Aulas em vídeo com materiais complementares",
       "Checklists de aplicação prática",
       "Progresso salvo automaticamente"
@@ -80,7 +80,7 @@ const onboardingSteps = [
       "Conexão Inicial: 2 encontros fundamentais",
       "Academia das Nações: 4 níveis de formação",
       "Acompanhamento de progresso pelo mentor",
-      "Marcação de Alicerce presencial"
+      "Marcação de Jornada Metanoia presencial"
     ],
     color: "text-blue-500"
   },
@@ -117,7 +117,7 @@ const onboardingSteps = [
     icon: CheckCircle2,
     title: "Pronto para Começar!",
     subtitle: "Sua transformação começa agora",
-    description: "Você está pronto para iniciar sua jornada no METANOIA HUB. Comece pela trilha Alicerce e deixe-se transformar pela Palavra.",
+    description: "Você está pronto para iniciar sua jornada no METANOIA HUB. Comece pela Jornada Metanoia e deixe-se transformar pela Palavra.",
     color: "text-primary"
   }
 ];

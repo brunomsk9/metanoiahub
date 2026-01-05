@@ -16,7 +16,7 @@ export { CelebrationModal } from "./CelebrationModal";
 // Dashboard components
 export { DailyVerse } from "./DailyVerse";
 export { DailyHabitsCard } from "./DailyHabitsCard";
-export { AlicerceProgress } from "./AlicerceProgress";
+export { JornadaMetanoiaProgress } from "./JornadaMetanoiaProgress";
 export { ContinueWatching } from "./ContinueWatching";
 
 // Discipleship components

@@ -101,7 +101,7 @@ export const DiscipuladorDashboardCards = memo(function DiscipuladorDashboardCar
             <BookOpen className="w-4 h-4 text-green-500" />
           </div>
           <p className="text-xl font-bold text-foreground">{alicerceCompleted}</p>
-          <p className="text-[10px] text-muted-foreground">Alicerce OK</p>
+          <p className="text-[10px] text-muted-foreground">Jornada OK</p>
         </div>
       </div>
 
