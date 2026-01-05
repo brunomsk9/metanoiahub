@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Edit2, Save, Loader2, Flame, Trophy, Lock, Eye, EyeOff, HelpCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { User, Edit2, Save, Loader2, Flame, Trophy, Lock, Eye, EyeOff, HelpCircle, Sparkles, Calendar, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Profile() {
@@ -92,11 +93,18 @@ export default function Profile() {
     ? new Date(profile.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
     : '';
 
+  // Calculate level from XP (every 500 XP = 1 level)
+  const level = Math.floor(profile.xp_points / 500) + 1;
+  const xpInCurrentLevel = profile.xp_points % 500;
+  const xpProgress = (xpInCurrentLevel / 500) * 100;
+
   if (isLoading) {
     return (
       <AppShell headerTitle="Perfil">
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
+            <Sparkles className="w-8 h-8 text-primary" />
+          </div>
         </div>
       </AppShell>
     );
@@ -105,95 +113,130 @@ export default function Profile() {
   return (
     <AppShell headerTitle="Perfil" onLogout={handleLogout} userName={profile.nome}>
       <PageTransition>
-        <div className="max-w-md mx-auto space-y-6">
-          {/* Profile Header */}
-          <header className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-5 h-5 text-primary" />
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Profile Header Card */}
+          <div className="glass-effect rounded-2xl p-6 border border-border/50 relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+            
+            <div className="relative flex items-start gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                  {level}
+                </div>
               </div>
-              <div className="flex-1">
+              
+              <div className="flex-1 min-w-0">
                 {isEditing ? (
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={editedNome}
                       onChange={(e) => setEditedNome(e.target.value)}
-                      className="text-base font-medium bg-muted border border-border rounded-md px-3 py-1.5 text-foreground focus:outline-none focus:border-primary"
+                      className="text-lg font-semibold bg-secondary/50 border border-border rounded-xl px-3 py-2 text-foreground focus:outline-none focus:border-primary w-full"
                       autoFocus
                     />
-                    <Button size="icon" variant="ghost" onClick={handleSave} disabled={isSaving} className="h-8 w-8">
+                    <Button size="icon" variant="ghost" onClick={handleSave} disabled={isSaving} className="h-10 w-10 rounded-xl">
                       {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <h1 className="text-base font-medium text-foreground">
+                    <h1 className="text-xl font-bold text-foreground truncate">
                       {profile.nome || 'Discípulo'}
                     </h1>
-                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-6 w-6">
-                      <Edit2 className="w-3 h-3" />
+                    <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-8 w-8 rounded-lg hover:bg-primary/10">
+                      <Edit2 className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground">{profile.email}</p>
-                <p className="text-xs text-muted-foreground">Membro desde {memberSince}</p>
-              </div>
-            </header>
-
-            {/* Stats */}
-            <section className="flex gap-3">
-              <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <div>
-                  <p className="text-base font-medium text-foreground">{profile.current_streak}</p>
-                  <p className="text-xs text-muted-foreground">Streak</p>
+                <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                  <Calendar className="w-3 h-3" />
+                  <span>Membro desde {memberSince}</span>
                 </div>
               </div>
-              <div className="flex-1 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
-                <Trophy className="w-4 h-4 text-amber-500" />
+            </div>
+
+            {/* Level Progress */}
+            <div className="mt-5 pt-4 border-t border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">Nível {level}</span>
+                <span className="text-xs text-muted-foreground">{xpInCurrentLevel}/500 XP</span>
+              </div>
+              <Progress value={xpProgress} className="h-2" />
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="glass-effect rounded-2xl p-5 border border-border/50 hover:border-orange-500/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-orange-500" />
+                </div>
                 <div>
-                  <p className="text-base font-medium text-foreground">{profile.xp_points.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">XP</p>
+                  <p className="text-2xl font-bold text-foreground">{profile.current_streak}</p>
+                  <p className="text-xs text-muted-foreground">Dias de Streak</p>
                 </div>
               </div>
-            </section>
-
-            {/* Achievements */}
-            <section className="p-4 rounded-lg border border-border/50 bg-card">
-              <h2 className="text-xs font-medium text-muted-foreground mb-3">Conquistas</h2>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { emoji: '🎯', label: 'Primeira Aula', unlocked: true },
-                  { emoji: '🔥', label: '7 Dias', unlocked: profile.current_streak >= 7 },
-                  { emoji: '📚', label: 'Trilha', unlocked: false },
-                  { emoji: '⭐', label: '1000 XP', unlocked: profile.xp_points >= 1000 },
-                ].map((achievement) => (
-                  <div
-                    key={achievement.label}
-                    className={cn(
-                      "aspect-square rounded-lg flex flex-col items-center justify-center transition-opacity",
-                      achievement.unlocked
-                        ? "bg-primary/8 border border-primary/20"
-                        : "bg-muted/30 opacity-40"
-                    )}
-                  >
-                    <span className="text-lg mb-0.5">{achievement.emoji}</span>
-                    <span className="text-[9px] text-muted-foreground text-center px-1 leading-tight">{achievement.label}</span>
-                  </div>
-                ))}
+            </div>
+            
+            <div className="glass-effect rounded-2xl p-5 border border-border/50 hover:border-amber-500/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{profile.xp_points.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Pontos XP</p>
+                </div>
               </div>
-            </section>
+            </div>
+          </div>
 
-            {/* Change Password Section */}
-            <ChangePasswordSection />
+          {/* Achievements */}
+          <div className="glass-effect rounded-2xl p-5 border border-border/50">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-5 h-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Conquistas</h2>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { emoji: '🎯', label: 'Primeira Aula', unlocked: true },
+                { emoji: '🔥', label: '7 Dias', unlocked: profile.current_streak >= 7 },
+                { emoji: '📚', label: 'Trilha', unlocked: false },
+                { emoji: '⭐', label: '1000 XP', unlocked: profile.xp_points >= 1000 },
+              ].map((achievement) => (
+                <div
+                  key={achievement.label}
+                  className={cn(
+                    "aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-300",
+                    achievement.unlocked
+                      ? "bg-primary/10 border border-primary/30 hover:scale-105"
+                      : "bg-secondary/30 opacity-40"
+                  )}
+                >
+                  <span className="text-2xl mb-1">{achievement.emoji}</span>
+                  <span className="text-[10px] text-muted-foreground text-center px-1 leading-tight">{achievement.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Change Password Section */}
+          <ChangePasswordSection />
 
           {/* Tutorial Button */}
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full h-12 rounded-xl border-border/50 hover:border-primary/50 hover:bg-primary/5"
             onClick={() => navigate('/onboarding')}
           >
-            <HelpCircle className="w-4 h-4 mr-2" />
+            <HelpCircle className="w-5 h-5 mr-2" />
             Ver Tutorial
           </Button>
         </div>
@@ -302,7 +345,6 @@ function ChangePasswordSection() {
     } catch (error: any) {
       let errorMessage = error.message;
       
-      // Handle common Supabase auth errors
       if (error.message?.includes('same_password') || error.status === 422) {
         errorMessage = "A nova senha deve ser diferente da senha atual.";
       } else if (error.message?.includes('weak_password')) {
@@ -323,21 +365,25 @@ function ChangePasswordSection() {
     return (
       <Button
         variant="outline"
-        className="w-full"
+        className="w-full h-12 rounded-xl border-border/50 hover:border-primary/50 hover:bg-primary/5"
         onClick={() => setIsOpen(true)}
       >
-        <Lock className="w-4 h-4 mr-2" />
+        <Lock className="w-5 h-5 mr-2" />
         Alterar Senha
       </Button>
     );
   }
 
   return (
-    <section className="p-4 rounded-lg border border-border/50 bg-card">
-      <h2 className="text-xs font-medium text-muted-foreground mb-3">Alterar Senha</h2>
-      <form onSubmit={handleChangePassword} className="space-y-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="newPassword" className="text-xs">Nova Senha</Label>
+    <div className="glass-effect rounded-2xl p-5 border border-border/50">
+      <div className="flex items-center gap-2 mb-4">
+        <Lock className="w-5 h-5 text-primary" />
+        <h2 className="font-semibold text-foreground">Alterar Senha</h2>
+      </div>
+      
+      <form onSubmit={handleChangePassword} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="newPassword" className="text-sm">Nova Senha</Label>
           <div className="relative">
             <Input
               id="newPassword"
@@ -345,21 +391,21 @@ function ChangePasswordSection() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
-              className="pr-10 h-9 text-sm"
+              className="pr-10 h-11 rounded-xl bg-secondary/50 border-border/50 focus:border-primary"
               required
             />
             <button
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showNewPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           
           {/* Password Strength Indicator */}
           {newPassword && (
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Força da senha:</span>
                 <span className={cn(
@@ -371,14 +417,14 @@ function ChangePasswordSection() {
                   {passwordStrength.label}
                 </span>
               </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className={cn("h-full transition-all duration-300", passwordStrength.color)}
                   style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
                 />
               </div>
               {passwordStrength.feedback.length > 0 && (
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Adicione: {passwordStrength.feedback.slice(0, 3).join(", ")}
                 </p>
               )}
@@ -386,24 +432,24 @@ function ChangePasswordSection() {
           )}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword" className="text-xs">Confirmar Nova Senha</Label>
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="text-sm">Confirmar Nova Senha</Label>
           <Input
             id="confirmPassword"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Digite novamente"
-            className="h-9 text-sm"
+            className="h-11 rounded-xl bg-secondary/50 border-border/50 focus:border-primary"
             required
           />
         </div>
 
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-3 pt-2">
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            className="flex-1 h-11 rounded-xl"
             onClick={() => {
               setIsOpen(false);
               setNewPassword('');
@@ -412,15 +458,15 @@ function ChangePasswordSection() {
           >
             Cancelar
           </Button>
-          <Button type="submit" size="sm" disabled={isLoading}>
+          <Button type="submit" className="flex-1 h-11 rounded-xl" disabled={isLoading}>
             {isLoading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               "Salvar"
             )}
           </Button>
         </div>
       </form>
-    </section>
+    </div>
   );
 }
