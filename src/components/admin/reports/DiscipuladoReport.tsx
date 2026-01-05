@@ -83,7 +83,7 @@ export function DiscipuladoReport() {
           fill: 'hsl(var(--chart-2))'
         },
         {
-          name: 'Alicerce Presencial',
+          name: 'Jornada Metanoia Presencial',
           completed: activeRels.filter(r => r.alicerce_completed_presencial).length,
           total: activeRels.length,
           percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.alicerce_completed_presencial).length / activeRels.length) * 100) : 0,
