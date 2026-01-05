@@ -15,7 +15,10 @@ import {
   ClipboardCheck,
   Bell,
   BarChart3,
-  Shield
+  Shield,
+  Play,
+  Check,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
@@ -47,7 +50,7 @@ export default function Index() {
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 rounded-xl bg-primary animate-pulse" />
+        <div className="w-14 h-14 rounded-2xl bg-primary animate-pulse" />
       </div>
     );
   }
@@ -56,313 +59,353 @@ export default function Index() {
     {
       icon: Compass,
       title: "Trilhas de Formação",
-      description: "Cursos estruturados com vídeos, materiais de apoio e quizzes interativos para cada etapa do discipulado.",
+      description: "Cursos estruturados com vídeos, materiais de apoio e quizzes interativos.",
     },
     {
       icon: BookOpen,
-      title: "Planos de Leitura Bíblica",
-      description: "De 7 dias a 1 ano completo. Acompanhe seu progresso e receba lembretes diários.",
+      title: "Planos de Leitura",
+      description: "De 7 dias a 1 ano. Acompanhe progresso e receba lembretes.",
     },
     {
       icon: Flame,
       title: "Hábitos Espirituais",
-      description: "Registre leitura bíblica, oração e devocionais. Mantenha sua sequência e conquiste badges.",
+      description: "Registre leitura bíblica, oração e conquiste badges.",
     },
     {
       icon: LifeBuoy,
       title: "S.O.S. Discipulador",
-      description: "Biblioteca de recursos para situações desafiadoras com busca inteligente por tema.",
+      description: "Biblioteca de recursos com busca inteligente por tema.",
     },
     {
       icon: MessageCircle,
       title: "Mentor IA",
-      description: "Assistente inteligente treinado com os recursos da plataforma para tirar dúvidas.",
+      description: "Assistente inteligente treinado para tirar dúvidas.",
     },
     {
       icon: Users,
       title: "Gestão de Discípulos",
-      description: "Acompanhe progresso, registre encontros e veja o histórico de cada discípulo.",
+      description: "Acompanhe progresso e registre encontros.",
     },
   ];
 
   const advancedFeatures = [
-    {
-      icon: Calendar,
-      title: "Escalas de Voluntários",
-      description: "Sistema completo para gestão de escalas ministeriais com confirmação automática.",
-    },
-    {
-      icon: ClipboardCheck,
-      title: "Checklist Semanal",
-      description: "Discipuladores registram atividades semanais: oração, mensagens e encontros.",
-    },
-    {
-      icon: Trophy,
-      title: "Gamificação & Rankings",
-      description: "Ganhe XP ao completar aulas, conquiste badges e apareça no ranking.",
-    },
-    {
-      icon: Bell,
-      title: "Notificações por Email",
-      description: "Alertas automáticos para escalas, lembretes de leitura e boas-vindas.",
-    },
-    {
-      icon: BarChart3,
-      title: "Relatórios Gerenciais",
-      description: "Dashboards com métricas de engajamento, compliance e performance.",
-    },
-    {
-      icon: Shield,
-      title: "Multi-Igreja",
-      description: "Isolamento completo de dados entre igrejas com controle de acesso por papel.",
-    },
+    { icon: Calendar, title: "Escalas de Voluntários" },
+    { icon: ClipboardCheck, title: "Checklist Semanal" },
+    { icon: Trophy, title: "Gamificação & Rankings" },
+    { icon: Bell, title: "Notificações Email" },
+    { icon: BarChart3, title: "Relatórios Gerenciais" },
+    { icon: Shield, title: "Multi-Igreja" },
   ];
 
   const journeySteps = [
-    { step: "1", title: "Conexão Inicial", description: "Primeiros encontros" },
-    { step: "2", title: "Alicerce", description: "Fundamentos da fé cristã" },
-    { step: "3", title: "Academia", description: "4 níveis de formação" },
-    { step: "4", title: "Multiplicação", description: "Forme novos discipuladores" },
+    { step: "01", title: "Conexão Inicial", description: "Primeiros encontros e acolhimento" },
+    { step: "02", title: "Alicerce", description: "Fundamentos da fé cristã" },
+    { step: "03", title: "Academia", description: "4 níveis de formação avançada" },
+    { step: "04", title: "Multiplicação", description: "Forme novos discipuladores" },
+  ];
+
+  const stats = [
+    { value: "500+", label: "Discípulos ativos" },
+    { value: "50+", label: "Discipuladores" },
+    { value: "12", label: "Trilhas disponíveis" },
   ];
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background overflow-x-hidden">
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
-          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
-              <span className="font-semibold text-foreground">Metanoia Hub</span>
+        <header className="fixed top-0 left-0 right-0 z-50 glass">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-10 h-10 object-contain" />
+              <span className="font-bold text-lg text-foreground hidden sm:block">Metanoia Hub</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
-              Entrar
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="text-muted-foreground hover:text-foreground">
+                Entrar
+              </Button>
+              <Button size="sm" onClick={() => navigate('/auth')} className="btn-glow">
+                Começar
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </div>
         </header>
 
-        {/* Hero Section */}
-        <section className="min-h-screen flex flex-col items-center justify-center px-4 pt-14">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm text-primary font-medium">Plataforma Completa de Discipulado</span>
+        {/* Hero Section - Plagiados style */}
+        <section className="min-h-screen relative flex items-center pt-16">
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -right-1/4 top-0 w-[800px] h-[800px] opacity-10">
+              <div className="w-full h-full text-[400px] font-black text-primary leading-none select-none">
+                M
+              </div>
             </div>
-
-            <div className="space-y-4">
-              <img 
-                src={metanoiaLogo} 
-                alt="Metanoia Hub" 
-                className="w-28 h-28 mx-auto object-contain"
-              />
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-                METANOIA <span className="text-primary">HUB</span>
-              </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Plataforma completa para discipuladores formarem vidas com o caráter de Cristo
-              </p>
-            </div>
-
-            <blockquote className="border-l-4 border-primary pl-6 py-3 text-left max-w-2xl mx-auto bg-primary/5 rounded-r-lg">
-              <p className="text-xl sm:text-2xl text-foreground/90 font-serif italic leading-relaxed">
-                "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
-              </p>
-              <footer className="text-sm text-muted-foreground mt-3 font-medium">— N. T. Wright</footer>
-            </blockquote>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
-              <Button size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
-                Começar Agora
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button variant="outline" size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
-                Já tenho conta
-              </Button>
-            </div>
-
-            <p className="text-sm text-muted-foreground pt-4">
-              Uma iniciativa da <span className="text-primary font-semibold">Comunidade das Nações de Goiânia</span>
-            </p>
+            <div className="absolute -left-20 bottom-20 w-[300px] h-[300px] rounded-full bg-primary/5 blur-3xl" />
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1">
-              <div className="w-1.5 h-3 rounded-full bg-muted-foreground/50" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 w-full">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              {/* Left content */}
+              <div className="space-y-8 animate-fade-in">
+                <div className="hero-badge">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Plataforma de Discipulado
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.9] tracking-tight">
+                  <span className="text-foreground">Transforme</span>
+                  <br />
+                  <span className="text-gradient">vidas com</span>
+                  <br />
+                  <span className="text-foreground">propósito.</span>
+                </h1>
+
+                <p className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed">
+                  A plataforma completa para discipuladores formarem vidas com o caráter de Cristo através de relacionamentos intencionais.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button size="lg" onClick={() => navigate('/auth')} className="btn-glow text-base h-14 px-8">
+                    Começar Agora
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                  <Button variant="outline" size="lg" onClick={() => navigate('/auth')} className="text-base h-14 px-8 border-border hover:bg-secondary">
+                    Já tenho conta
+                  </Button>
+                </div>
+
+                {/* Stats */}
+                <div className="flex flex-wrap gap-8 pt-6">
+                  {stats.map((stat) => (
+                    <div key={stat.label}>
+                      <p className="text-3xl sm:text-4xl font-black text-gradient">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right visual */}
+              <div className="relative hidden lg:block animate-slide-up">
+                <div className="relative">
+                  {/* Main card */}
+                  <div className="bg-card border border-border rounded-3xl p-8 shadow-glow">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
+                        <Play className="w-6 h-6 text-primary-foreground ml-1" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground text-lg">Seu momento chegou</p>
+                        <p className="text-sm text-muted-foreground">Comece sua jornada de transformação</p>
+                      </div>
+                    </div>
+                    
+                    {/* Progress preview */}
+                    <div className="space-y-4">
+                      {journeySteps.slice(0, 3).map((step, index) => (
+                        <div key={step.step} className="flex items-center gap-4 p-3 rounded-xl bg-secondary/50">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${index === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                            {index === 0 ? <Check className="w-5 h-5" /> : <span className="text-sm font-bold">{step.step}</span>}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{step.title}</p>
+                            <p className="text-xs text-muted-foreground">{step.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Floating badge */}
+                  <div className="absolute -right-4 top-20 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold text-sm shadow-glow animate-glow">
+                    +50 XP
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <ChevronDown className="w-6 h-6 text-muted-foreground" />
           </div>
         </section>
 
-        {/* Jornada Section */}
-        <section className="py-20 px-4 bg-muted/30">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                A Jornada do Discípulo
+        {/* Journey Section */}
+        <section className="py-24 px-4 sm:px-6 section-pattern">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <p className="text-primary font-semibold mb-3 uppercase tracking-wider text-sm">A Jornada</p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-4">
+                Do novo convertido ao<br />
+                <span className="text-gradient">multiplicador de vidas</span>
               </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Um caminho estruturado para crescer e multiplicar discípulos
-              </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {journeySteps.map((item, index) => (
                 <div 
                   key={item.step}
-                  className="relative bg-background border border-border rounded-xl p-6 text-center group hover:border-primary/50 transition-all"
+                  className="feature-card text-center"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                    <span className="text-xl font-bold text-primary">{item.step}</span>
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary/20 transition-all">
+                    <span className="text-2xl font-black text-gradient">{item.step}</span>
                   </div>
-                  <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
-                  
-                  {index < journeySteps.length - 1 && (
-                    <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2">
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/30" />
-                    </div>
-                  )}
+                  <h3 className="font-bold text-xl text-foreground mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Main Features Section */}
-        <section className="py-20 px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Recursos Principais
+        {/* Main Features */}
+        <section className="py-24 px-4 sm:px-6 bg-card/50">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <p className="text-primary font-semibold mb-3 uppercase tracking-wider text-sm">Recursos</p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-4">
+                Tudo que você precisa<br />
+                <span className="text-gradient">em um só lugar</span>
               </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Ferramentas essenciais para cuidar, formar e multiplicar discípulos
-              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mainFeatures.map((feature) => (
+              {mainFeatures.map((feature, index) => (
                 <div 
                   key={feature.title} 
-                  className="bg-background border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group"
+                  className="feature-card"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                    <feature.icon className="w-6 h-6 text-primary" />
+                  <div className="icon-wrapper">
+                    <feature.icon className="w-7 h-7 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                  <h3 className="font-bold text-xl text-foreground mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Advanced Features Section */}
-        <section className="py-20 px-4 bg-muted/30">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Recursos Avançados
+        {/* Advanced Features - Compact */}
+        <section className="py-24 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <p className="text-primary font-semibold mb-3 uppercase tracking-wider text-sm">Avançado</p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-4">
+                Gestão completa<br />
+                <span className="text-gradient">para sua igreja</span>
               </h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Funcionalidades para gestão completa da sua igreja
-              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {advancedFeatures.map((feature) => (
                 <div 
-                  key={feature.title} 
-                  className="bg-background border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group"
+                  key={feature.title}
+                  className="bg-card border border-border rounded-2xl p-5 text-center hover:border-primary/40 transition-all group"
                 >
-                  <div className="w-12 h-12 rounded-lg bg-accent/50 flex items-center justify-center mb-4 group-hover:bg-accent transition-colors">
-                    <feature.icon className="w-6 h-6 text-accent-foreground" />
+                  <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-3 group-hover:bg-accent/30 transition-colors">
+                    <feature.icon className="w-6 h-6 text-accent" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                  <p className="font-medium text-sm text-foreground">{feature.title}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Sobre a Comunidade */}
-        <section className="py-20 px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                <Globe className="w-8 h-8 text-primary" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-                Comunidade das Nações de Goiânia
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Uma comunidade de fé comprometida com o discipulado relacional e a formação de vidas segundo o caráter de Cristo
-              </p>
+        {/* Quote Section */}
+        <section className="py-24 px-4 sm:px-6 section-pattern">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="verse-card inline-block text-left">
+              <blockquote>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-serif italic text-foreground leading-relaxed mb-6">
+                  "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
+                </p>
+                <footer className="text-primary font-semibold">— N. T. Wright</footer>
+              </blockquote>
             </div>
+          </div>
+        </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-background border border-border rounded-xl p-6 text-center">
-                <Heart className="w-8 h-8 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">Nossa Missão</h3>
-                <p className="text-sm text-muted-foreground">
-                  Fazer discípulos que fazem discípulos, formando o caráter de Cristo através de relacionamentos intencionais
+        {/* About Section */}
+        <section className="py-24 px-4 sm:px-6 bg-card/50">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <p className="text-primary font-semibold mb-3 uppercase tracking-wider text-sm">Sobre</p>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-6">
+                  Comunidade das<br />
+                  <span className="text-gradient">Nações de Goiânia</span>
+                </h2>
+                <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                  Uma comunidade de fé comprometida com o discipulado relacional e a formação de vidas segundo o caráter de Cristo. 
+                  Nosso chamado é fazer discípulos que fazem discípulos.
                 </p>
+                
+                <div className="grid grid-cols-3 gap-6">
+                  {[
+                    { icon: Heart, label: "Missão" },
+                    { icon: Users, label: "Valores" },
+                    { icon: Globe, label: "Visão" },
+                  ].map((item) => (
+                    <div key={item.label} className="text-center">
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                        <item.icon className="w-7 h-7 text-primary" />
+                      </div>
+                      <p className="font-semibold text-foreground">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-              
-              <div className="bg-background border border-border rounded-xl p-6 text-center">
-                <Users className="w-8 h-8 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">Nossos Valores</h3>
-                <p className="text-sm text-muted-foreground">
-                  Comunhão autêntica, discipulado relacional, vida em células e multiplicação de líderes servos
-                </p>
-              </div>
-              
-              <div className="bg-background border border-border rounded-xl p-6 text-center">
-                <Compass className="w-8 h-8 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">Nossa Visão</h3>
-                <p className="text-sm text-muted-foreground">
-                  Alcançar todas as nações através de comunidades de fé saudáveis que transformam vidas e cidades
-                </p>
+
+              <div className="verse-card">
+                <blockquote>
+                  <p className="text-xl sm:text-2xl font-serif italic text-foreground leading-relaxed mb-4">
+                    "Portanto, vão e façam discípulos de todas as nações, batizando-os em nome do Pai, do Filho e do Espírito Santo, 
+                    ensinando-os a obedecer a tudo o que eu ordenei a vocês."
+                  </p>
+                  <footer className="text-primary font-semibold">— Mateus 28:19-20</footer>
+                </blockquote>
               </div>
             </div>
-
-            <blockquote className="mt-12 border-l-4 border-primary pl-6 py-4 text-left max-w-2xl mx-auto bg-primary/5 rounded-r-lg">
-              <p className="text-lg sm:text-xl text-foreground/90 font-serif italic leading-relaxed">
-                "Portanto, vão e façam discípulos de todas as nações, batizando-os em nome do Pai, do Filho e do Espírito Santo, ensinando-os a obedecer a tudo o que eu ordenei a vocês."
-              </p>
-              <footer className="text-sm text-muted-foreground mt-3 font-medium">— Mateus 28:19-20</footer>
-            </blockquote>
           </div>
         </section>
 
         {/* CTA Final */}
-        <section className="py-20 px-4 bg-primary/5">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Pronto para transformar o discipulado na sua igreja?
+        <section className="py-24 px-4 sm:px-6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+          
+          <div className="max-w-3xl mx-auto text-center relative">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-6">
+              Pronto para<br />
+              <span className="text-gradient">transformar vidas?</span>
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-lg text-muted-foreground mb-10">
               Junte-se a dezenas de discipuladores que já estão usando o Metanoia Hub
             </p>
-            <Button size="lg" className="text-base px-8 py-6" onClick={() => navigate('/auth')}>
+            <Button size="lg" onClick={() => navigate('/auth')} className="btn-glow text-lg h-16 px-12">
               Começar Agora
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-6 h-6 ml-2" />
             </Button>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="py-8 px-4 border-t border-border">
-          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <footer className="py-8 px-4 sm:px-6 border-t border-border">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-10 h-10 object-contain" />
               <div>
-                <span className="font-semibold text-foreground">Metanoia Hub</span>
+                <span className="font-bold text-foreground">Metanoia Hub</span>
                 <p className="text-xs text-muted-foreground">Plataforma de Discipulado</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 Comunidade das Nações de Goiânia
+              © {new Date().getFullYear()} Comunidade das Nações de Goiânia
             </p>
           </div>
         </footer>

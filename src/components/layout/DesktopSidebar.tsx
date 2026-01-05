@@ -92,14 +92,14 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
       <NavLink
         to={to}
         className={cn(
-          "flex items-center gap-3 rounded-xl text-sm font-medium transition-all",
-          isCollapsed ? "px-2 py-2.5 justify-center" : "px-3 py-2.5",
+          "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200",
+          isCollapsed ? "px-3 py-3 justify-center" : "px-4 py-3",
           active
-            ? "bg-primary/10 text-primary"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            ? "bg-primary/10 text-primary shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-secondary"
         )}
       >
-        <Icon className="w-5 h-5 flex-shrink-0" />
+        <Icon className={cn("w-5 h-5 flex-shrink-0", active && "text-primary")} />
         {!isCollapsed && <span>{label}</span>}
       </NavLink>
     );
@@ -108,7 +108,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
       return (
         <Tooltip>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
-          <TooltipContent side="right">{label}</TooltipContent>
+          <TooltipContent side="right" className="font-medium">{label}</TooltipContent>
         </Tooltip>
       );
     }
@@ -119,7 +119,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
   const SectionHeader = ({ label }: { label: string }) => {
     if (isCollapsed) return null;
     return (
-      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </p>
     );
@@ -129,8 +129,8 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "hidden md:flex fixed left-0 top-16 bottom-0 flex-col bg-card border-r border-border/50 transition-all duration-300",
-          isCollapsed ? "w-16" : "w-56"
+          "hidden md:flex fixed left-0 top-16 bottom-0 flex-col bg-card/50 border-r border-border/50 transition-all duration-300 backdrop-blur-sm",
+          isCollapsed ? "w-16" : "w-60"
         )}
       >
         {/* Toggle Button */}
@@ -138,7 +138,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-4 h-6 w-6 rounded-full border bg-background shadow-sm hover:bg-muted z-10"
+          className="absolute -right-3 top-6 h-6 w-6 rounded-full border border-border bg-card shadow-sm hover:bg-primary/10 hover:text-primary hover:border-primary/30 z-10 transition-all"
         >
           {isCollapsed ? (
             <ChevronRight className="h-3 w-3" />
@@ -148,7 +148,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
         </Button>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
           {/* Home */}
           <NavItem
             to="/dashboard"
@@ -174,24 +174,24 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
             <Collapsible open={learningOpen} onOpenChange={setLearningOpen}>
               <CollapsibleTrigger
                 className={cn(
-                  "flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                  "flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                   isLearningActive
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className={cn("w-5 h-5", isLearningActive && "text-primary")} />
                   <span>Aprendizado</span>
                 </div>
                 <ChevronDown
                   className={cn(
-                    "w-4 h-4 transition-transform",
+                    "w-4 h-4 transition-transform duration-200",
                     learningOpen && "rotate-180"
                   )}
                 />
               </CollapsibleTrigger>
-              <CollapsibleContent className="pl-6 mt-1 space-y-1">
+              <CollapsibleContent className="pl-4 mt-1 space-y-1">
                 {learningItems.map((item) => (
                   <NavItem
                     key={item.path}
@@ -224,24 +224,24 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
                 <Collapsible open={ministryOpen} onOpenChange={setMinistryOpen}>
                   <CollapsibleTrigger
                     className={cn(
-                      "flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      "flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                       isMinistryActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Network className="w-5 h-5" />
+                      <Network className={cn("w-5 h-5", isMinistryActive && "text-primary")} />
                       <span>Ministério</span>
                     </div>
                     <ChevronDown
                       className={cn(
-                        "w-4 h-4 transition-transform",
+                        "w-4 h-4 transition-transform duration-200",
                         ministryOpen && "rotate-180"
                       )}
                     />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="pl-6 mt-1 space-y-1">
+                  <CollapsibleContent className="pl-4 mt-1 space-y-1">
                     {ministryItems.map((item) => (
                       <NavItem
                         key={item.path}
@@ -287,7 +287,7 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
 
           {/* Admin Section */}
           {(isAdmin || isDiscipulador || isSuperAdmin) && (
-            <div className={cn("pt-4 mt-4 border-t border-border/50", isCollapsed && "pt-2 mt-2")}>
+            <div className={cn("pt-4 mt-4 border-t border-border/30", isCollapsed && "pt-3 mt-3")}>
               <SectionHeader label="Gestão" />
 
               {(isAdmin || isDiscipulador || isLiderMinisterial) && (

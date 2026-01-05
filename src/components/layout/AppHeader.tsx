@@ -2,7 +2,6 @@ import { memo, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   ChevronLeft, 
-  Bell, 
   Menu, 
   Home, 
   GraduationCap, 
@@ -120,25 +119,22 @@ export const AppHeader = memo(function AppHeader({
     active, 
     icon: Icon, 
     label, 
-    delay 
   }: { 
     onClick: () => void; 
     active: boolean; 
     icon: any; 
     label: string; 
-    delay?: string;
   }) => (
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left hover:translate-x-1 animate-fade-in",
+        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-left",
         active
           ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
       )}
-      style={delay ? { animationDelay: delay } : undefined}
     >
-      <Icon className="w-5 h-5 transition-transform duration-200" />
+      <Icon className={cn("w-5 h-5", active && "text-primary")} />
       <span>{label}</span>
     </button>
   );
@@ -149,7 +145,7 @@ export const AppHeader = memo(function AppHeader({
         "fixed top-0 left-0 right-0 z-40 h-14",
         transparent
           ? "bg-transparent"
-          : "bg-background/80 backdrop-blur-xl border-b border-border/30",
+          : "glass",
         className
       )}
     >
@@ -159,28 +155,30 @@ export const AppHeader = memo(function AppHeader({
           {/* Hamburger Menu */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Button variant="ghost" size="icon" className="h-10 w-10">
                 <Menu className="w-5 h-5 text-foreground" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] p-0 [&>button]:transition-all [&>button]:duration-200 [&>button]:hover:rotate-90">
-              <SheetHeader className="p-4 pb-2 border-b border-border/50 animate-fade-in">
+            <SheetContent side="left" className="w-[300px] p-0 bg-card border-border">
+              <SheetHeader className="p-5 border-b border-border/50">
                 <div className="flex items-center gap-3">
                   <img
                     src={metanoiaLogo}
                     alt="Metanoia Hub"
-                    className="w-10 h-10 object-contain transition-transform duration-300 hover:scale-110"
+                    className="w-11 h-11 object-contain"
                   />
-                  <div className="animate-fade-in" style={{ animationDelay: '50ms' }}>
-                    <SheetTitle className="text-left text-base">Metanoia Hub</SheetTitle>
+                  <div>
+                    <SheetTitle className="text-left text-base font-bold">
+                      Metanoia <span className="text-gradient">Hub</span>
+                    </SheetTitle>
                     {userName && (
-                      <p className="text-xs text-muted-foreground">Olá, {userName.split(' ')[0]}</p>
+                      <p className="text-sm text-muted-foreground">Olá, {userName.split(' ')[0]}</p>
                     )}
                   </div>
                 </div>
               </SheetHeader>
 
-              <ScrollArea className="flex-1 h-[calc(100vh-140px)]">
+              <ScrollArea className="flex-1 h-[calc(100vh-160px)]">
                 <nav className="p-3 space-y-1">
                   {/* Home */}
                   <NavButton
@@ -188,40 +186,37 @@ export const AppHeader = memo(function AppHeader({
                     active={location.pathname === "/dashboard"}
                     icon={Home}
                     label="Início"
-                    delay="75ms"
                   />
 
                   {/* Learning Section */}
                   <Collapsible open={learningOpen} onOpenChange={setLearningOpen}>
                     <CollapsibleTrigger
                       className={cn(
-                        "flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1 animate-fade-in",
+                        "flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                         isLearningActive
                           ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                       )}
-                      style={{ animationDelay: '100ms' }}
                     >
                       <div className="flex items-center gap-3">
-                        <Sparkles className="w-5 h-5" />
+                        <Sparkles className={cn("w-5 h-5", isLearningActive && "text-primary")} />
                         <span>Aprendizado</span>
                       </div>
                       <ChevronDown
                         className={cn(
-                          "w-4 h-4 transition-transform duration-300",
+                          "w-4 h-4 transition-transform duration-200",
                           learningOpen && "rotate-180"
                         )}
                       />
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="pl-6 mt-1 space-y-1 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
-                      {learningItems.map((item, index) => (
+                    <CollapsibleContent className="pl-4 mt-1 space-y-1">
+                      {learningItems.map((item) => (
                         <NavButton
                           key={item.path}
                           onClick={() => handleNavigate(item.path)}
                           active={location.pathname === item.path}
                           icon={item.icon}
                           label={item.label}
-                          delay={`${(index + 1) * 50}ms`}
                         />
                       ))}
                     </CollapsibleContent>
@@ -232,33 +227,31 @@ export const AppHeader = memo(function AppHeader({
                     <Collapsible open={ministryOpen} onOpenChange={setMinistryOpen}>
                       <CollapsibleTrigger
                         className={cn(
-                          "flex items-center justify-between w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1 animate-fade-in",
+                          "flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                           isMinistryActive
                             ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                         )}
-                        style={{ animationDelay: '125ms' }}
                       >
                         <div className="flex items-center gap-3">
-                          <Network className="w-5 h-5" />
+                          <Network className={cn("w-5 h-5", isMinistryActive && "text-primary")} />
                           <span>Ministério</span>
                         </div>
                         <ChevronDown
                           className={cn(
-                            "w-4 h-4 transition-transform duration-300",
+                            "w-4 h-4 transition-transform duration-200",
                             ministryOpen && "rotate-180"
                           )}
                         />
                       </CollapsibleTrigger>
-                      <CollapsibleContent className="pl-6 mt-1 space-y-1 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
-                        {ministryItems.map((item, index) => (
+                      <CollapsibleContent className="pl-4 mt-1 space-y-1">
+                        {ministryItems.map((item) => (
                           <NavButton
                             key={item.path}
                             onClick={() => handleNavigate(item.path)}
                             active={item.active}
                             icon={item.icon}
                             label={item.label}
-                            delay={`${(index + 1) * 50}ms`}
                           />
                         ))}
                       </CollapsibleContent>
@@ -272,7 +265,6 @@ export const AppHeader = memo(function AppHeader({
                       active={location.pathname === "/minhas-escalas"}
                       icon={Calendar}
                       label="Minhas Escalas"
-                      delay="125ms"
                     />
                   )}
 
@@ -283,7 +275,6 @@ export const AppHeader = memo(function AppHeader({
                       active={location.pathname === "/discipulado"}
                       icon={Users}
                       label="Discipulado"
-                      delay="150ms"
                     />
                   )}
 
@@ -293,13 +284,12 @@ export const AppHeader = memo(function AppHeader({
                     active={location.pathname === "/perfil"}
                     icon={User}
                     label="Meu Perfil"
-                    delay="175ms"
                   />
 
                   {/* Admin Section */}
                   {(isAdmin || isDiscipulador || isSuperAdmin) && (
-                    <div className="pt-4 mt-4 border-t border-border/50 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                      <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <div className="pt-4 mt-4 border-t border-border/30">
+                      <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Gestão
                       </p>
 
@@ -340,12 +330,12 @@ export const AppHeader = memo(function AppHeader({
               </ScrollArea>
 
               {/* Footer */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background animate-fade-in" style={{ animationDelay: '225ms' }}>
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-card">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-destructive hover:bg-destructive/10 transition-all duration-200 hover:translate-x-1"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-destructive hover:bg-destructive/10 transition-all duration-200"
                 >
-                  <LogOut className="w-5 h-5 transition-transform duration-200" />
+                  <LogOut className="w-5 h-5" />
                   <span className="text-sm font-medium">Sair da conta</span>
                 </button>
               </div>
@@ -365,14 +355,14 @@ export const AppHeader = memo(function AppHeader({
               <img
                 src={metanoiaLogo}
                 alt="Metanoia Hub"
-                className="w-8 h-8 object-contain"
+                className="w-9 h-9 object-contain"
               />
               <div className="hidden sm:block">
-                <span className="font-display font-semibold text-foreground text-sm tracking-tight">
-                  Metanoia Hub
+                <span className="font-display font-bold text-foreground text-sm tracking-tight">
+                  Metanoia <span className="text-gradient">Hub</span>
                 </span>
                 {church && (
-                  <p className="text-[10px] text-primary font-medium">
+                  <p className="text-[10px] text-muted-foreground font-medium">
                     {church.nome}
                   </p>
                 )}
@@ -381,18 +371,15 @@ export const AppHeader = memo(function AppHeader({
           ) : null}
 
           {title && (
-            <h1 className="text-base font-semibold text-foreground truncate max-w-[200px]">
+            <h1 className="text-base font-bold text-foreground truncate max-w-[200px]">
               {title}
             </h1>
           )}
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-            <Bell className="w-5 h-5 text-muted-foreground" />
-          </Button>
         </div>
       </div>
     </header>
