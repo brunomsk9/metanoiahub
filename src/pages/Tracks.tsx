@@ -28,7 +28,7 @@ export default function Tracks() {
   const [loading, setLoading] = useState(true);
   const [completedBaseTrack, setCompletedBaseTrack] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [baseTrackTitle, setBaseTrackTitle] = useState('Alicerce');
+  const [baseTrackTitle, setBaseTrackTitle] = useState('Jornada Metanoia');
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
@@ -82,7 +82,7 @@ export default function Tracks() {
       const isCompleted = completedData.data === true || !!presencialData.data;
       setCompletedBaseTrack(isCompleted);
 
-      const celebrationKey = `alicerce_celebration_shown:${session.user.id}`;
+      const celebrationKey = `jornada_metanoia_celebration_shown:${session.user.id}`;
       let celebrationShown: string | null = null;
       try {
         celebrationShown = localStorage.getItem(celebrationKey);

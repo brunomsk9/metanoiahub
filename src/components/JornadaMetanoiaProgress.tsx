@@ -2,7 +2,7 @@ import { Lock, CheckCircle, BookOpen, Award } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 
-interface AlicerceProgressProps {
+interface JornadaMetanoiaProgressProps {
   trackId: string;
   trackTitle: string;
   completedLessons: number;
@@ -11,14 +11,14 @@ interface AlicerceProgressProps {
   completedPresencial?: boolean;
 }
 
-export function AlicerceProgress({ 
+export function JornadaMetanoiaProgress({
   trackId, 
   trackTitle, 
   completedLessons, 
   totalLessons,
   isCompleted,
   completedPresencial = false
-}: AlicerceProgressProps) {
+}: JornadaMetanoiaProgressProps) {
   const navigate = useNavigate();
   const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 

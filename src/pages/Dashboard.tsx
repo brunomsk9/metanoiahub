@@ -4,7 +4,7 @@ import { MentorChatButton } from "@/components/MentorChat";
 import { AppShell } from "@/components/layout";
 import { PageTransition } from "@/components/PageTransition";
 import { ReadingPlanCard } from "@/components/ReadingPlanCard";
-import { AlicerceProgress } from "@/components/AlicerceProgress";
+import { JornadaMetanoiaProgress } from "@/components/JornadaMetanoiaProgress";
 import { DailyVerse } from "@/components/DailyVerse";
 import { StartPlanModal } from "@/components/StartPlanModal";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -332,10 +332,10 @@ export default function Dashboard() {
                 <AchievementBadges compact />
               </Suspense>
 
-              {/* Alicerce Progress - Destaque se não completou */}
+              {/* Jornada Metanoia Progress - Destaque se não completou */}
               {baseTrackProgress && !baseTrackProgress.isCompleted && (
                 <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-                  <AlicerceProgress
+                  <JornadaMetanoiaProgress
                     trackId={baseTrackProgress.trackId}
                     trackTitle={baseTrackProgress.trackTitle}
                     completedLessons={baseTrackProgress.completedLessons}
