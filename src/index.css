@@ -216,7 +216,7 @@
 
   /* Feature card - like Plagiados */
   .feature-card {
-    @apply rounded-2xl p-6 bg-card border border-border transition-all duration-300 group;
+    @apply rounded-2xl p-6 bg-card border border-border transition-all duration-300;
   }
 
   .feature-card:hover {
