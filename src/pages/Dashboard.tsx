@@ -39,19 +39,16 @@ interface ReadingPlanWithProgress {
 
 // Block section header component
 const BlockHeader = memo(({ icon, title, accent = false }: { icon: React.ReactNode; title: string; accent?: boolean }) => (
-  <div className={cn(
-    "flex items-center gap-2 mb-4 pb-2 border-b",
-    accent ? "border-primary/30" : "border-border/50"
-  )}>
+  <div className="block-header">
     <div className={cn(
-      "w-8 h-8 rounded-lg flex items-center justify-center",
-      accent ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+      "block-header-icon",
+      accent ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
     )}>
       {icon}
     </div>
     <h2 className={cn(
-      "text-sm font-semibold uppercase tracking-wider",
-      accent ? "text-primary" : "text-muted-foreground"
+      "block-header-title text-sm uppercase tracking-wider",
+      accent ? "text-gradient font-bold" : "text-muted-foreground font-semibold"
     )}>{title}</h2>
   </div>
 ));
@@ -116,47 +113,47 @@ export default function Dashboard() {
         <PageTransition>
           <div className="space-y-8 max-w-2xl mx-auto lg:max-w-none pb-8">
             {/* Header com saudação e stats */}
-            <header className="pt-2 space-y-4">
+            <header className="pt-2 space-y-5">
               <div>
                 <p className="text-muted-foreground text-sm">Olá,</p>
-                <h1 className="text-xl font-semibold text-foreground">{userName}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{userName}</h1>
               </div>
               
               {/* Stats Cards */}
-              <div className="flex gap-3">
-                <div className="flex-1 p-3 rounded-lg bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                    <Flame className="w-4 h-4 text-orange-500" />
+              <div className="flex gap-4">
+                <div className="flex-1 stats-card flex items-center gap-4 hover:border-accent/40 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+                    <Flame className="w-5 h-5 text-accent" />
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-foreground">{streak}</p>
-                    <p className="text-[10px] text-muted-foreground">dias seguidos</p>
+                    <p className="text-2xl font-black text-gradient">{streak}</p>
+                    <p className="text-xs text-muted-foreground">dias seguidos</p>
                   </div>
                 </div>
-                <div className="flex-1 p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-primary" />
+                <div className="flex-1 stats-card flex items-center gap-4 hover:border-primary/40 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-foreground">{xpPoints}</p>
-                    <p className="text-[10px] text-muted-foreground">XP total</p>
+                    <p className="text-2xl font-black text-gradient">{xpPoints}</p>
+                    <p className="text-xs text-muted-foreground">XP total</p>
                   </div>
                 </div>
               </div>
             </header>
 
             {/* ====================== BLOCO: FÉ & DEVOCIONAIS ====================== */}
-            <section className="space-y-4 p-4 rounded-xl bg-gradient-to-br from-primary/5 via-transparent to-transparent border border-primary/10">
+            <section className="space-y-5 p-5 rounded-2xl section-pattern border border-primary/20">
               <BlockHeader icon={<Heart className="w-4 h-4" />} title="Fé & Devocionais" accent />
               
               {/* Versículo do Dia - Destaque */}
               <DailyVerse />
 
               {/* Hábitos Diários */}
-              <div className="space-y-3 p-4 rounded-lg bg-card border border-border/50">
+              <div className="space-y-4 p-5 rounded-xl bg-card border border-border/50">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium text-foreground">Hábitos de hoje</h3>
-                  <span className="text-xs text-muted-foreground">{completedHabits}/{totalHabits}</span>
+                  <h3 className="text-sm font-semibold text-foreground">Hábitos de hoje</h3>
+                  <span className="tag-pill">{completedHabits}/{totalHabits}</span>
                 </div>
                 {userId && (
                   <DailyHabitsCard userId={userId} onHabitsChange={handleHabitsChange} />
@@ -298,8 +295,8 @@ export default function Dashboard() {
 
             {/* ====================== BLOCO: MEU DISCIPULADO (para discipuladores) ====================== */}
             {isDiscipulador && userId && (
-              <section className="space-y-4 p-4 rounded-xl bg-gradient-to-br from-rose-500/5 via-transparent to-transparent border border-rose-500/10">
-                <BlockHeader icon={<Heart className="w-4 h-4" />} title="Meu Discipulado" accent />
+              <section className="space-y-5 p-5 rounded-2xl bg-card border border-accent/20">
+                <BlockHeader icon={<Users className="w-4 h-4" />} title="Meu Discipulado" accent />
                 
                 {/* Checklist Semanal - Sempre visível */}
                 <div className="p-4 rounded-lg border border-border/50 bg-card">
@@ -327,7 +324,7 @@ export default function Dashboard() {
             )}
 
             {/* ====================== BLOCO: CRESCIMENTO ====================== */}
-            <section className="space-y-4 p-4 rounded-xl bg-card border border-border/50">
+            <section className="space-y-5 p-5 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
               <BlockHeader icon={<GraduationCap className="w-4 h-4" />} title="Crescimento" />
 
               {/* Conquistas */}
@@ -389,8 +386,8 @@ export default function Dashboard() {
             </section>
 
             {/* ====================== BLOCO: COMUNIDADE ====================== */}
-            <section className="space-y-4 p-4 rounded-xl bg-card border border-border/50">
-              <BlockHeader icon={<Users className="w-4 h-4" />} title="Comunidade" />
+            <section className="space-y-5 p-5 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
+              <BlockHeader icon={<Trophy className="w-4 h-4" />} title="Comunidade" />
 
               {/* Ranking */}
               <CollapsibleSection 
