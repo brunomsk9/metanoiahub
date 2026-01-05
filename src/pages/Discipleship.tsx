@@ -8,7 +8,8 @@ import { ShieldAlert, ArrowLeft, Heart, Plus, Sparkles, Calendar } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { MeetingsManager } from '@/components/MeetingsManager';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MeetingsHistoryLog } from '@/components/MeetingsHistoryLog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function Discipleship() {
   const navigate = useNavigate();
@@ -121,21 +122,26 @@ export default function Discipleship() {
 
           {/* Log de Encontros Recentes - apenas para discipuladores */}
           {isDiscipulador && (
-            <section className="mt-8 pt-6 border-t border-border/50">
-              <div className="flex items-center gap-2 mb-4">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  Histórico de Encontros
-                </h3>
+            <section className="mt-8 pt-6 border-t border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Histórico de Encontros
+                  </h3>
+                </div>
               </div>
-              <MeetingsManager 
-                externalDialogOpen={showMeetingDialog}
-                onExternalDialogChange={setShowMeetingDialog}
-                showHeader={false}
-                maxItems={5}
-              />
+              <MeetingsHistoryLog maxItems={5} />
             </section>
           )}
+
+          {/* Dialog para novo encontro */}
+          <MeetingsManager 
+            externalDialogOpen={showMeetingDialog}
+            onExternalDialogChange={setShowMeetingDialog}
+            showHeader={false}
+            maxItems={0}
+          />
         </div>
       </PageTransition>
     </AppShell>
