@@ -117,90 +117,97 @@ export default function Library() {
           {/* Breadcrumb */}
           <PageBreadcrumb items={[{ label: 'Biblioteca' }]} />
 
-          {/* Header - visible on desktop */}
-          <header className="hidden lg:block text-center">
-            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground mb-1">
-              Biblioteca
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Livros, músicas e pregações para edificar sua fé
-            </p>
+          {/* Header */}
+          <header className="section-pattern rounded-2xl p-6 border border-border/50">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Book className="w-7 h-7 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                  <span className="text-gradient">Biblioteca</span>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Livros, músicas e pregações para edificar sua fé
+                </p>
+              </div>
+            </div>
           </header>
 
-            {/* Search */}
-            <div className="relative max-w-md mx-auto mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título, autor..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-6">
-                <TabsTrigger value="livro" className="flex items-center gap-2">
-                  <Book className="w-4 h-4" />
-                  <span className="hidden sm:inline">Livros</span>
-                </TabsTrigger>
-                <TabsTrigger value="musica" className="flex items-center gap-2">
-                  <Music className="w-4 h-4" />
-                  <span className="hidden sm:inline">Músicas</span>
-                </TabsTrigger>
-                <TabsTrigger value="pregacao" className="flex items-center gap-2">
-                  <Video className="w-4 h-4" />
-                  <span className="hidden sm:inline">Pregações</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {['livro', 'musica', 'pregacao'].map((categoria) => (
-                <TabsContent key={categoria} value={categoria}>
-                  {loading ? (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {[1, 2, 3].map((i) => (
-                        <Card key={i} className="p-4">
-                          <Skeleton className="h-32 w-full mb-3" />
-                          <Skeleton className="h-5 w-3/4 mb-2" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </Card>
-                      ))}
-                    </div>
-                  ) : filteredResources.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                        {(() => {
-                          const Icon = getCategoryIcon(categoria);
-                          return <Icon className="w-6 h-6 text-muted-foreground" />;
-                        })()}
-                      </div>
-                      <p className="text-muted-foreground">
-                        {searchQuery 
-                          ? `Nenhum resultado para "${searchQuery}"` 
-                          : `Nenhum ${getCategoryLabel(categoria).toLowerCase().slice(0, -1)} cadastrado ainda`}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {filteredResources.map((resource) => (
-                        <ResourceCard 
-                          key={resource.id} 
-                          resource={resource}
-                          onOpen={() => openResource(resource)}
-                          onDownload={() => downloadPdf(resource)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
+          {/* Search */}
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por título, autor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 rounded-xl bg-card/50 border-border/50 focus:border-primary/50"
+            />
           </div>
-        </PageTransition>
 
-        <MentorChatButton />
-      </AppShell>
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-6 h-12 p-1 bg-card/50 rounded-xl">
+              <TabsTrigger value="livro" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Book className="w-4 h-4" />
+                <span className="hidden sm:inline">Livros</span>
+              </TabsTrigger>
+              <TabsTrigger value="musica" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Music className="w-4 h-4" />
+                <span className="hidden sm:inline">Músicas</span>
+              </TabsTrigger>
+              <TabsTrigger value="pregacao" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Video className="w-4 h-4" />
+                <span className="hidden sm:inline">Pregações</span>
+              </TabsTrigger>
+            </TabsList>
+
+            {['livro', 'musica', 'pregacao'].map((categoria) => (
+              <TabsContent key={categoria} value={categoria}>
+                {loading ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="glass-effect rounded-2xl p-4 border border-border/50">
+                        <Skeleton className="h-32 w-full mb-3 rounded-xl" />
+                        <Skeleton className="h-5 w-3/4 mb-2" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredResources.length === 0 ? (
+                  <div className="glass-effect rounded-2xl p-12 border border-border/50 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                      {(() => {
+                        const Icon = getCategoryIcon(categoria);
+                        return <Icon className="w-8 h-8 text-muted-foreground" />;
+                      })()}
+                    </div>
+                    <p className="text-muted-foreground">
+                      {searchQuery 
+                        ? `Nenhum resultado para "${searchQuery}"` 
+                        : `Nenhum ${getCategoryLabel(categoria).toLowerCase().slice(0, -1)} cadastrado ainda`}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredResources.map((resource) => (
+                      <ResourceCard 
+                        key={resource.id} 
+                        resource={resource}
+                        onOpen={() => openResource(resource)}
+                        onDownload={() => downloadPdf(resource)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      </PageTransition>
+
+      <MentorChatButton />
+    </AppShell>
   );
 }
 
@@ -215,22 +222,22 @@ function ResourceCard({ resource, onOpen, onDownload }: ResourceCardProps) {
   const hasPdf = resource.url_pdf;
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    <div className="glass-effect rounded-2xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 group">
       {resource.imagem_capa && (
-        <div className="aspect-[16/9] bg-muted overflow-hidden">
+        <div className="aspect-[16/9] bg-muted/50 overflow-hidden">
           <img 
             src={resource.imagem_capa} 
             alt={resource.titulo}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </div>
       )}
       <div className="p-4">
-        <h3 className="font-medium text-foreground line-clamp-2 mb-1">
+        <h3 className="font-medium text-foreground line-clamp-2 mb-1 group-hover:text-primary transition-colors">
           {resource.titulo}
         </h3>
         {resource.autor && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-2">
             <User className="w-3 h-3" />
             {resource.autor}
           </p>
@@ -243,9 +250,8 @@ function ResourceCard({ resource, onOpen, onDownload }: ResourceCardProps) {
         <div className="flex gap-2">
           {hasLink && (
             <Button 
-              variant="outline" 
               size="sm" 
-              className="flex-1"
+              className="flex-1 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
               onClick={onOpen}
             >
               <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
@@ -254,9 +260,9 @@ function ResourceCard({ resource, onOpen, onDownload }: ResourceCardProps) {
           )}
           {hasPdf && (
             <Button 
-              variant={hasLink ? "ghost" : "outline"}
+              variant="outline"
               size="sm" 
-              className={hasLink ? "" : "flex-1"}
+              className={`rounded-xl ${hasLink ? "" : "flex-1"}`}
               onClick={onDownload}
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
@@ -270,6 +276,6 @@ function ResourceCard({ resource, onOpen, onDownload }: ResourceCardProps) {
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
