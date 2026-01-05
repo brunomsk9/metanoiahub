@@ -294,24 +294,24 @@ export function AdminTracks() {
         </Dialog>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="glass-effect rounded-xl border border-primary/20 overflow-hidden">
         {tracks.length === 0 ? (
           <div className="p-12 text-center">
-            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhuma trilha cadastrada ainda.</p>
+            <BookOpen className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhuma trilha cadastrada ainda.</p>
             <Button 
               onClick={() => handleOpenDialog()} 
               variant="outline" 
-              className="mt-4 border-gray-300 text-gray-700"
+              className="mt-4"
             >
               Criar primeira trilha
             </Button>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-muted/50 border-b border-border">
+            <thead className="bg-card/80 border-b border-primary/10">
               <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground">
                   <SortableHeader 
                     sortState={sorting.getSortIcon('ordem')} 
                     onClick={() => sorting.toggleSort('ordem')}
@@ -319,7 +319,7 @@ export function AdminTracks() {
                     Ordem
                   </SortableHeader>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground">
                   <SortableHeader 
                     sortState={sorting.getSortIcon('titulo')} 
                     onClick={() => sorting.toggleSort('titulo')}
@@ -327,7 +327,7 @@ export function AdminTracks() {
                     Título
                   </SortableHeader>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground hidden sm:table-cell">
                   <SortableHeader 
                     sortState={sorting.getSortIcon('categoria')} 
                     onClick={() => sorting.toggleSort('categoria')}
@@ -335,14 +335,14 @@ export function AdminTracks() {
                     Categoria
                   </SortableHeader>
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Público</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Tipo</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground hidden md:table-cell">Público</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-foreground hidden lg:table-cell">Tipo</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border/50">
               {pagination.paginatedData.map((track) => (
-                <tr key={track.id} className="hover:bg-muted/30">
+                <tr key={track.id} className="hover:bg-primary/5 transition-colors">
                   <td className="py-3 px-4 text-muted-foreground">{track.ordem}</td>
                   <td className="py-3 px-4">
                     <div>
@@ -353,28 +353,28 @@ export function AdminTracks() {
                     </div>
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell">
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    <span className="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
                       {track.categoria}
                     </span>
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    <span className="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
                       {getPublicoAlvoLabel(track.publico_alvo)}
                     </span>
                   </td>
                   <td className="py-3 px-4 hidden lg:table-cell">
                     {track.is_base && (
-                      <span className="inline-flex px-2 py-1 text-xs rounded-full bg-primary/10 text-primary font-medium">
+                      <span className="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-primary/20 text-primary border border-primary/30">
                         Alicerce
                       </span>
                     )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(track)} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(track)} className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-primary/10">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(track.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(track.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
