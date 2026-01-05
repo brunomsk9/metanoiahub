@@ -108,10 +108,10 @@ export function CelebrationModal({ isOpen, onClose, trackTitle }: CelebrationMod
           >
             <div className="flex items-center justify-center gap-2 text-success">
               <Lock className="w-5 h-5" />
-              <span className="font-semibold">Todas as trilhas foram desbloqueadas!</span>
+              <span className="font-semibold">Jornada Metanoia concluída!</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              Agora você pode explorar todo o conteúdo da plataforma.
+              Todas as trilhas foram desbloqueadas. Explore todo o conteúdo da plataforma.
             </p>
           </motion.div>
 

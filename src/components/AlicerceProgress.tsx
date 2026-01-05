@@ -31,7 +31,7 @@ export function AlicerceProgress({
           </div>
           <div className="flex-1">
             <p className="font-semibold text-foreground">{trackTitle}</p>
-            <p className="text-xs text-success">Concluído! Todas as trilhas liberadas.</p>
+            <p className="text-xs text-success">Jornada Metanoia concluída! Todas as trilhas liberadas.</p>
           </div>
           {completedPresencial && (
             <div className="flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">
@@ -55,7 +55,7 @@ export function AlicerceProgress({
         </div>
         <div className="flex-1">
           <p className="font-semibold text-foreground">{trackTitle}</p>
-          <p className="text-xs text-muted-foreground">Complete para desbloquear outras trilhas</p>
+          <p className="text-xs text-muted-foreground">Complete a Jornada Metanoia para desbloquear outras trilhas</p>
         </div>
         <Lock className="w-4 h-4 text-muted-foreground" />
       </div>
