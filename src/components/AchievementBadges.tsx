@@ -190,7 +190,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
 
   if (loading) {
     return (
-      <Card>
+      <Card className="glass-effect">
         <CardContent className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </CardContent>
@@ -201,14 +201,14 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
   if (compact) {
     return (
       <>
-        <Card className="overflow-hidden">
+        <Card className="glass-effect overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between text-base">
               <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-warning" />
+                <Trophy className="w-5 h-5 text-primary" />
                 Conquistas
               </div>
-              <Badge variant="secondary" className="font-mono">
+              <Badge variant="secondary" className="font-mono bg-primary/10 text-primary border-primary/20">
                 {unlockedCount}/{achievements.length}
               </Badge>
             </CardTitle>
@@ -227,7 +227,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
                       "relative w-12 h-12 rounded-xl flex items-center justify-center transition-all",
                       "bg-gradient-to-br",
                       achievement.unlocked ? tierColors[achievement.tier] : "from-muted to-muted/80",
-                      achievement.unlocked ? "shadow-lg" : "opacity-60"
+                      achievement.unlocked ? "shadow-lg shadow-primary/10" : "opacity-60"
                     )}
                   >
                     <Icon className={cn(
@@ -243,7 +243,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
               {unlockedCount < achievements.length && (
                 <button
                   onClick={() => setSelectedAchievement(achievements.find(a => !a.unlocked) || null)}
-                  className="w-12 h-12 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center text-muted-foreground hover:border-primary/50 transition-colors"
+                  className="w-12 h-12 rounded-xl border-2 border-dashed border-primary/30 flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-all duration-200"
                 >
                   +{achievements.length - unlockedCount}
                 </button>
@@ -254,7 +254,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
 
         {/* Achievement Detail Dialog */}
         <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md glass-effect border-primary/20">
             {selectedAchievement && (
               <AchievementDetail achievement={selectedAchievement} />
             )}
@@ -265,7 +265,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
         <AnimatePresence>
           {newUnlock && (
             <Dialog open={!!newUnlock} onOpenChange={() => setNewUnlock(null)}>
-              <DialogContent className="sm:max-w-md border-none bg-gradient-to-br from-primary/10 via-background to-warning/10">
+              <DialogContent className="sm:max-w-md glass-effect border-primary/30 bg-gradient-to-br from-primary/5 via-background to-primary/10">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -275,7 +275,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
                     animate={{ rotate: [0, -10, 10, 0] }}
                     transition={{ repeat: 3, duration: 0.5 }}
                     className={cn(
-                      "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center bg-gradient-to-br shadow-lg",
+                      "w-20 h-20 rounded-2xl mx-auto flex items-center justify-center bg-gradient-to-br shadow-xl shadow-primary/20",
                       tierColors[newUnlock.tier]
                     )}
                   >
@@ -286,11 +286,11 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
                   </motion.div>
                   <div>
                     <h2 className="text-xl font-bold flex items-center justify-center gap-2">
-                      <Sparkles className="w-5 h-5 text-warning" />
+                      <Sparkles className="w-5 h-5 text-primary" />
                       Nova Conquista!
-                      <Sparkles className="w-5 h-5 text-warning" />
+                      <Sparkles className="w-5 h-5 text-primary" />
                     </h2>
-                    <p className="text-2xl font-display font-bold text-primary mt-2">
+                    <p className="text-2xl font-display font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mt-2">
                       {newUnlock.name}
                     </p>
                     <p className="text-muted-foreground mt-1">{newUnlock.description}</p>
@@ -309,10 +309,10 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-display font-bold flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-warning" />
+          <Trophy className="w-6 h-6 text-primary" />
           Conquistas
         </h2>
-        <Badge variant="secondary" className="font-mono text-lg px-3 py-1">
+        <Badge variant="secondary" className="font-mono text-lg px-3 py-1 bg-primary/10 text-primary border-primary/20">
           {unlockedCount}/{achievements.length}
         </Badge>
       </div>
@@ -325,20 +325,20 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
           return (
             <motion.button
               key={achievement.id}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedAchievement(achievement)}
               className={cn(
                 "relative p-4 rounded-2xl border transition-all text-left",
                 achievement.unlocked 
-                  ? `bg-gradient-to-br ${tierColors[achievement.tier]} text-white border-transparent shadow-lg`
-                  : `bg-card ${tierBorderColors[achievement.tier]} hover:shadow-md`
+                  ? `bg-gradient-to-br ${tierColors[achievement.tier]} text-white border-transparent shadow-lg shadow-primary/10`
+                  : `glass-effect ${tierBorderColors[achievement.tier]} hover:shadow-md hover:border-primary/30`
               )}
             >
               <div className="flex flex-col items-center gap-2">
                 <div className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center",
-                  achievement.unlocked ? "bg-white/20" : "bg-muted"
+                  "w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300",
+                  achievement.unlocked ? "bg-white/20" : "bg-muted/50"
                 )}>
                   <Icon className={cn(
                     "w-6 h-6",
@@ -360,7 +360,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
                   </div>
                 )}
                 {achievement.unlocked && (
-                  <Badge variant="secondary" className="bg-white/20 text-white border-none text-xs">
+                  <Badge variant="secondary" className="bg-white/20 text-white border-none text-xs capitalize">
                     {achievement.tier}
                   </Badge>
                 )}
@@ -372,7 +372,7 @@ export function AchievementBadges({ compact = false, showAll = false }: Achievem
 
       {/* Achievement Detail Dialog */}
       <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md glass-effect border-primary/20">
           {selectedAchievement && (
             <AchievementDetail achievement={selectedAchievement} />
           )}
@@ -389,7 +389,9 @@ function AchievementDetail({ achievement }: { achievement: Achievement }) {
   return (
     <div className="space-y-4">
       <DialogHeader>
-        <DialogTitle className="text-center">{achievement.name}</DialogTitle>
+        <DialogTitle className="text-center bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          {achievement.name}
+        </DialogTitle>
         <DialogDescription className="text-center">{achievement.description}</DialogDescription>
       </DialogHeader>
       
@@ -398,8 +400,9 @@ function AchievementDetail({ achievement }: { achievement: Achievement }) {
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           className={cn(
-            "w-24 h-24 rounded-2xl flex items-center justify-center bg-gradient-to-br shadow-lg",
-            achievement.unlocked ? tierColors[achievement.tier] : "from-muted to-muted/80"
+            "w-24 h-24 rounded-2xl flex items-center justify-center bg-gradient-to-br shadow-xl",
+            achievement.unlocked ? tierColors[achievement.tier] : "from-muted to-muted/80",
+            achievement.unlocked && "shadow-primary/20"
           )}
         >
           <Icon className={cn(
@@ -408,7 +411,7 @@ function AchievementDetail({ achievement }: { achievement: Achievement }) {
           )} />
         </motion.div>
 
-        <Badge variant={achievement.unlocked ? "default" : "secondary"} className="capitalize">
+        <Badge variant={achievement.unlocked ? "default" : "secondary"} className="capitalize bg-primary/10 text-primary border-primary/20">
           {achievement.tier}
         </Badge>
 
@@ -421,7 +424,7 @@ function AchievementDetail({ achievement }: { achievement: Achievement }) {
           </div>
         ) : (
           <div className="text-center">
-            <p className="text-success font-semibold flex items-center gap-2 justify-center">
+            <p className="text-primary font-semibold flex items-center gap-2 justify-center">
               <Sparkles className="w-4 h-4" />
               Conquista Desbloqueada!
             </p>

@@ -51,49 +51,61 @@ export default function Achievements() {
       <AppShell onLogout={handleLogout}>
         <div className="space-y-8 pb-6">
           {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-warning to-warning/60 mb-4">
-              <Trophy className="w-8 h-8 text-white" />
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 shadow-lg shadow-primary/25 mb-4">
+              <Trophy className="w-10 h-10 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-display font-bold text-foreground">Conquistas</h1>
+            <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Conquistas
+            </h1>
             <p className="text-muted-foreground">Acompanhe seu progresso e desbloqueie badges</p>
           </div>
 
           {/* Stats Overview */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <Card className="text-center">
-              <CardContent className="pt-4 pb-3">
-                <Flame className="w-6 h-6 mx-auto text-orange-500 mb-2" />
+            <Card className="glass-effect text-center group hover:border-primary/40 transition-all duration-300">
+              <CardContent className="pt-5 pb-4">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <Flame className="w-5 h-5 text-white" />
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.streak}</p>
-                <p className="text-xs text-muted-foreground">Streak</p>
+                <p className="text-xs text-muted-foreground mt-1">Streak</p>
               </CardContent>
             </Card>
-            <Card className="text-center">
-              <CardContent className="pt-4 pb-3">
-                <Zap className="w-6 h-6 mx-auto text-yellow-500 mb-2" />
+            <Card className="glass-effect text-center group hover:border-primary/40 transition-all duration-300">
+              <CardContent className="pt-5 pb-4">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="w-5 h-5 text-primary-foreground" />
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.xp}</p>
-                <p className="text-xs text-muted-foreground">XP Total</p>
+                <p className="text-xs text-muted-foreground mt-1">XP Total</p>
               </CardContent>
             </Card>
-            <Card className="text-center">
-              <CardContent className="pt-4 pb-3">
-                <BookOpen className="w-6 h-6 mx-auto text-blue-500 mb-2" />
+            <Card className="glass-effect text-center group hover:border-primary/40 transition-all duration-300">
+              <CardContent className="pt-5 pb-4">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.lessons}</p>
-                <p className="text-xs text-muted-foreground">Lições</p>
+                <p className="text-xs text-muted-foreground mt-1">Lições</p>
               </CardContent>
             </Card>
-            <Card className="text-center">
-              <CardContent className="pt-4 pb-3">
-                <Heart className="w-6 h-6 mx-auto text-pink-500 mb-2" />
+            <Card className="glass-effect text-center group hover:border-primary/40 transition-all duration-300">
+              <CardContent className="pt-5 pb-4">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.habits}</p>
-                <p className="text-xs text-muted-foreground">Hábitos</p>
+                <p className="text-xs text-muted-foreground mt-1">Hábitos</p>
               </CardContent>
             </Card>
-            <Card className="text-center col-span-2 sm:col-span-1">
-              <CardContent className="pt-4 pb-3">
-                <Target className="w-6 h-6 mx-auto text-green-500 mb-2" />
+            <Card className="glass-effect text-center col-span-2 sm:col-span-1 group hover:border-primary/40 transition-all duration-300">
+              <CardContent className="pt-5 pb-4">
+                <div className="w-10 h-10 mx-auto rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <Target className="w-5 h-5 text-white" />
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.readingDays}</p>
-                <p className="text-xs text-muted-foreground">Dias Lidos</p>
+                <p className="text-xs text-muted-foreground mt-1">Dias Lidos</p>
               </CardContent>
             </Card>
           </div>
