@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, Lock, Loader2, Eye, EyeOff, Sparkles, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,6 +120,15 @@ export default function Auth() {
   return (
     <PageTransition>
       <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+        {/* Back to home button */}
+        <Link 
+          to="/" 
+          className="absolute top-4 left-4 z-20 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-secondary/50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">Voltar</span>
+        </Link>
+
         {/* Background effects */}
         <div className="absolute inset-0 section-pattern">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
