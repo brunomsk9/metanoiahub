@@ -5,7 +5,7 @@ import {
   Church,
 } from "lucide-react";
 import { memo } from "react";
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+import { MetanoiaLogo } from "@/components/MetanoiaLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useChurch } from "@/contexts/ChurchContext";
 import {
@@ -33,14 +33,7 @@ export const DesktopHeader = memo(function DesktopHeader({
       <div className="flex items-center justify-between w-full px-6">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <img
-              src={metanoiaLogo}
-              alt="Metanoia Hub"
-              className="w-10 h-10 object-contain"
-            />
-            <div className="absolute -inset-1 bg-primary/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
+          <MetanoiaLogo size="md" />
           <div>
             <span className="font-display font-bold text-foreground text-base tracking-tight">
               Metanoia <span className="text-gradient">Hub</span>

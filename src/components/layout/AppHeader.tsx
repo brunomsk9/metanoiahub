@@ -21,7 +21,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+import { MetanoiaLogo } from "@/components/MetanoiaLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useChurch } from "@/contexts/ChurchContext";
@@ -162,11 +162,7 @@ export const AppHeader = memo(function AppHeader({
             <SheetContent side="left" className="w-[300px] p-0 bg-card border-border">
               <SheetHeader className="p-5 border-b border-border/50">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={metanoiaLogo}
-                    alt="Metanoia Hub"
-                    className="w-11 h-11 object-contain"
-                  />
+                  <MetanoiaLogo size="lg" />
                   <div>
                     <SheetTitle className="text-left text-base font-bold">
                       Metanoia <span className="text-gradient">Hub</span>
@@ -352,11 +348,7 @@ export const AppHeader = memo(function AppHeader({
             </Link>
           ) : isHome ? (
             <div className="flex items-center gap-2.5">
-              <img
-                src={metanoiaLogo}
-                alt="Metanoia Hub"
-                className="w-9 h-9 object-contain"
-              />
+              <MetanoiaLogo size="md" />
               <div className="hidden sm:block">
                 <span className="font-display font-bold text-foreground text-sm tracking-tight">
                   Metanoia <span className="text-gradient">Hub</span>
