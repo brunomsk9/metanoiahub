@@ -1917,6 +1917,16 @@ export type Database = {
         Args: { _church_id: string }
         Returns: number
       }
+      get_profile_with_phone: {
+        Args: { profile_id: string }
+        Returns: {
+          church_id: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          nome: string
+          telefone: string
+        }[]
+      }
       get_public_churches: {
         Args: never
         Returns: {
@@ -1992,6 +2002,23 @@ export type Database = {
           content: string
           resource_id: string
           similarity: number
+        }[]
+      }
+      search_newsletter_by_email: {
+        Args: { email_search: string }
+        Returns: {
+          email: string
+          id: string
+          is_subscribed: boolean
+          nome: string
+        }[]
+      }
+      search_profiles_by_phone: {
+        Args: { phone_search: string }
+        Returns: {
+          id: string
+          nome: string
+          telefone: string
         }[]
       }
       user_belongs_to_church: {
