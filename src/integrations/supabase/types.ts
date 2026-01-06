@@ -1745,16 +1745,7 @@ export type Database = {
       }
     }
     Views: {
-      v_user_auth_details: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          email_confirmed_at: string | null
-          id: string | null
-          last_sign_in_at: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       can_manage_church_content: {
