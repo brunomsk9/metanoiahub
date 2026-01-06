@@ -260,140 +260,185 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
         {isAdmin && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
+              <Button onClick={() => handleOpenDialog()} variant="default">
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Recurso
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-white border-gray-200 max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-gray-900">{editing ? 'Editar Recurso' : 'Novo Recurso'}</DialogTitle>
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl border-primary/20">
+              <DialogHeader className="pb-4 border-b border-primary/10">
+                <DialogTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+                  {editing ? <Pencil className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-primary" />}
+                  {editing ? 'Editar Recurso' : 'Novo Recurso'}
+                </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label className="text-gray-700">Título *</Label>
-                <Input
-                  value={form.titulo}
-                  onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-                  placeholder="Ex: Como lidar com o luto"
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              
+              <div className="space-y-5 py-4">
+                {/* Título */}
                 <div className="space-y-2">
-                  <Label className="text-gray-700">Categoria</Label>
-                  <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v as ResourceCategory })}>
-                    <SelectTrigger className="border-gray-300 bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="sos">S.O.S.</SelectItem>
-                      <SelectItem value="apoio">Apoio</SelectItem>
-                      <SelectItem value="devocional">Devocional</SelectItem>
-                      <SelectItem value="estudo">Estudo</SelectItem>
-                      <SelectItem value="livro">Livro</SelectItem>
-                      <SelectItem value="musica">Música</SelectItem>
-                      <SelectItem value="pregacao">Pregação</SelectItem>
-                      <SelectItem value="playbook">Playbook</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Autor</Label>
+                  <Label className="text-sm font-medium text-foreground">
+                    Título <span className="text-destructive">*</span>
+                  </Label>
                   <Input
-                    value={form.autor}
-                    onChange={(e) => setForm({ ...form, autor: e.target.value })}
-                    placeholder="Ex: C.S. Lewis"
-                    className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
+                    value={form.titulo}
+                    onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+                    placeholder="Ex: Como lidar com o luto"
+                    className="bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20"
                   />
                 </div>
-              </div>
-              
-              {form.categoria === 'playbook' && (
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Ministério *</Label>
-                  <Select value={form.ministry_id} onValueChange={(v) => setForm({ ...form, ministry_id: v })}>
-                    <SelectTrigger className="border-gray-300 bg-white">
-                      <SelectValue placeholder="Selecione o ministério" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      {ministries.map((ministry) => (
-                        <SelectItem key={ministry.id} value={ministry.id}>
-                          {ministry.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Voluntários só verão playbooks do seu ministério
-                  </p>
+                
+                {/* Categoria e Autor */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground">Categoria</Label>
+                    <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v as ResourceCategory })}>
+                      <SelectTrigger className="bg-background/50 border-border/50 focus:border-primary">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border z-50">
+                        <SelectItem value="sos">S.O.S.</SelectItem>
+                        <SelectItem value="apoio">Apoio</SelectItem>
+                        <SelectItem value="devocional">Devocional</SelectItem>
+                        <SelectItem value="estudo">Estudo</SelectItem>
+                        <SelectItem value="livro">Livro</SelectItem>
+                        <SelectItem value="musica">Música</SelectItem>
+                        <SelectItem value="pregacao">Pregação</SelectItem>
+                        <SelectItem value="playbook">Playbook</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-foreground">Autor</Label>
+                    <Input
+                      value={form.autor}
+                      onChange={(e) => setForm({ ...form, autor: e.target.value })}
+                      placeholder="Ex: C.S. Lewis"
+                      className="bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20"
+                    />
+                  </div>
                 </div>
-              )}
-              
-              <div className="space-y-2">
-                <Label className="text-gray-700">Descrição</Label>
-                <Textarea
-                  value={form.descricao}
-                  onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                  placeholder="Descrição do recurso..."
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
-                />
+                
+                {/* Ministério (apenas para playbook) */}
+                {form.categoria === 'playbook' && (
+                  <div className="space-y-2 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <Label className="text-sm font-medium text-foreground">
+                      Ministério <span className="text-destructive">*</span>
+                    </Label>
+                    <Select value={form.ministry_id} onValueChange={(v) => setForm({ ...form, ministry_id: v })}>
+                      <SelectTrigger className="bg-background/50 border-border/50 focus:border-primary">
+                        <SelectValue placeholder="Selecione o ministério" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border z-50">
+                        {ministries.map((ministry) => (
+                          <SelectItem key={ministry.id} value={ministry.id}>
+                            {ministry.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Voluntários só verão playbooks do seu ministério
+                    </p>
+                  </div>
+                )}
+                
+                {/* Descrição */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">Descrição</Label>
+                  <Textarea
+                    value={form.descricao}
+                    onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+                    placeholder="Descrição do recurso..."
+                    rows={3}
+                    className="bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 resize-none"
+                  />
+                </div>
+                
+                {/* Seção de Arquivos */}
+                <div className="space-y-4 p-4 rounded-lg bg-muted/30 border border-border/30">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    Arquivos e Links
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground">Imagem de Capa</Label>
+                      <FileUpload
+                        value={form.imagem_capa}
+                        onChange={(url) => setForm({ ...form, imagem_capa: url })}
+                        accept=".jpg,.jpeg,.png,.webp"
+                        folder="recursos/capas"
+                        placeholder="Cole uma URL ou faça upload"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                        <ExternalLink className="h-3 w-3" />
+                        Link Externo (Spotify, YouTube, etc.)
+                      </Label>
+                      <Input
+                        value={form.link_externo}
+                        onChange={(e) => setForm({ ...form, link_externo: e.target.value })}
+                        placeholder="https://open.spotify.com/..."
+                        className="bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <Play className="h-3 w-3" />
+                          Vídeo
+                        </Label>
+                        <FileUpload
+                          value={form.video_url}
+                          onChange={(url) => setForm({ ...form, video_url: url })}
+                          accept=".mp4,.webm,.mov"
+                          folder="recursos/videos"
+                          placeholder="URL ou upload"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <FileText className="h-3 w-3" />
+                          PDF/Documento
+                        </Label>
+                        <FileUpload
+                          value={form.url_pdf}
+                          onChange={(url) => setForm({ ...form, url_pdf: url })}
+                          accept=".pdf,.doc,.docx"
+                          folder="recursos/pdfs"
+                          placeholder="URL ou upload"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tags */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">Tags (separadas por vírgula)</Label>
+                  <Input
+                    value={form.tags}
+                    onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                    placeholder="luto, ansiedade, medo"
+                    className="bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20"
+                  />
+                </div>
+                
+                {/* Botão de salvar */}
+                <div className="pt-4 border-t border-primary/10">
+                  <Button onClick={handleSave} disabled={saving} className="w-full">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    {editing ? 'Salvar Alterações' : 'Criar Recurso'}
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">Imagem de Capa</Label>
-                <FileUpload
-                  value={form.imagem_capa}
-                  onChange={(url) => setForm({ ...form, imagem_capa: url })}
-                  accept=".jpg,.jpeg,.png,.webp"
-                  folder="recursos/capas"
-                  placeholder="Cole uma URL ou faça upload da imagem"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">Link Externo (Spotify, YouTube, etc.)</Label>
-                <Input
-                  value={form.link_externo}
-                  onChange={(e) => setForm({ ...form, link_externo: e.target.value })}
-                  placeholder="https://open.spotify.com/..."
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">Vídeo (URL ou Upload)</Label>
-                <FileUpload
-                  value={form.video_url}
-                  onChange={(url) => setForm({ ...form, video_url: url })}
-                  accept=".mp4,.webm,.mov"
-                  folder="recursos/videos"
-                  placeholder="Cole uma URL do YouTube ou faça upload"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">PDF ou Documento</Label>
-                <FileUpload
-                  value={form.url_pdf}
-                  onChange={(url) => setForm({ ...form, url_pdf: url })}
-                  accept=".pdf,.doc,.docx"
-                  folder="recursos/pdfs"
-                  placeholder="Cole uma URL ou faça upload do PDF"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-700">Tags (separadas por vírgula)</Label>
-                <Input
-                  value={form.tags}
-                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                  placeholder="luto, ansiedade, medo"
-                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
-                />
-              </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {editing ? 'Salvar Alterações' : 'Criar Recurso'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
 
