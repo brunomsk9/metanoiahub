@@ -314,7 +314,7 @@ export default function Dashboard() {
                 <CollapsibleSection 
                   title="Encontros" 
                   icon={<Users className="w-4 h-4" />}
-                  defaultOpen={false}
+                  defaultOpen={true}
                 >
                   <Suspense fallback={<Skeleton className="h-20" />}>
                     <MeetingsManager />
