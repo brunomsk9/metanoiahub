@@ -6,7 +6,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChurch } from "@/contexts/ChurchContext";
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+import { MetanoiaLogo } from "@/components/MetanoiaLogo";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -131,12 +131,8 @@ export default function Auth() {
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center mb-4">
               <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl scale-150" />
-                <img 
-                  src={metanoiaLogo} 
-                  alt="Metanoia Hub" 
-                  className="relative w-20 h-20 object-contain drop-shadow-2xl" 
-                />
+                <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-xl scale-150" />
+                <MetanoiaLogo size="lg" className="relative w-24 h-24 drop-shadow-2xl" />
               </div>
             </div>
             <h1 className="text-3xl font-bold">
