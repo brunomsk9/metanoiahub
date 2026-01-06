@@ -1765,7 +1765,39 @@ export type Database = {
         Args: { _discipulador_id: string }
         Returns: number
       }
+      get_all_ministry_volunteers_for_leader: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          church_id: string
+          current_streak: number
+          funcao: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_batizado: boolean
+          ministry_id: string
+          ministry_name: string
+          nome: string
+          role: Database["public"]["Enums"]["app_role"]
+          xp_points: number
+        }[]
+      }
       get_max_disciples_limit: { Args: { _church_id: string }; Returns: number }
+      get_ministry_volunteer_profiles: {
+        Args: { ministry_id_param: string }
+        Returns: {
+          avatar_url: string
+          church_id: string
+          current_streak: number
+          funcao: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_batizado: boolean
+          nome: string
+          role: Database["public"]["Enums"]["app_role"]
+          xp_points: number
+        }[]
+      }
       get_public_churches: {
         Args: never
         Returns: {
