@@ -19,7 +19,7 @@ import {
   Church,
   Trophy
 } from "lucide-react";
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+import { MetanoiaLogo } from "@/components/MetanoiaLogo";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -126,7 +126,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
           {/* Logo + Church Tag */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2.5">
-              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+              <MetanoiaLogo size="sm" />
               <span className="font-display font-semibold text-foreground text-sm tracking-tight">
                 Metanoia Hub
               </span>
@@ -345,7 +345,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
               <SheetHeader className="p-4 border-b border-border/50">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2.5">
-                    <img src={metanoiaLogo} alt="Metanoia Hub" className="w-8 h-8 object-contain" />
+                    <MetanoiaLogo size="sm" />
                     <SheetTitle className="text-left text-sm font-semibold">
                       Metanoia Hub
                     </SheetTitle>
@@ -516,7 +516,7 @@ export const Sidebar = memo(function Sidebar({ onLogout, userName }: SidebarProp
 
         {/* Logo + Church Tag */}
         <div className="flex items-center gap-2">
-          <img src={metanoiaLogo} alt="Metanoia Hub" className="w-7 h-7 object-contain" />
+          <MetanoiaLogo size="sm" />
           {church && (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30">
               <Church className="w-2.5 h-2.5 text-primary" />
