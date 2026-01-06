@@ -1812,6 +1812,62 @@ export type Database = {
           xp_points: number
         }[]
       }
+      get_church_member_profile: {
+        Args: { member_id: string }
+        Returns: {
+          avatar_url: string
+          batizou_na_igreja: boolean
+          church_id: string
+          created_at: string
+          current_streak: number
+          data_batismo: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_batizado: boolean
+          is_novo_convertido: boolean
+          is_transferido: boolean
+          needs_password_change: boolean
+          nome: string
+          onboarding_completed: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          xp_points: number
+        }[]
+      }
+      get_church_member_profiles: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          batizou_na_igreja: boolean
+          church_id: string
+          created_at: string
+          current_streak: number
+          data_batismo: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_batizado: boolean
+          is_novo_convertido: boolean
+          is_transferido: boolean
+          needs_password_change: boolean
+          nome: string
+          onboarding_completed: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          xp_points: number
+        }[]
+      }
+      get_church_member_stats: {
+        Args: never
+        Returns: {
+          total_batizados: number
+          total_by_gender: Json
+          total_by_role: Json
+          total_members: number
+          total_novos_convertidos: number
+          total_onboarding_completed: number
+          total_transferidos: number
+        }[]
+      }
       get_disciple_profile: {
         Args: { discipulo_id_param: string }
         Returns: {
