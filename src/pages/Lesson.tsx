@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, ArrowUp, Focus, Minimize2 } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
@@ -706,7 +707,12 @@ export default function Lesson() {
                     <div className="prose max-w-none animate-slide-up">
                       <div 
                         className="text-muted-foreground text-sm leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: lesson.texto_apoio }}
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(lesson.texto_apoio, {
+                            ALLOWED_TAGS: ['p', 'strong', 'em', 'ul', 'ol', 'li', 'h2', 'h3', 'a', 'blockquote', 'br'],
+                            ALLOWED_ATTR: ['href', 'target', 'rel']
+                          })
+                        }}
                       />
                     </div>
                   )}
