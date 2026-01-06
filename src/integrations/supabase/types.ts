@@ -1896,6 +1896,10 @@ export type Database = {
           xp_points: number
         }[]
       }
+      get_newsletter_subscriber_count: {
+        Args: { _church_id: string }
+        Returns: number
+      }
       get_public_churches: {
         Args: never
         Returns: {
