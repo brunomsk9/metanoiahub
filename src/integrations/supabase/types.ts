@@ -1924,6 +1924,16 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      get_user_auth_details_secure: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          id: string
+          last_sign_in_at: string
+        }[]
+      }
       get_user_church_id: { Args: { _user_id: string }; Returns: string }
       get_user_emails: {
         Args: never
