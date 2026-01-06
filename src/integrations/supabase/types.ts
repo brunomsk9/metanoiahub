@@ -1765,6 +1765,36 @@ export type Database = {
         Args: { _discipulador_id: string }
         Returns: number
       }
+      get_all_disciples_for_discipulador: {
+        Args: never
+        Returns: {
+          academia_nivel_1: boolean
+          academia_nivel_2: boolean
+          academia_nivel_3: boolean
+          academia_nivel_4: boolean
+          alicerce_completed_at: string
+          alicerce_completed_presencial: boolean
+          avatar_url: string
+          batizou_na_igreja: boolean
+          church_id: string
+          conexao_inicial_1: boolean
+          conexao_inicial_2: boolean
+          current_streak: number
+          data_batismo: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_batizado: boolean
+          is_novo_convertido: boolean
+          is_transferido: boolean
+          nome: string
+          onboarding_completed: boolean
+          relationship_id: string
+          relationship_started_at: string
+          relationship_status: string
+          role: Database["public"]["Enums"]["app_role"]
+          xp_points: number
+        }[]
+      }
       get_all_ministry_volunteers_for_leader: {
         Args: never
         Returns: {
@@ -1779,6 +1809,27 @@ export type Database = {
           ministry_name: string
           nome: string
           role: Database["public"]["Enums"]["app_role"]
+          xp_points: number
+        }[]
+      }
+      get_disciple_profile: {
+        Args: { discipulo_id_param: string }
+        Returns: {
+          avatar_url: string
+          batizou_na_igreja: boolean
+          church_id: string
+          created_at: string
+          current_streak: number
+          data_batismo: string
+          genero: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_batizado: boolean
+          is_novo_convertido: boolean
+          is_transferido: boolean
+          nome: string
+          onboarding_completed: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
           xp_points: number
         }[]
       }
