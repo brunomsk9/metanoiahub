@@ -261,12 +261,16 @@ export default function Index() {
         {/* Journey Section */}
         <section className="py-24 px-4 sm:px-6 section-pattern">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-12">
               <p className="text-primary font-semibold mb-3 uppercase tracking-wider text-sm">A Jornada</p>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground mb-6">
                 Do novo convertido ao<br />
                 <span className="text-gradient">multiplicador de vidas</span>
               </h2>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto font-serif italic">
+                "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
+                <span className="block text-primary text-base mt-2 not-italic font-semibold">— N. T. Wright</span>
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -343,19 +347,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Quote Section */}
-        <section className="py-24 px-4 sm:px-6 section-pattern">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="verse-card inline-block text-left">
-              <blockquote>
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-serif italic text-foreground leading-relaxed mb-6">
-                  "O objetivo do discipulado é aprender a ser humano da maneira que Jesus ensinou."
-                </p>
-                <footer className="text-primary font-semibold">— N. T. Wright</footer>
-              </blockquote>
-            </div>
-          </div>
-        </section>
 
         {/* About Section */}
         <section className="py-24 px-4 sm:px-6 bg-card/50">
