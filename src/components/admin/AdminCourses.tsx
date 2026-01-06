@@ -182,7 +182,7 @@ export function AdminCourses() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -190,10 +190,10 @@ export function AdminCourses() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <p className="text-gray-500">{courses.length} curso(s) cadastrado(s)</p>
+        <p className="text-muted-foreground">{courses.length} curso(s) cadastrado(s)</p>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} className="bg-amber-600 hover:bg-amber-700 text-white">
+            <Button onClick={() => handleOpenDialog()} variant="default">
               <Plus className="h-4 w-4 mr-2" />
               Novo Curso
             </Button>
@@ -297,50 +297,50 @@ export function AdminCourses() {
         </Dialog>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden">
         {courses.length === 0 ? (
           <div className="p-12 text-center">
-            <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhum curso cadastrado ainda.</p>
-            <p className="text-sm text-gray-400 mt-1">Crie uma trilha primeiro, depois adicione cursos.</p>
+            <GraduationCap className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhum curso cadastrado ainda.</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Crie uma trilha primeiro, depois adicione cursos.</p>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-muted/30 border-b border-border/50">
               <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ordem</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Trilha</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Público</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Ordem</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Título</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Trilha</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Público</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border/30">
               {paginatedCourses.map((course) => (
-                <tr key={course.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-500">{course.ordem}</td>
+                <tr key={course.id} className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3 px-4 text-muted-foreground">{course.ordem}</td>
                   <td className="py-3 px-4">
                     <div>
-                      <p className="font-medium text-gray-900">{course.titulo}</p>
+                      <p className="font-medium text-foreground">{course.titulo}</p>
                       {course.duracao_minutos ? (
-                        <p className="text-sm text-gray-500">{course.duracao_minutos} min</p>
+                        <p className="text-sm text-muted-foreground">{course.duracao_minutos} min</p>
                       ) : null}
                     </div>
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell">
-                    <span className="text-gray-600">{getTrackName(course.track_id)}</span>
+                    <span className="text-muted-foreground">{getTrackName(course.track_id)}</span>
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
                       {getPublicoAlvoLabel(course.publico_alvo)}
                     </span>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(course)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(course)} className="h-8 w-8 text-muted-foreground hover:text-foreground">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

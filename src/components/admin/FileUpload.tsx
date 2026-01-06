@@ -89,13 +89,13 @@ export function FileUpload({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="border-gray-300 focus:border-amber-500 focus:ring-amber-500 pr-10"
+            className="bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 pr-10"
           />
           {value && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -114,7 +114,7 @@ export function FileUpload({
           variant="outline"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="border-gray-300 hover:bg-gray-50"
+          className="border-border/50 hover:bg-muted/50"
         >
           {uploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -126,10 +126,10 @@ export function FileUpload({
 
       {/* Preview */}
       {value && (
-        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/30">
           {isImage ? (
             <>
-              <ImageIcon className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <ImageIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
               <img
                 src={value}
                 alt="Preview"
@@ -138,24 +138,24 @@ export function FileUpload({
             </>
           ) : isPdf ? (
             <>
-              <FileText className="h-4 w-4 text-red-600 flex-shrink-0" />
+              <FileText className="h-4 w-4 text-red-500 flex-shrink-0" />
               <a
                 href={value}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-amber-600 hover:underline truncate"
+                className="text-sm text-primary hover:underline truncate"
               >
                 {value.split('/').pop()}
               </a>
             </>
           ) : (
             <>
-              <Link className="h-4 w-4 text-gray-600 flex-shrink-0" />
+              <Link className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <a
                 href={value}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-amber-600 hover:underline truncate"
+                className="text-sm text-primary hover:underline truncate"
               >
                 {value}
               </a>

@@ -442,30 +442,30 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
         )}
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden">
         {resources.length === 0 ? (
           <div className="p-12 text-center">
-            <LifeBuoy className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhum recurso cadastrado ainda.</p>
+            <LifeBuoy className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhum recurso cadastrado ainda.</p>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-muted/30 border-b border-border/50">
               <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Tags</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Título</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Categoria</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Tags</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border/30">
               {resources.map((resource) => (
-                <tr key={resource.id} className="hover:bg-gray-50">
+                <tr key={resource.id} className="hover:bg-muted/20 transition-colors">
                   <td className="py-3 px-4">
                     <div>
-                      <p className="font-medium text-gray-900">{resource.titulo}</p>
+                      <p className="font-medium text-foreground">{resource.titulo}</p>
                       {resource.descricao && (
-                        <p className="text-sm text-gray-500 truncate max-w-xs">{resource.descricao}</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-xs">{resource.descricao}</p>
                       )}
                     </div>
                   </td>
@@ -484,12 +484,12 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                   <td className="py-3 px-4 hidden md:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {(resource.tags || []).slice(0, 3).map((tag) => (
-                        <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-600">
+                        <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded bg-muted/50 text-muted-foreground">
                           {tag}
                         </span>
                       ))}
                       {(resource.tags || []).length > 3 && (
-                        <span className="text-xs text-gray-400">+{(resource.tags || []).length - 3}</span>
+                        <span className="text-xs text-muted-foreground/50">+{(resource.tags || []).length - 3}</span>
                       )}
                     </div>
                   </td>

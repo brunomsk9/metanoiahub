@@ -70,15 +70,15 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escreva o conte
   };
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+    <div className="border border-border/50 rounded-xl overflow-hidden bg-card/50">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-1 p-2 border-b border-gray-200 bg-gray-50">
+      <div className="flex flex-wrap gap-1 p-2 border-b border-border/50 bg-muted/30">
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`h-8 w-8 ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('bold') ? 'bg-primary/20 text-primary' : ''}`}
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -87,19 +87,19 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escreva o conte
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`h-8 w-8 ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('italic') ? 'bg-primary/20 text-primary' : ''}`}
         >
           <Italic className="h-4 w-4" />
         </Button>
         
-        <div className="w-px h-8 bg-gray-200 mx-1" />
+        <div className="w-px h-8 bg-border/50 mx-1" />
         
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`h-8 w-8 ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('heading', { level: 2 }) ? 'bg-primary/20 text-primary' : ''}`}
         >
           <Heading2 className="h-4 w-4" />
         </Button>
@@ -108,19 +108,19 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escreva o conte
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`h-8 w-8 ${editor.isActive('heading', { level: 3 }) ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('heading', { level: 3 }) ? 'bg-primary/20 text-primary' : ''}`}
         >
           <Heading3 className="h-4 w-4" />
         </Button>
         
-        <div className="w-px h-8 bg-gray-200 mx-1" />
+        <div className="w-px h-8 bg-border/50 mx-1" />
         
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`h-8 w-8 ${editor.isActive('bulletList') ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('bulletList') ? 'bg-primary/20 text-primary' : ''}`}
         >
           <List className="h-4 w-4" />
         </Button>
@@ -129,7 +129,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escreva o conte
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`h-8 w-8 ${editor.isActive('orderedList') ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('orderedList') ? 'bg-primary/20 text-primary' : ''}`}
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
@@ -138,24 +138,24 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escreva o conte
           variant="ghost"
           size="icon"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`h-8 w-8 ${editor.isActive('blockquote') ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('blockquote') ? 'bg-primary/20 text-primary' : ''}`}
         >
           <Quote className="h-4 w-4" />
         </Button>
         
-        <div className="w-px h-8 bg-gray-200 mx-1" />
+        <div className="w-px h-8 bg-border/50 mx-1" />
         
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={addLink}
-          className={`h-8 w-8 ${editor.isActive('link') ? 'bg-gray-200' : ''}`}
+          className={`h-8 w-8 ${editor.isActive('link') ? 'bg-primary/20 text-primary' : ''}`}
         >
           <LinkIcon className="h-4 w-4" />
         </Button>
         
-        <div className="w-px h-8 bg-gray-200 mx-1" />
+        <div className="w-px h-8 bg-border/50 mx-1" />
         
         <Button
           type="button"

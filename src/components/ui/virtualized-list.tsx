@@ -94,9 +94,9 @@ export const VirtualizedTable = memo(function VirtualizedTable<T>({
 
   if (items.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-muted/30 border-b border-border/50">
             {header}
           </thead>
         </table>
@@ -108,9 +108,9 @@ export const VirtualizedTable = memo(function VirtualizedTable<T>({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden">
       <table className="w-full">
-        <thead className="bg-gray-50 border-b border-gray-200">
+        <thead className="bg-muted/30 border-b border-border/50">
           {header}
         </thead>
       </table>
@@ -140,7 +140,7 @@ export const VirtualizedTable = memo(function VirtualizedTable<T>({
                     display: 'table',
                     tableLayout: 'fixed',
                   }}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-border/30 hover:bg-muted/20 transition-colors"
                 >
                   {renderRow(items[virtualItem.index], virtualItem.index)}
                 </tr>
