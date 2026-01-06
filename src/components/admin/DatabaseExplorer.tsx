@@ -90,8 +90,6 @@ const AVAILABLE_TABLES = [
   'ai_settings',
   'ai_prompt_history',
   'super_admin_audit_logs',
-  // Views (somente leitura)
-  'v_user_auth_details',
 ] as const;
 
 type TableName = typeof AVAILABLE_TABLES[number];
@@ -354,9 +352,9 @@ export function DatabaseExplorer() {
           .replace(/\s*\.\s*/g, '.');
 
         // Este editor não executa SQL arbitrário; ele traduz SELECT simples para chamadas do SDK.
-        // Então, funções como get_user_auth_details() não funcionam em "FROM".
+        // Funções como get_user_auth_details_secure() precisam ser chamadas via RPC.
         if (rawRelationToken.includes('(') || rawRelationToken.includes(')')) {
-          throw new Error('Este editor suporta SELECT apenas em tabelas/views. Para auth.users, use: SELECT * FROM public.v_user_auth_details');
+          throw new Error('Este editor suporta SELECT apenas em tabelas. Para auth.users, use a função get_user_auth_details_secure() via RPC.');
         }
 
         const relationParts = rawRelationToken.split('.').map((p) => p.trim()).filter(Boolean);
@@ -1513,7 +1511,21 @@ export function DatabaseExplorer() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setSqlQuery("SELECT * FROM public.v_user_auth_details LIMIT 50")}
+                    onClick={async () => {
+                      // Call the secure function via RPC
+                      setLoading(true);
+                      setQueryError(null);
+                      try {
+                        const { data, error } = await supabase.rpc('get_user_auth_details_secure');
+                        if (error) throw error;
+                        setQueryResult(data || []);
+                      } catch (err: any) {
+                        setQueryError(err.message || 'Erro ao buscar dados de autenticação');
+                        setQueryResult([]);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
                   >
                     <Search className="h-3 w-3 mr-1" /> Auth Usuários
                   </Button>
