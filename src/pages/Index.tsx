@@ -28,6 +28,11 @@ import { MetanoiaLogo } from "@/components/MetanoiaLogo";
 export default function Index() {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
+  const [stats, setStats] = useState([
+    { value: "—", label: "Discípulos ativos" },
+    { value: "—", label: "Discipuladores" },
+    { value: "—", label: "Trilhas disponíveis" },
+  ]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -46,6 +51,33 @@ export default function Index() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Fetch real stats from database
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [profilesRes, rolesRes, tracksRes] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('user_roles').select('id', { count: 'exact', head: true }).eq('role', 'discipulador'),
+          supabase.from('tracks').select('id', { count: 'exact', head: true }),
+        ]);
+
+        const totalUsers = profilesRes.count || 0;
+        const discipuladores = rolesRes.count || 0;
+        const tracks = tracksRes.count || 0;
+
+        setStats([
+          { value: totalUsers > 0 ? totalUsers.toString() : "—", label: "Membros ativos" },
+          { value: discipuladores > 0 ? discipuladores.toString() : "—", label: "Discipuladores" },
+          { value: tracks > 0 ? tracks.toString() : "—", label: "Trilhas disponíveis" },
+        ]);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   if (isChecking) {
     return (
@@ -102,12 +134,6 @@ export default function Index() {
     { step: "02", title: "Jornada Metanoia", description: "Fundamentos da fé cristã" },
     { step: "03", title: "Academia", description: "4 níveis de formação avançada" },
     { step: "04", title: "Multiplicação", description: "Forme novos discipuladores" },
-  ];
-
-  const stats = [
-    { value: "500+", label: "Discípulos ativos" },
-    { value: "50+", label: "Discipuladores" },
-    { value: "12", label: "Trilhas disponíveis" },
   ];
 
   return (
