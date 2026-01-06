@@ -84,14 +84,12 @@ export function NewsletterManager() {
     queryFn: async () => {
       if (!churchId) return 0;
       
-      const { count, error } = await supabase
-        .from("newsletter_subscribers")
-        .select("*", { count: "exact", head: true })
-        .eq("church_id", churchId)
-        .eq("is_subscribed", true);
+      // Use secure RPC function to get count without accessing individual emails
+      const { data, error } = await supabase
+        .rpc("get_newsletter_subscriber_count", { _church_id: churchId });
 
       if (error) throw error;
-      return count || 0;
+      return data || 0;
     },
     enabled: !!churchId,
   });
