@@ -708,9 +708,12 @@ export type Database = {
           church_id: string
           created_at: string
           email: string
+          email_encrypted: string | null
+          email_hash: string | null
           id: string
           is_subscribed: boolean
           nome: string | null
+          nome_encrypted: string | null
           unsubscribed_at: string | null
           user_id: string | null
         }
@@ -718,9 +721,12 @@ export type Database = {
           church_id: string
           created_at?: string
           email: string
+          email_encrypted?: string | null
+          email_hash?: string | null
           id?: string
           is_subscribed?: boolean
           nome?: string | null
+          nome_encrypted?: string | null
           unsubscribed_at?: string | null
           user_id?: string | null
         }
@@ -728,9 +734,12 @@ export type Database = {
           church_id?: string
           created_at?: string
           email?: string
+          email_encrypted?: string | null
+          email_hash?: string | null
           id?: string
           is_subscribed?: boolean
           nome?: string | null
+          nome_encrypted?: string | null
           unsubscribed_at?: string | null
           user_id?: string | null
         }
@@ -822,6 +831,8 @@ export type Database = {
           onboarding_completed: boolean
           role: Database["public"]["Enums"]["app_role"]
           telefone: string | null
+          telefone_encrypted: string | null
+          telefone_hash: string | null
           updated_at: string
           xp_points: number
         }
@@ -842,6 +853,8 @@ export type Database = {
           onboarding_completed?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           telefone?: string | null
+          telefone_encrypted?: string | null
+          telefone_hash?: string | null
           updated_at?: string
           xp_points?: number
         }
@@ -862,6 +875,8 @@ export type Database = {
           onboarding_completed?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           telefone?: string | null
+          telefone_encrypted?: string | null
+          telefone_hash?: string | null
           updated_at?: string
           xp_points?: number
         }
