@@ -2075,6 +2075,13 @@ export type Database = {
           rotated_count: number
         }[]
       }
+      rotate_all_subscriber_keys: {
+        Args: { batch_size?: number; new_version: number }
+        Returns: {
+          remaining_count: number
+          rotated_count: number
+        }[]
+      }
       rotate_profile_key: {
         Args: { new_version: number; profile_id: string }
         Returns: boolean
