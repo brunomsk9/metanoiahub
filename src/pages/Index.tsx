@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
-import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
+import { MetanoiaLogo } from "@/components/MetanoiaLogo";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -117,7 +117,7 @@ export default function Index() {
         <header className="fixed top-0 left-0 right-0 z-50 glass">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-10 h-10 object-contain" />
+              <MetanoiaLogo size="md" />
               <span className="font-bold text-lg text-foreground hidden sm:block">Metanoia Hub</span>
             </div>
             <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function Index() {
         <footer className="py-8 px-4 sm:px-6 border-t border-border">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img src={metanoiaLogo} alt="Metanoia Hub" className="w-10 h-10 object-contain" />
+              <MetanoiaLogo size="md" />
               <div>
                 <span className="font-bold text-foreground">Metanoia Hub</span>
                 <p className="text-xs text-muted-foreground">Plataforma de Discipulado</p>
