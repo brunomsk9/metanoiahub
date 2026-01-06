@@ -703,6 +703,107 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          church_id: string
+          created_at: string
+          email: string
+          id: string
+          is_subscribed: boolean
+          nome: string | null
+          unsubscribed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          email: string
+          id?: string
+          is_subscribed?: boolean
+          nome?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_subscribed?: boolean
+          nome?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletters: {
+        Row: {
+          church_id: string
+          conteudo: string
+          created_at: string
+          created_by: string
+          id: string
+          recipients_count: number | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          conteudo: string
+          created_at?: string
+          created_by: string
+          id?: string
+          recipients_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          conteudo?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          recipients_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletters_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1082,6 +1183,63 @@ export type Database = {
             columns: ["volunteer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_attendance: {
+        Row: {
+          adultos: number
+          church_id: string
+          created_at: string
+          criancas: number
+          id: string
+          notas: string | null
+          registered_by: string
+          service_id: string
+          total_geral: number | null
+          updated_at: string
+          voluntarios: number
+        }
+        Insert: {
+          adultos?: number
+          church_id: string
+          created_at?: string
+          criancas?: number
+          id?: string
+          notas?: string | null
+          registered_by: string
+          service_id: string
+          total_geral?: number | null
+          updated_at?: string
+          voluntarios?: number
+        }
+        Update: {
+          adultos?: number
+          church_id?: string
+          created_at?: string
+          criancas?: number
+          id?: string
+          notas?: string | null
+          registered_by?: string
+          service_id?: string
+          total_geral?: number | null
+          updated_at?: string
+          voluntarios?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_attendance_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_attendance_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: true
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
