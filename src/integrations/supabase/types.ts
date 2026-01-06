@@ -343,6 +343,36 @@ export type Database = {
           },
         ]
       }
+      encryption_keys: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          key_hash: string
+          retired_at: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash: string
+          retired_at?: string | null
+          version: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash?: string
+          retired_at?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       habit_achievements: {
         Row: {
           achieved_at: string
@@ -710,6 +740,7 @@ export type Database = {
           email: string
           email_encrypted: string | null
           email_hash: string | null
+          encryption_key_version: number | null
           id: string
           is_subscribed: boolean
           nome: string | null
@@ -723,6 +754,7 @@ export type Database = {
           email: string
           email_encrypted?: string | null
           email_hash?: string | null
+          encryption_key_version?: number | null
           id?: string
           is_subscribed?: boolean
           nome?: string | null
@@ -736,6 +768,7 @@ export type Database = {
           email?: string
           email_encrypted?: string | null
           email_hash?: string | null
+          encryption_key_version?: number | null
           id?: string
           is_subscribed?: boolean
           nome?: string | null
@@ -821,6 +854,7 @@ export type Database = {
           created_at: string
           current_streak: number
           data_batismo: string | null
+          encryption_key_version: number | null
           genero: Database["public"]["Enums"]["gender_type"] | null
           id: string
           is_batizado: boolean | null
@@ -843,6 +877,7 @@ export type Database = {
           created_at?: string
           current_streak?: number
           data_batismo?: string | null
+          encryption_key_version?: number | null
           genero?: Database["public"]["Enums"]["gender_type"] | null
           id: string
           is_batizado?: boolean | null
@@ -865,6 +900,7 @@ export type Database = {
           created_at?: string
           current_streak?: number
           data_batismo?: string | null
+          encryption_key_version?: number | null
           genero?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           is_batizado?: boolean | null
@@ -1763,6 +1799,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_encryption_key_version: {
+        Args: { new_version: number }
+        Returns: boolean
+      }
       can_manage_church_content: {
         Args: { _church_id: string; _user_id: string }
         Returns: boolean
@@ -1772,7 +1812,20 @@ export type Database = {
         Returns: number
       }
       decrypt_sensitive: { Args: { encrypted_text: string }; Returns: string }
+      decrypt_sensitive_versioned: {
+        Args: { encrypted_text: string; key_version: number }
+        Returns: string
+      }
+      decrypt_with_version: {
+        Args: { encrypted_text: string; key_version: number }
+        Returns: string
+      }
       encrypt_sensitive: { Args: { plain_text: string }; Returns: string }
+      encrypt_with_version: {
+        Args: { key_version: number; plain_text: string }
+        Returns: string
+      }
+      get_active_key_version: { Args: never; Returns: number }
       get_all_disciples_for_discipulador: {
         Args: never
         Returns: {
@@ -1897,6 +1950,17 @@ export type Database = {
           xp_points: number
         }[]
       }
+      get_key_rotation_status: {
+        Args: never
+        Returns: {
+          active_version: number
+          profiles_needing_rotation: number
+          profiles_on_active: number
+          subscribers_on_active: number
+          total_profiles: number
+          total_subscribers: number
+        }[]
+      }
       get_max_disciples_limit: { Args: { _church_id: string }; Returns: number }
       get_ministry_volunteer_profiles: {
         Args: { ministry_id_param: string }
@@ -2003,6 +2067,17 @@ export type Database = {
           resource_id: string
           similarity: number
         }[]
+      }
+      rotate_all_profile_keys: {
+        Args: { batch_size?: number; new_version: number }
+        Returns: {
+          remaining_count: number
+          rotated_count: number
+        }[]
+      }
+      rotate_profile_key: {
+        Args: { new_version: number; profile_id: string }
+        Returns: boolean
       }
       search_newsletter_by_email: {
         Args: { email_search: string }
