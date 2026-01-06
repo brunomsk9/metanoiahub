@@ -1756,6 +1756,8 @@ export type Database = {
         Args: { _discipulador_id: string }
         Returns: number
       }
+      decrypt_sensitive: { Args: { encrypted_text: string }; Returns: string }
+      encrypt_sensitive: { Args: { plain_text: string }; Returns: string }
       get_all_disciples_for_discipulador: {
         Args: never
         Returns: {
@@ -1948,6 +1950,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_for_search: { Args: { plain_text: string }; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_of_own_church: { Args: { _user_id: string }; Returns: boolean }
       is_church_admin: {
