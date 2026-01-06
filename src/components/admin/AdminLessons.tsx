@@ -592,31 +592,31 @@ export function AdminLessons() {
         </Dialog>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden">
         {lessons.length === 0 ? (
           <div className="p-12 text-center">
-            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhuma aula cadastrada ainda.</p>
-            <p className="text-sm text-gray-400 mt-1">Crie um curso primeiro, depois adicione aulas.</p>
+            <FileText className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhuma aula cadastrada ainda.</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Crie um curso primeiro, depois adicione aulas.</p>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-muted/30 border-b border-border/50">
               <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Ordem</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Título</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden sm:table-cell">Tipo</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden md:table-cell">Curso</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 hidden lg:table-cell">Materiais</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Ações</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Ordem</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Título</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Tipo</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Curso</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Materiais</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border/30">
               {paginatedLessons.map((lesson) => (
-                <tr key={lesson.id} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-500">{lesson.ordem}</td>
+                <tr key={lesson.id} className="hover:bg-muted/20 transition-colors">
+                  <td className="py-3 px-4 text-muted-foreground">{lesson.ordem}</td>
                   <td className="py-3 px-4">
-                    <p className="font-medium text-gray-900">{lesson.titulo}</p>
+                    <p className="font-medium text-foreground">{lesson.titulo}</p>
                   </td>
                   <td className="py-3 px-4 hidden sm:table-cell">
                     <span className={`inline-flex px-2 py-1 text-xs rounded-full ${tipoColors[lesson.tipo]}`}>
@@ -624,24 +624,24 @@ export function AdminLessons() {
                     </span>
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
-                    <span className="text-gray-600 text-sm">{getCourseName(lesson.course_id)}</span>
+                    <span className="text-muted-foreground text-sm">{getCourseName(lesson.course_id)}</span>
                   </td>
                   <td className="py-3 px-4 hidden lg:table-cell">
                     {lesson.materiais?.length > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+                      <span className="inline-flex items-center gap-1 text-xs text-primary">
                         <Paperclip className="h-3 w-3" />
                         {lesson.materiais.length} arquivo(s)
                       </span>
                     ) : (
-                      <span className="text-gray-400 text-xs">-</span>
+                      <span className="text-muted-foreground/50 text-xs">-</span>
                     )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(lesson)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(lesson)} className="h-8 w-8 text-muted-foreground hover:text-foreground">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(lesson.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(lesson.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -655,8 +655,8 @@ export function AdminLessons() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border/50">
+          <p className="text-sm text-muted-foreground">
             Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, lessons.length)} de {lessons.length}
           </p>
           <div className="flex items-center gap-2">
@@ -669,7 +669,7 @@ export function AdminLessons() {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted-foreground">
               {currentPage} de {totalPages}
             </span>
             <Button
