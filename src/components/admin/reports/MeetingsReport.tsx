@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,19 +54,45 @@ interface DiscipuladorStats {
   totalParticipantes: number;
 }
 
-// Premium chart palette - high contrast with glow effect
+// Refined chart palette - warm & vibrant, no black
 const CHART_COLORS = {
-  lime: "hsl(82 85% 55%)",       // Vibrant lime
-  gold: "hsl(45 100% 58%)",      // Rich gold
-  emerald: "hsl(160 75% 45%)",   // Deep emerald
-  cyan: "hsl(185 80% 50%)",      // Electric cyan
-  violet: "hsl(280 75% 60%)",    // Soft violet
-  rose: "hsl(350 85% 60%)",      // Warm rose
-  sky: "hsl(200 90% 55%)",       // Sky blue
-  amber: "hsl(25 95% 55%)",      // Warm amber
+  lime: "hsl(82 75% 52%)",        // Fresh lime
+  gold: "hsl(42 95% 55%)",        // Warm gold
+  emerald: "hsl(158 65% 48%)",    // Soft emerald
+  cyan: "hsl(182 70% 48%)",       // Ocean cyan
+  violet: "hsl(268 65% 58%)",     // Gentle violet
+  rose: "hsl(345 75% 58%)",       // Soft rose
+  sky: "hsl(198 80% 52%)",        // Clear sky
+  amber: "hsl(32 90% 52%)",       // Warm amber
 };
 
 const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
+
+// Animation variants
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.4,
+      ease: [0.25, 0.1, 0.25, 1] as const
+    }
+  })
+};
+
+const chartVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 0.1, 0.25, 1] as const
+    }
+  }
+};
 
 export function MeetingsReport() {
   const { churchId } = useUserChurchId();
@@ -405,377 +432,421 @@ export function MeetingsReport() {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden border-[hsl(82_85%_55%)]/30 bg-gradient-to-br from-[hsl(82_85%_55%)]/10 via-transparent to-transparent">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[hsl(82_85%_55%)]/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Encontros</CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-[hsl(82_85%_55%)]/15 flex items-center justify-center ring-1 ring-[hsl(82_85%_55%)]/30">
-              <Calendar className="h-4 w-4 text-[hsl(82_85%_55%)]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-[hsl(82_85%_55%)]">{totals.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden border-[hsl(82_85%_55%)]/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Individuais</CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-[hsl(82_85%_55%)]/10 flex items-center justify-center">
-              <User className="h-4 w-4 text-[hsl(82_85%_55%)]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totals.individuais}</div>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="h-2 flex-1 bg-muted/50 rounded-full overflow-hidden">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            title: "Total de Encontros",
+            value: totals.total,
+            subtitle: "no período selecionado",
+            color: CHART_COLORS.lime,
+            Icon: Calendar,
+            hasGlow: true
+          },
+          {
+            title: "Individuais",
+            value: totals.individuais,
+            percent: totals.total > 0 ? Math.round((totals.individuais / totals.total) * 100) : 0,
+            color: CHART_COLORS.lime,
+            Icon: User,
+            hasProgress: true
+          },
+          {
+            title: "Células",
+            value: totals.celulas,
+            percent: totals.total > 0 ? Math.round((totals.celulas / totals.total) * 100) : 0,
+            color: CHART_COLORS.gold,
+            Icon: Users,
+            hasProgress: true
+          },
+          {
+            title: "Participantes",
+            value: totals.participantes,
+            subtitle: `média de ${totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : 0} por encontro`,
+            color: CHART_COLORS.emerald,
+            Icon: TrendingUp,
+            hasGlow: true
+          }
+        ].map((card, i) => (
+          <motion.div
+            key={card.title}
+            custom={i}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+          >
+            <Card className={`relative overflow-hidden h-full`} style={{ borderColor: `${card.color}33` }}>
+              {card.hasGlow && (
                 <div 
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${totals.total > 0 ? (totals.individuais / totals.total) * 100 : 0}%`,
-                    background: `linear-gradient(90deg, hsl(82 85% 55%), hsl(82 85% 65%))`
-                  }}
+                  className="absolute top-0 right-0 w-20 h-20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20"
+                  style={{ background: card.color }}
                 />
-              </div>
-              <span className="text-xs font-medium text-[hsl(82_85%_55%)]">
-                {totals.total > 0 ? Math.round((totals.individuais / totals.total) * 100) : 0}%
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden border-[hsl(45_100%_58%)]/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Células</CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-[hsl(45_100%_58%)]/10 flex items-center justify-center">
-              <Users className="h-4 w-4 text-[hsl(45_100%_58%)]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totals.celulas}</div>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="h-2 flex-1 bg-muted/50 rounded-full overflow-hidden">
+              )}
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">{card.title}</CardTitle>
                 <div 
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${totals.total > 0 ? (totals.celulas / totals.total) * 100 : 0}%`,
-                    background: `linear-gradient(90deg, hsl(45 100% 58%), hsl(45 100% 68%))`
-                  }}
-                />
-              </div>
-              <span className="text-xs font-medium text-[hsl(45_100%_58%)]">
-                {totals.total > 0 ? Math.round((totals.celulas / totals.total) * 100) : 0}%
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden border-[hsl(160_75%_45%)]/30 bg-gradient-to-br from-[hsl(160_75%_45%)]/10 via-transparent to-transparent">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[hsl(160_75%_45%)]/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Participantes</CardTitle>
-            <div className="h-9 w-9 rounded-xl bg-[hsl(160_75%_45%)]/15 flex items-center justify-center ring-1 ring-[hsl(160_75%_45%)]/30">
-              <TrendingUp className="h-4 w-4 text-[hsl(160_75%_45%)]" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-[hsl(160_75%_45%)]">{totals.participantes}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              média de <span className="font-semibold text-[hsl(160_75%_45%)]">{totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : 0}</span> por encontro
-            </p>
-          </CardContent>
-        </Card>
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl flex-shrink-0 flex items-center justify-center"
+                  style={{ background: `${card.color}15` }}
+                >
+                  <card.Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: card.color }} />
+                </div>
+              </CardHeader>
+              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <div className="text-2xl sm:text-3xl font-bold" style={{ color: card.hasGlow ? card.color : undefined }}>
+                  {card.value}
+                </div>
+                {card.hasProgress && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="h-1.5 sm:h-2 flex-1 bg-muted/40 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${card.percent}%` }}
+                        transition={{ duration: 0.8, delay: 0.3 + i * 0.1, ease: "easeOut" }}
+                        style={{ background: card.color }}
+                      />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-semibold" style={{ color: card.color }}>
+                      {card.percent}%
+                    </span>
+                  </div>
+                )}
+                {card.subtitle && (
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">{card.subtitle}</p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Charts Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Evolução Mensal */}
-        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.lime }} />
-              Evolução Mensal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {monthlyTrend.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px]">
-                <BarChart data={monthlyTrend} barGap={6}>
-                  <defs>
-                    <linearGradient id="barLime" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(82 85% 60%)" />
-                      <stop offset="100%" stopColor="hsl(82 85% 45%)" />
-                    </linearGradient>
-                    <linearGradient id="barGold" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(45 100% 65%)" />
-                      <stop offset="100%" stopColor="hsl(45 100% 50%)" />
-                    </linearGradient>
-                  </defs>
-                  <XAxis 
-                    dataKey="month" 
-                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }} 
-                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }} 
-                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
-                    tickLine={false}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    cursor={{ fill: 'hsl(220 10% 15% / 0.6)' }}
-                  />
-                  <Bar dataKey="individuais" name="Individuais" fill="url(#barLime)" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="celulas" name="Células" fill="url(#barGold)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
-                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
-                  <Calendar className="h-7 w-7 opacity-40" />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartVariants}
+        >
+          <Card className="border-border/50 overflow-hidden">
+            <CardHeader className="pb-2 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" style={{ background: CHART_COLORS.lime }} />
+                Evolução Mensal
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
+              {monthlyTrend.length > 0 ? (
+                <div className="h-[220px] sm:h-[280px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyTrend} barGap={4} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="barLime" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={CHART_COLORS.lime} />
+                          <stop offset="100%" stopColor="hsl(82 75% 38%)" />
+                        </linearGradient>
+                        <linearGradient id="barGold" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={CHART_COLORS.gold} />
+                          <stop offset="100%" stopColor="hsl(42 95% 42%)" />
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: 10, fill: 'hsl(60 10% 65%)' }} 
+                        axisLine={{ stroke: 'hsl(220 10% 25%)' }}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 10, fill: 'hsl(60 10% 65%)' }} 
+                        axisLine={{ stroke: 'hsl(220 10% 25%)' }}
+                        tickLine={false}
+                        width={30}
+                      />
+                      <Tooltip
+                        contentStyle={{ 
+                          background: 'hsl(220 12% 12%)', 
+                          border: '1px solid hsl(220 10% 25%)',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
+                        iconSize={8}
+                      />
+                      <Bar dataKey="individuais" name="Individuais" fill="url(#barLime)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="celulas" name="Células" fill="url(#barGold)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="text-sm">Nenhum dado disponível</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="h-[220px] sm:h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                    <Calendar className="h-6 w-6 sm:h-7 sm:w-7 opacity-40" />
+                  </div>
+                  <span className="text-xs sm:text-sm">Nenhum dado disponível</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Distribuição por Tipo */}
-        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.gold }} />
-              Distribuição por Tipo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {typeDistribution.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs>
-                      <filter id="glow">
-                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                        <feMerge>
-                          <feMergeNode in="coloredBlur"/>
-                          <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <Pie
-                      data={typeDistribution}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="45%"
-                      outerRadius={90}
-                      innerRadius={58}
-                      paddingAngle={4}
-                      strokeWidth={0}
-                      filter="url(#glow)"
-                    >
-                      {typeDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={45}
-                      iconType="circle"
-                      iconSize={10}
-                      formatter={(value) => <span className="text-sm font-medium text-foreground ml-2">{value}</span>}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
-                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
-                  <Users className="h-7 w-7 opacity-40" />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartVariants}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="border-border/50 overflow-hidden h-full">
+            <CardHeader className="pb-2 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" style={{ background: CHART_COLORS.gold }} />
+                Distribuição por Tipo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
+              {typeDistribution.length > 0 ? (
+                <div className="h-[220px] sm:h-[280px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={typeDistribution}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="45%"
+                        outerRadius={70}
+                        innerRadius={45}
+                        paddingAngle={4}
+                        strokeWidth={0}
+                      >
+                        {typeDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ 
+                          background: 'hsl(220 12% 12%)', 
+                          border: '1px solid hsl(220 10% 25%)',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={40}
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ fontSize: '12px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="text-sm">Nenhum dado disponível</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="h-[220px] sm:h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                    <Users className="h-6 w-6 sm:h-7 sm:w-7 opacity-40" />
+                  </div>
+                  <span className="text-xs sm:text-sm">Nenhum dado disponível</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Tendência Semanal */}
-        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.emerald }} />
-              Tendência Semanal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {weeklyTrend.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px]">
-                <LineChart data={weeklyTrend}>
-                  <defs>
-                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor={CHART_COLORS.lime} />
-                      <stop offset="100%" stopColor={CHART_COLORS.emerald} />
-                    </linearGradient>
-                    <filter id="lineGlow">
-                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                      <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  <XAxis 
-                    dataKey="week" 
-                    tick={{ fontSize: 11, fill: 'hsl(60 10% 70%)' }}
-                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }}
-                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
-                    tickLine={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="total" 
-                    name="Total"
-                    stroke="url(#lineGradient)" 
-                    strokeWidth={3}
-                    filter="url(#lineGlow)"
-                    dot={{ fill: CHART_COLORS.lime, strokeWidth: 0, r: 5 }}
-                    activeDot={{ fill: CHART_COLORS.emerald, strokeWidth: 3, stroke: 'hsl(220 12% 8%)', r: 7 }}
-                  />
-                </LineChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
-                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
-                  <TrendingUp className="h-7 w-7 opacity-40" />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartVariants}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="border-border/50 overflow-hidden h-full">
+            <CardHeader className="pb-2 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" style={{ background: CHART_COLORS.emerald }} />
+                Tendência Semanal
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
+              {weeklyTrend.length > 0 ? (
+                <div className="h-[220px] sm:h-[280px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={weeklyTrend} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={CHART_COLORS.lime} />
+                          <stop offset="100%" stopColor={CHART_COLORS.emerald} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="week" 
+                        tick={{ fontSize: 10, fill: 'hsl(60 10% 65%)' }}
+                        axisLine={{ stroke: 'hsl(220 10% 25%)' }}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 10, fill: 'hsl(60 10% 65%)' }}
+                        axisLine={{ stroke: 'hsl(220 10% 25%)' }}
+                        tickLine={false}
+                        width={30}
+                      />
+                      <Tooltip
+                        contentStyle={{ 
+                          background: 'hsl(220 12% 12%)', 
+                          border: '1px solid hsl(220 10% 25%)',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="total" 
+                        name="Total"
+                        stroke="url(#lineGradient)" 
+                        strokeWidth={2.5}
+                        dot={{ fill: CHART_COLORS.lime, strokeWidth: 0, r: 4 }}
+                        activeDot={{ fill: CHART_COLORS.emerald, strokeWidth: 2, stroke: 'hsl(220 12% 15%)', r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="text-sm">Nenhum dado disponível</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="h-[220px] sm:h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 opacity-40" />
+                  </div>
+                  <span className="text-xs sm:text-sm">Nenhum dado disponível</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Top Discipuladores */}
-        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.cyan }} />
-              Top Discipuladores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topDiscipuladores.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px]">
-                <BarChart data={topDiscipuladores} layout="vertical" barSize={22}>
-                  <defs>
-                    {CHART_COLORS_ARRAY.map((color, i) => (
-                      <linearGradient key={i} id={`barGrad${i}`} x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-                        <stop offset="100%" stopColor={color} stopOpacity={1} />
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <XAxis 
-                    type="number" 
-                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }}
-                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    tick={{ fontSize: 12, fill: 'hsl(60 10% 90%)', fontWeight: 500 }} 
-                    width={80}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    cursor={{ fill: 'hsl(220 10% 15% / 0.6)' }}
-                  />
-                  <Bar dataKey="encontros" name="Encontros" radius={[0, 8, 8, 0]}>
-                    {topDiscipuladores.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
-                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
-                  <Users className="h-7 w-7 opacity-40" />
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartVariants}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="border-border/50 overflow-hidden h-full">
+            <CardHeader className="pb-2 px-3 sm:px-6">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" style={{ background: CHART_COLORS.cyan }} />
+                Top Discipuladores
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
+              {topDiscipuladores.length > 0 ? (
+                <div className="h-[220px] sm:h-[280px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={topDiscipuladores} layout="vertical" barSize={18} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <XAxis 
+                        type="number" 
+                        tick={{ fontSize: 10, fill: 'hsl(60 10% 65%)' }}
+                        axisLine={{ stroke: 'hsl(220 10% 25%)' }}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        tick={{ fontSize: 11, fill: 'hsl(60 10% 85%)' }} 
+                        width={65}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{ 
+                          background: 'hsl(220 12% 12%)', 
+                          border: '1px solid hsl(220 10% 25%)',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                      />
+                      <Bar dataKey="encontros" name="Encontros" radius={[0, 6, 6, 0]}>
+                        {topDiscipuladores.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="text-sm">Nenhum dado disponível</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="h-[220px] sm:h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                    <Users className="h-6 w-6 sm:h-7 sm:w-7 opacity-40" />
+                  </div>
+                  <span className="text-xs sm:text-sm">Nenhum dado disponível</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Table by Discipulador */}
-      <Card ref={tableRef}>
-        <CardHeader>
-          <CardTitle className="text-base">Detalhamento por Discipulador</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Discipulador</TableHead>
-                <TableHead className="text-center">Individuais</TableHead>
-                <TableHead className="text-center">Células</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Participantes</TableHead>
-                <TableHead className="text-center">Média/Encontro</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {stats.length === 0 ? (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        <Card ref={tableRef} className="border-border/50 overflow-hidden">
+          <CardHeader className="px-3 sm:px-6">
+            <CardTitle className="text-sm sm:text-base">Detalhamento por Discipulador</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum encontro registrado no período
-                  </TableCell>
+                  <TableHead className="text-xs sm:text-sm">Discipulador</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm">Ind.</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm">Cél.</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm">Total</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm hidden sm:table-cell">Part.</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm hidden md:table-cell">Média</TableHead>
                 </TableRow>
-              ) : (
-                <>
-                  {stats.map((stat) => (
-                    <TableRow key={stat.id}>
-                      <TableCell className="font-medium">{stat.nome}</TableCell>
-                      <TableCell className="text-center">{stat.individuais}</TableCell>
-                      <TableCell className="text-center">{stat.celulas}</TableCell>
-                      <TableCell className="text-center font-semibold">{stat.totalEncontros}</TableCell>
-                      <TableCell className="text-center">{stat.totalParticipantes}</TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {stat.totalEncontros > 0 
-                          ? (stat.totalParticipantes / stat.totalEncontros).toFixed(1) 
-                          : "0"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="bg-muted/50 font-semibold">
-                    <TableCell>Total</TableCell>
-                    <TableCell className="text-center">{totals.individuais}</TableCell>
-                    <TableCell className="text-center">{totals.celulas}</TableCell>
-                    <TableCell className="text-center">{totals.total}</TableCell>
-                    <TableCell className="text-center">{totals.participantes}</TableCell>
-                    <TableCell className="text-center">
-                      {totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : "0"}
+              </TableHeader>
+              <TableBody>
+                {stats.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-xs sm:text-sm">
+                      Nenhum encontro registrado no período
                     </TableCell>
                   </TableRow>
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ) : (
+                  <>
+                    {stats.map((stat) => (
+                      <TableRow key={stat.id}>
+                        <TableCell className="font-medium text-xs sm:text-sm max-w-[120px] truncate">{stat.nome}</TableCell>
+                        <TableCell className="text-center text-xs sm:text-sm">{stat.individuais}</TableCell>
+                        <TableCell className="text-center text-xs sm:text-sm">{stat.celulas}</TableCell>
+                        <TableCell className="text-center font-semibold text-xs sm:text-sm" style={{ color: CHART_COLORS.lime }}>{stat.totalEncontros}</TableCell>
+                        <TableCell className="text-center text-xs sm:text-sm hidden sm:table-cell">{stat.totalParticipantes}</TableCell>
+                        <TableCell className="text-center text-muted-foreground text-xs sm:text-sm hidden md:table-cell">
+                          {stat.totalEncontros > 0 
+                            ? (stat.totalParticipantes / stat.totalEncontros).toFixed(1) 
+                            : "0"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/30 font-semibold">
+                      <TableCell className="text-xs sm:text-sm">Total</TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm">{totals.individuais}</TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm">{totals.celulas}</TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm" style={{ color: CHART_COLORS.lime }}>{totals.total}</TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm hidden sm:table-cell">{totals.participantes}</TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm hidden md:table-cell">
+                        {totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : "0"}
+                      </TableCell>
+                    </TableRow>
+                  </>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Recent Meetings */}
       <Card>
