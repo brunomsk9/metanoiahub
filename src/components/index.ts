@@ -7,7 +7,7 @@ export { ThemeToggle } from "./ThemeToggle";
 export { CollapsibleSection } from "./CollapsibleSection";
 
 // Gamification components
-export { AchievementBadges } from "./AchievementBadges";
+export { default as AchievementBadges } from "./AchievementBadges";
 export { Leaderboard } from "./Leaderboard";
 export { StreakDisplay, HealthRadial, DailyHabits } from "./StreakDisplay";
 export { XPGainToast } from "./XPGainToast";
