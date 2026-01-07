@@ -53,12 +53,16 @@ interface DiscipuladorStats {
   totalParticipantes: number;
 }
 
+// Vibrant chart palette aligned with lime/dark design system
 const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "hsl(78 80% 48%)",     // Primary lime
+  "hsl(42 90% 52%)",     // Accent gold
+  "hsl(152 65% 42%)",    // Success green
+  "hsl(210 70% 55%)",    // Info blue
+  "hsl(320 70% 55%)",    // Magenta accent
+  "hsl(180 60% 45%)",    // Teal
+  "hsl(270 60% 55%)",    // Purple
+  "hsl(15 80% 55%)",     // Orange
 ];
 
 export function MeetingsReport() {
@@ -323,10 +327,10 @@ export function MeetingsReport() {
   ];
 
   const chartConfig = {
-    individuais: { label: "Individuais", color: "hsl(var(--primary))" },
-    celulas: { label: "Células", color: "hsl(var(--chart-2))" },
-    total: { label: "Total", color: "hsl(var(--chart-3))" },
-    encontros: { label: "Encontros", color: "hsl(var(--primary))" },
+    individuais: { label: "Individuais", color: "hsl(78 80% 48%)" },
+    celulas: { label: "Células", color: "hsl(42 90% 52%)" },
+    total: { label: "Total", color: "hsl(78 80% 48%)" },
+    encontros: { label: "Encontros", color: "hsl(78 80% 48%)" },
   };
 
   if (isLoading) {
@@ -400,52 +404,77 @@ export function MeetingsReport() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Encontros</CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Calendar className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.total}</div>
-            <p className="text-xs text-muted-foreground">no período selecionado</p>
+            <div className="text-3xl font-bold text-primary">{totals.total}</div>
+            <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-[hsl(78_80%_48%)]/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Individuais</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-lg bg-[hsl(78_80%_48%)]/10 flex items-center justify-center">
+              <User className="h-4 w-4 text-[hsl(78_80%_48%)]" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.individuais}</div>
-            <p className="text-xs text-muted-foreground">
-              {totals.total > 0 ? Math.round((totals.individuais / totals.total) * 100) : 0}% do total
-            </p>
+            <div className="text-3xl font-bold">{totals.individuais}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[hsl(78_80%_48%)] rounded-full transition-all"
+                  style={{ width: `${totals.total > 0 ? (totals.individuais / totals.total) * 100 : 0}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {totals.total > 0 ? Math.round((totals.individuais / totals.total) * 100) : 0}%
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-[hsl(42_90%_52%)]/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Células</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-lg bg-[hsl(42_90%_52%)]/10 flex items-center justify-center">
+              <Users className="h-4 w-4 text-[hsl(42_90%_52%)]" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.celulas}</div>
-            <p className="text-xs text-muted-foreground">
-              {totals.total > 0 ? Math.round((totals.celulas / totals.total) * 100) : 0}% do total
-            </p>
+            <div className="text-3xl font-bold">{totals.celulas}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[hsl(42_90%_52%)] rounded-full transition-all"
+                  style={{ width: `${totals.total > 0 ? (totals.celulas / totals.total) * 100 : 0}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {totals.total > 0 ? Math.round((totals.celulas / totals.total) * 100) : 0}%
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden border-[hsl(152_65%_42%)]/20 bg-gradient-to-br from-[hsl(152_65%_42%)]/5 to-transparent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Participantes</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
+            <div className="h-8 w-8 rounded-lg bg-[hsl(152_65%_42%)]/10 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-[hsl(152_65%_42%)]" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totals.participantes}</div>
-            <p className="text-xs text-muted-foreground">
-              média de {totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : 0} por encontro
+            <div className="text-3xl font-bold text-[hsl(152_65%_42%)]">{totals.participantes}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              média de <span className="font-medium">{totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : 0}</span> por encontro
             </p>
           </CardContent>
         </Card>
@@ -454,33 +483,52 @@ export function MeetingsReport() {
       {/* Charts Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Evolução Mensal */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Evolução Mensal</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-primary" />
+              Evolução Mensal
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {monthlyTrend.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[280px]">
-                <BarChart data={monthlyTrend}>
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="individuais" name="Individuais" fill="hsl(var(--primary))" radius={4} />
-                  <Bar dataKey="celulas" name="Células" fill="hsl(var(--chart-2))" radius={4} />
+                <BarChart data={monthlyTrend} barGap={4}>
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }} 
+                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }} 
+                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: 'hsl(220 10% 12% / 0.5)' }}
+                  />
+                  <Bar dataKey="individuais" name="Individuais" fill="hsl(78 80% 48%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="celulas" name="Células" fill="hsl(42 90% 52%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <Calendar className="h-10 w-10 opacity-20" />
+                <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Distribuição por Tipo */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Distribuição por Tipo</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[hsl(42_90%_52%)]" />
+              Distribuição por Tipo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {typeDistribution.length > 0 ? (
@@ -492,12 +540,12 @@ export function MeetingsReport() {
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      innerRadius={50}
-                      paddingAngle={2}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+                      cy="45%"
+                      outerRadius={85}
+                      innerRadius={55}
+                      paddingAngle={3}
+                      strokeWidth={2}
+                      stroke="hsl(220 12% 8%)"
                     >
                       {typeDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -506,63 +554,104 @@ export function MeetingsReport() {
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Legend 
                       verticalAlign="bottom" 
-                      height={36}
-                      formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
+                      height={40}
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(value) => <span className="text-sm text-foreground ml-1">{value}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <Users className="h-10 w-10 opacity-20" />
+                <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Tendência Semanal */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Tendência Semanal</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[hsl(152_65%_42%)]" />
+              Tendência Semanal
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {weeklyTrend.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[280px]">
                 <LineChart data={weeklyTrend}>
-                  <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <defs>
+                    <linearGradient id="gradientLine" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(78 80% 48%)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(78 80% 48%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis 
+                    dataKey="week" 
+                    tick={{ fontSize: 11, fill: 'hsl(60 5% 55%)' }}
+                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }}
+                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                  />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line 
                     type="monotone" 
                     dataKey="total" 
                     name="Total"
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2 }}
+                    stroke="hsl(78 80% 48%)" 
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(78 80% 48%)", strokeWidth: 0, r: 4 }}
+                    activeDot={{ fill: "hsl(78 80% 58%)", strokeWidth: 0, r: 6 }}
                   />
                 </LineChart>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <TrendingUp className="h-10 w-10 opacity-20" />
+                <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Top Discipuladores */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Top Discipuladores</CardTitle>
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[hsl(210_70%_55%)]" />
+              Top Discipuladores
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {topDiscipuladores.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[280px]">
-                <BarChart data={topDiscipuladores} layout="vertical">
-                  <XAxis type="number" tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={70} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="encontros" name="Encontros" radius={4}>
+                <BarChart data={topDiscipuladores} layout="vertical" barSize={20}>
+                  <XAxis 
+                    type="number" 
+                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }}
+                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                  />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    tick={{ fontSize: 11, fill: 'hsl(60 10% 96%)' }} 
+                    width={75}
+                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tickLine={false}
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: 'hsl(220 10% 12% / 0.5)' }}
+                  />
+                  <Bar dataKey="encontros" name="Encontros" radius={[0, 4, 4, 0]}>
                     {topDiscipuladores.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -570,8 +659,9 @@ export function MeetingsReport() {
                 </BarChart>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
-                Nenhum dado disponível
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <Users className="h-10 w-10 opacity-20" />
+                <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
           </CardContent>
