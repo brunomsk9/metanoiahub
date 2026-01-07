@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, BarChart, Bar, Resp
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CHART_COLORS, CHART_COLORS_ARRAY } from "@/lib/chartColors";
+import { CHART_COLORS, CHART_COLORS_ARRAY, chartAnimationVariants } from "@/lib/chartColors";
 
 interface Stats {
   // Usuários
@@ -396,118 +397,128 @@ export function VisaoGeralReport() {
 
       {/* Quick Stats - Row 1: Usuários e Discipulado */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="border-primary/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Membros</CardTitle>
-            <Users className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
-            <div className="flex items-center gap-2 mt-1">
+        {[
+          {
+            title: "Total de Membros",
+            value: stats?.totalUsers || 0,
+            subtitle: <div className="flex items-center gap-2 mt-1">
               <TrendIndicator value={stats?.usersGrowth || 0} />
-              <span className="text-xs text-muted-foreground">
-                +{stats?.newUsersThisPeriod || 0} no período
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Discipulados Ativos</CardTitle>
-            <Heart className="h-4 w-4 text-pink-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeDiscipulados || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.totalDiscipuladores || 0} discipuladores • {stats?.avgDiscipulosPerMentor || 0} média
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jornada Metanoia</CardTitle>
-            <Target className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.jornadaCompletedCount || 0}</div>
-            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-muted-foreground">+{stats?.newUsersThisPeriod || 0} no período</span>
+            </div>,
+            Icon: Users,
+            iconClass: "text-primary",
+            highlight: true
+          },
+          {
+            title: "Discipulados Ativos",
+            value: stats?.activeDiscipulados || 0,
+            subtitle: <p className="text-xs text-muted-foreground">{stats?.totalDiscipuladores || 0} discipuladores • {stats?.avgDiscipulosPerMentor || 0} média</p>,
+            Icon: Heart,
+            iconClass: "text-pink-500"
+          },
+          {
+            title: "Jornada Metanoia",
+            value: stats?.jornadaCompletedCount || 0,
+            subtitle: <div className="flex items-center gap-2 mt-1">
               <Progress value={stats?.jornadaCompletionRate || 0} className="h-1.5 flex-1" />
               <span className="text-xs text-muted-foreground">{stats?.jornadaCompletionRate || 0}%</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Encontros</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalMeetings || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              ~{stats?.avgMeetingsPerWeek || 0}/semana • {stats?.meetingsIndividual || 0} ind. / {stats?.meetingsCelula || 0} cél.
-            </p>
-          </CardContent>
-        </Card>
+            </div>,
+            Icon: Target,
+            iconClass: "text-green-500"
+          },
+          {
+            title: "Encontros",
+            value: stats?.totalMeetings || 0,
+            subtitle: <p className="text-xs text-muted-foreground">~{stats?.avgMeetingsPerWeek || 0}/semana • {stats?.meetingsIndividual || 0} ind. / {stats?.meetingsCelula || 0} cél.</p>,
+            Icon: Calendar,
+            iconClass: "text-blue-500"
+          }
+        ].map((card, i) => (
+          <motion.div
+            key={card.title}
+            custom={i}
+            initial="hidden"
+            animate="visible"
+            variants={chartAnimationVariants.card}
+          >
+            <Card className={card.highlight ? "border-primary/20" : ""}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                <card.Icon className={`h-4 w-4 ${card.iconClass}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{card.value}</div>
+                {card.subtitle}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Quick Stats - Row 2: Engajamento e Conteúdo */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Streak Médio</CardTitle>
-            <Flame className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.avgStreak || 0} <span className="text-sm font-normal text-muted-foreground">dias</span></div>
-            <p className="text-xs text-muted-foreground">{stats?.usersWithStreak || 0} com streak ativo</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">XP Total</CardTitle>
-            <Award className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(stats?.totalXP || 0).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">média {stats?.avgXP || 0} XP/membro</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conteúdo</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalLessons || 0} <span className="text-sm font-normal text-muted-foreground">aulas</span></div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.totalTracks || 0} trilhas • {stats?.totalCourses || 0} cursos
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Checklist Semanal</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.avgChecklistCompliance || 0}%</div>
-            <div className="flex items-center gap-2 mt-1">
+        {[
+          {
+            title: "Streak Médio",
+            value: <>{stats?.avgStreak || 0} <span className="text-sm font-normal text-muted-foreground">dias</span></>,
+            subtitle: <p className="text-xs text-muted-foreground">{stats?.usersWithStreak || 0} com streak ativo</p>,
+            Icon: Flame,
+            iconClass: "text-orange-500"
+          },
+          {
+            title: "XP Total",
+            value: (stats?.totalXP || 0).toLocaleString(),
+            subtitle: <p className="text-xs text-muted-foreground">média {stats?.avgXP || 0} XP/membro</p>,
+            Icon: Award,
+            iconClass: "text-yellow-500"
+          },
+          {
+            title: "Conteúdo",
+            value: <>{stats?.totalLessons || 0} <span className="text-sm font-normal text-muted-foreground">aulas</span></>,
+            subtitle: <p className="text-xs text-muted-foreground">{stats?.totalTracks || 0} trilhas • {stats?.totalCourses || 0} cursos</p>,
+            Icon: BookOpen,
+            iconClass: "text-muted-foreground"
+          },
+          {
+            title: "Checklist Semanal",
+            value: `${stats?.avgChecklistCompliance || 0}%`,
+            subtitle: <div className="flex items-center gap-2 mt-1">
               <Progress value={stats?.avgChecklistCompliance || 0} className="h-1.5 flex-1" />
-            </div>
-          </CardContent>
-        </Card>
+            </div>,
+            Icon: CheckCircle2,
+            iconClass: "text-muted-foreground"
+          }
+        ].map((card, i) => (
+          <motion.div
+            key={card.title}
+            custom={i + 4}
+            initial="hidden"
+            animate="visible"
+            variants={chartAnimationVariants.card}
+          >
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                <card.Icon className={`h-4 w-4 ${card.iconClass}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{card.value}</div>
+                {card.subtitle}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
 
       {/* Charts - Row 1 */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Evolução Mensal */}
-        <Card>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartAnimationVariants.chart}
+        >
+          <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
@@ -558,114 +569,137 @@ export function VisaoGeralReport() {
             </ChartContainer>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Role Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Distribuição por Papel
-            </CardTitle>
-            <CardDescription>Composição da comunidade por função</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[280px]">
-              <PieChart>
-                <Pie
-                  data={roleDistribution}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
-                >
-                  {roleDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts - Row 2 */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Meeting Types */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Tipos de Encontro
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {meetingTypeData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[180px]">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartAnimationVariants.chart}
+          transition={{ delay: 0.1 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Distribuição por Papel
+              </CardTitle>
+              <CardDescription>Composição da comunidade por função</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[280px]">
                 <PieChart>
                   <Pie
-                    data={meetingTypeData}
+                    data={roleDistribution}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    innerRadius={35}
-                    outerRadius={60}
-                    paddingAngle={4}
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
                   >
-                    {meetingTypeData.map((entry, index) => (
+                    {roleDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
                   <ChartTooltip content={<ChartTooltipContent />} />
                 </PieChart>
               </ChartContainer>
-            ) : (
-              <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">
-                Sem dados de encontros
-              </div>
-            )}
-            <div className="flex justify-center gap-4 mt-2">
-              {meetingTypeData.map((item, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
-                  <span>{item.name}: {item.value}</span>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Charts - Row 2 */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Meeting Types */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartAnimationVariants.chart}
+          transition={{ delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Tipos de Encontro
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {meetingTypeData.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[180px]">
+                  <PieChart>
+                    <Pie
+                      data={meetingTypeData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={35}
+                      outerRadius={60}
+                      paddingAngle={4}
+                    >
+                      {meetingTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">
+                  Sem dados de encontros
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              )}
+              <div className="flex justify-center gap-4 mt-2">
+                {meetingTypeData.map((item, i) => (
+                  <div key={i} className="flex items-center gap-1.5 text-xs">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                    <span>{item.name}: {item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Top Discipuladores */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Top Discipuladores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topDiscipuladores.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[180px]">
-                <BarChart data={topDiscipuladores} layout="vertical">
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="nome" type="category" width={80} tick={{ fontSize: 11 }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="discipulos" fill={CHART_COLORS.lime} radius={4} />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">
-                Sem dados de discipuladores
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={chartAnimationVariants.chart}
+          transition={{ delay: 0.3 }}
+          className="lg:col-span-2"
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Top Discipuladores
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topDiscipuladores.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[180px]">
+                  <BarChart data={topDiscipuladores} layout="vertical">
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis dataKey="nome" type="category" width={80} tick={{ fontSize: 11 }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="discipulos" fill={CHART_COLORS.lime} radius={4} />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">
+                  Sem dados de discipuladores
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Summary Footer */}
