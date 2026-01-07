@@ -23,7 +23,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { CHART_COLORS, CHART_COLORS_ARRAY, CHART_GRADIENTS } from "@/lib/chartColors";
+import { CHART_COLORS, CHART_COLORS_ARRAY, CHART_GRADIENTS, chartAnimationVariants } from "@/lib/chartColors";
 
 interface MeetingWithDetails {
   id: string;
@@ -54,32 +54,6 @@ interface DiscipuladorStats {
   totalEncontros: number;
   totalParticipantes: number;
 }
-
-// Animation variants
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.1,
-      duration: 0.4,
-      ease: [0.25, 0.1, 0.25, 1] as const
-    }
-  })
-};
-
-const chartVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.1, 0.25, 1] as const
-    }
-  }
-};
 
 export function MeetingsReport() {
   const { churchId } = useUserChurchId();
@@ -459,7 +433,7 @@ export function MeetingsReport() {
             custom={i}
             initial="hidden"
             animate="visible"
-            variants={cardVariants}
+            variants={chartAnimationVariants.card}
           >
             <Card className={`relative overflow-hidden h-full`} style={{ borderColor: `${card.color}33` }}>
               {card.hasGlow && (
@@ -512,7 +486,7 @@ export function MeetingsReport() {
         <motion.div
           initial="hidden"
           animate="visible"
-          variants={chartVariants}
+          variants={chartAnimationVariants.chart}
         >
           <Card className="border-border/50 overflow-hidden">
             <CardHeader className="pb-2 px-3 sm:px-6">
@@ -581,7 +555,7 @@ export function MeetingsReport() {
         <motion.div
           initial="hidden"
           animate="visible"
-          variants={chartVariants}
+          variants={chartAnimationVariants.chart}
           transition={{ delay: 0.1 }}
         >
           <Card className="border-border/50 overflow-hidden h-full">
@@ -645,7 +619,7 @@ export function MeetingsReport() {
         <motion.div
           initial="hidden"
           animate="visible"
-          variants={chartVariants}
+          variants={chartAnimationVariants.chart}
           transition={{ delay: 0.2 }}
         >
           <Card className="border-border/50 overflow-hidden h-full">
@@ -714,7 +688,7 @@ export function MeetingsReport() {
         <motion.div
           initial="hidden"
           animate="visible"
-          variants={chartVariants}
+          variants={chartAnimationVariants.chart}
           transition={{ delay: 0.3 }}
         >
           <Card className="border-border/50 overflow-hidden h-full">
