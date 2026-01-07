@@ -42,13 +42,19 @@ interface Summary {
   academiaProgress: number;
 }
 
-const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))"
-];
+// Harmonized chart palette - lime/dark theme aligned
+const CHART_COLORS = {
+  lime: "hsl(78 80% 48%)",        // Primary lime (matches theme)
+  teal: "hsl(168 65% 45%)",       // Complementary teal
+  cyan: "hsl(188 75% 48%)",       // Fresh cyan
+  violet: "hsl(265 55% 55%)",     // Soft violet
+  rose: "hsl(340 65% 55%)",       // Muted rose
+  emerald: "hsl(152 60% 42%)",    // Deep emerald
+  sky: "hsl(200 70% 50%)",        // Cool sky
+  mint: "hsl(160 50% 50%)",       // Soft mint
+};
+
+const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
 
 export function DiscipulosReport() {
   const [loading, setLoading] = useState(true);
@@ -418,7 +424,7 @@ export function DiscipulosReport() {
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 >
                   {jornadaData.map((_, index) => (
-                    <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    <Cell key={index} fill={CHART_COLORS_ARRAY[index % CHART_COLORS_ARRAY.length]} />
                   ))}
                 </Pie>
                 <ChartTooltip content={<ChartTooltipContent />} />

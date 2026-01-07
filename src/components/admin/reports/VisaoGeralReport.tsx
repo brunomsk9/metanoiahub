@@ -73,13 +73,19 @@ function TrendIndicator({ value, suffix = "%" }: TrendIndicatorProps) {
   );
 }
 
-const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))"
-];
+// Harmonized chart palette - lime/dark theme aligned
+const CHART_COLORS = {
+  lime: "hsl(78 80% 48%)",        // Primary lime (matches theme)
+  teal: "hsl(168 65% 45%)",       // Complementary teal
+  cyan: "hsl(188 75% 48%)",       // Fresh cyan
+  violet: "hsl(265 55% 55%)",     // Soft violet
+  rose: "hsl(340 65% 55%)",       // Muted rose
+  emerald: "hsl(152 60% 42%)",    // Deep emerald
+  sky: "hsl(200 70% 50%)",        // Cool sky
+  mint: "hsl(160 50% 50%)",       // Soft mint
+};
+
+const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
 
 export function VisaoGeralReport() {
   const [loading, setLoading] = useState(true);
@@ -279,11 +285,11 @@ export function VisaoGeralReport() {
       });
 
       const roleColors: Record<string, string> = {
-        discipulo: CHART_COLORS[0],
-        discipulador: CHART_COLORS[1],
-        admin: CHART_COLORS[2],
-        church_admin: CHART_COLORS[3],
-        lider_ministerial: CHART_COLORS[4]
+        discipulo: CHART_COLORS_ARRAY[0],
+        discipulador: CHART_COLORS_ARRAY[1],
+        admin: CHART_COLORS_ARRAY[2],
+        church_admin: CHART_COLORS_ARRAY[3],
+        lider_ministerial: CHART_COLORS_ARRAY[4]
       };
 
       const roleLabels: Record<string, string> = {
@@ -306,8 +312,8 @@ export function VisaoGeralReport() {
 
       // Meeting type distribution
       setMeetingTypeData([
-        { name: "Individuais", value: meetingsIndividual, fill: CHART_COLORS[0] },
-        { name: "Células", value: meetingsCelula, fill: CHART_COLORS[1] }
+        { name: "Individuais", value: meetingsIndividual, fill: CHART_COLORS.lime },
+        { name: "Células", value: meetingsCelula, fill: CHART_COLORS.teal }
       ].filter(d => d.value > 0));
 
       // Top discipuladores
@@ -383,10 +389,10 @@ export function VisaoGeralReport() {
   }
 
   const chartConfig = {
-    usuarios: { label: "Usuários", color: CHART_COLORS[0] },
-    discipulados: { label: "Discipulados", color: CHART_COLORS[1] },
-    encontros: { label: "Encontros", color: CHART_COLORS[2] },
-    discipulos: { label: "Discípulos", color: CHART_COLORS[0] }
+    usuarios: { label: "Usuários", color: CHART_COLORS.lime },
+    discipulados: { label: "Discipulados", color: CHART_COLORS.teal },
+    encontros: { label: "Encontros", color: CHART_COLORS.cyan },
+    discipulos: { label: "Discípulos", color: CHART_COLORS.lime }
   };
 
   return (
@@ -526,12 +532,12 @@ export function VisaoGeralReport() {
               <AreaChart data={monthlyData}>
                 <defs>
                   <linearGradient id="colorUsuarios" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0}/>
+                    <stop offset="5%" stopColor={CHART_COLORS.lime} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={CHART_COLORS.lime} stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorDiscipulados" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS[1]} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={CHART_COLORS[1]} stopOpacity={0}/>
+                    <stop offset="5%" stopColor={CHART_COLORS.teal} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={CHART_COLORS.teal} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
@@ -540,7 +546,7 @@ export function VisaoGeralReport() {
                 <Area 
                   type="monotone" 
                   dataKey="usuarios" 
-                  stroke={CHART_COLORS[0]} 
+                  stroke={CHART_COLORS.lime} 
                   fillOpacity={1}
                   fill="url(#colorUsuarios)"
                   strokeWidth={2}
@@ -548,7 +554,7 @@ export function VisaoGeralReport() {
                 <Area 
                   type="monotone" 
                   dataKey="discipulados" 
-                  stroke={CHART_COLORS[1]} 
+                  stroke={CHART_COLORS.teal} 
                   fillOpacity={1}
                   fill="url(#colorDiscipulados)"
                   strokeWidth={2}
@@ -556,9 +562,9 @@ export function VisaoGeralReport() {
                 <Line 
                   type="monotone" 
                   dataKey="encontros" 
-                  stroke={CHART_COLORS[2]} 
+                  stroke={CHART_COLORS.cyan} 
                   strokeWidth={2}
-                  dot={{ fill: CHART_COLORS[2], r: 3 }}
+                  dot={{ fill: CHART_COLORS.cyan, r: 3 }}
                 />
               </AreaChart>
             </ChartContainer>
@@ -662,7 +668,7 @@ export function VisaoGeralReport() {
                   <XAxis type="number" tick={{ fontSize: 11 }} />
                   <YAxis dataKey="nome" type="category" width={80} tick={{ fontSize: 11 }} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="discipulos" fill={CHART_COLORS[0]} radius={4} />
+                  <Bar dataKey="discipulos" fill={CHART_COLORS.lime} radius={4} />
                 </BarChart>
               </ChartContainer>
             ) : (
