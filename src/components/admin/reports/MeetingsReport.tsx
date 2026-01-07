@@ -53,17 +53,19 @@ interface DiscipuladorStats {
   totalParticipantes: number;
 }
 
-// Vibrant chart palette aligned with lime/dark design system
-const CHART_COLORS = [
-  "hsl(78 80% 48%)",     // Primary lime
-  "hsl(42 90% 52%)",     // Accent gold
-  "hsl(152 65% 42%)",    // Success green
-  "hsl(210 70% 55%)",    // Info blue
-  "hsl(320 70% 55%)",    // Magenta accent
-  "hsl(180 60% 45%)",    // Teal
-  "hsl(270 60% 55%)",    // Purple
-  "hsl(15 80% 55%)",     // Orange
-];
+// Premium chart palette - high contrast with glow effect
+const CHART_COLORS = {
+  lime: "hsl(82 85% 55%)",       // Vibrant lime
+  gold: "hsl(45 100% 58%)",      // Rich gold
+  emerald: "hsl(160 75% 45%)",   // Deep emerald
+  cyan: "hsl(185 80% 50%)",      // Electric cyan
+  violet: "hsl(280 75% 60%)",    // Soft violet
+  rose: "hsl(350 85% 60%)",      // Warm rose
+  sky: "hsl(200 90% 55%)",       // Sky blue
+  amber: "hsl(25 95% 55%)",      // Warm amber
+};
+
+const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
 
 export function MeetingsReport() {
   const { churchId } = useUserChurchId();
@@ -259,8 +261,8 @@ export function MeetingsReport() {
   // Pie chart data for type distribution
   const typeDistribution = useMemo(() => {
     return [
-      { name: "Individuais", value: totals.individuais, fill: CHART_COLORS[0] },
-      { name: "Células", value: totals.celulas, fill: CHART_COLORS[1] },
+      { name: "Individuais", value: totals.individuais, fill: CHART_COLORS.lime },
+      { name: "Células", value: totals.celulas, fill: CHART_COLORS.gold },
     ].filter((d) => d.value > 0);
   }, [totals]);
 
@@ -269,7 +271,7 @@ export function MeetingsReport() {
     return stats.slice(0, 8).map((s, i) => ({
       name: s.nome.split(" ")[0], // First name only
       encontros: s.totalEncontros,
-      fill: CHART_COLORS[i % CHART_COLORS.length],
+      fill: CHART_COLORS_ARRAY[i % CHART_COLORS_ARRAY.length],
     }));
   }, [stats]);
 
@@ -327,10 +329,10 @@ export function MeetingsReport() {
   ];
 
   const chartConfig = {
-    individuais: { label: "Individuais", color: "hsl(78 80% 48%)" },
-    celulas: { label: "Células", color: "hsl(42 90% 52%)" },
-    total: { label: "Total", color: "hsl(78 80% 48%)" },
-    encontros: { label: "Encontros", color: "hsl(78 80% 48%)" },
+    individuais: { label: "Individuais", color: CHART_COLORS.lime },
+    celulas: { label: "Células", color: CHART_COLORS.gold },
+    total: { label: "Total", color: CHART_COLORS.lime },
+    encontros: { label: "Encontros", color: CHART_COLORS.lime },
   };
 
   if (isLoading) {
@@ -404,77 +406,84 @@ export function MeetingsReport() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <Card className="relative overflow-hidden border-[hsl(82_85%_55%)]/30 bg-gradient-to-br from-[hsl(82_85%_55%)]/10 via-transparent to-transparent">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[hsl(82_85%_55%)]/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Encontros</CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-primary" />
+            <div className="h-9 w-9 rounded-xl bg-[hsl(82_85%_55%)]/15 flex items-center justify-center ring-1 ring-[hsl(82_85%_55%)]/30">
+              <Calendar className="h-4 w-4 text-[hsl(82_85%_55%)]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">{totals.total}</div>
+            <div className="text-3xl font-bold text-[hsl(82_85%_55%)]">{totals.total}</div>
             <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-[hsl(78_80%_48%)]/20">
+        <Card className="relative overflow-hidden border-[hsl(82_85%_55%)]/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Individuais</CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-[hsl(78_80%_48%)]/10 flex items-center justify-center">
-              <User className="h-4 w-4 text-[hsl(78_80%_48%)]" />
+            <div className="h-9 w-9 rounded-xl bg-[hsl(82_85%_55%)]/10 flex items-center justify-center">
+              <User className="h-4 w-4 text-[hsl(82_85%_55%)]" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totals.individuais}</div>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-2 flex-1 bg-muted/50 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-[hsl(78_80%_48%)] rounded-full transition-all"
-                  style={{ width: `${totals.total > 0 ? (totals.individuais / totals.total) * 100 : 0}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${totals.total > 0 ? (totals.individuais / totals.total) * 100 : 0}%`,
+                    background: `linear-gradient(90deg, hsl(82 85% 55%), hsl(82 85% 65%))`
+                  }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-[hsl(82_85%_55%)]">
                 {totals.total > 0 ? Math.round((totals.individuais / totals.total) * 100) : 0}%
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-[hsl(42_90%_52%)]/20">
+        <Card className="relative overflow-hidden border-[hsl(45_100%_58%)]/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Células</CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-[hsl(42_90%_52%)]/10 flex items-center justify-center">
-              <Users className="h-4 w-4 text-[hsl(42_90%_52%)]" />
+            <div className="h-9 w-9 rounded-xl bg-[hsl(45_100%_58%)]/10 flex items-center justify-center">
+              <Users className="h-4 w-4 text-[hsl(45_100%_58%)]" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totals.celulas}</div>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-2 flex-1 bg-muted/50 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-[hsl(42_90%_52%)] rounded-full transition-all"
-                  style={{ width: `${totals.total > 0 ? (totals.celulas / totals.total) * 100 : 0}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${totals.total > 0 ? (totals.celulas / totals.total) * 100 : 0}%`,
+                    background: `linear-gradient(90deg, hsl(45 100% 58%), hsl(45 100% 68%))`
+                  }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-[hsl(45_100%_58%)]">
                 {totals.total > 0 ? Math.round((totals.celulas / totals.total) * 100) : 0}%
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-[hsl(152_65%_42%)]/20 bg-gradient-to-br from-[hsl(152_65%_42%)]/5 to-transparent">
+        <Card className="relative overflow-hidden border-[hsl(160_75%_45%)]/30 bg-gradient-to-br from-[hsl(160_75%_45%)]/10 via-transparent to-transparent">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[hsl(160_75%_45%)]/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Participantes</CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-[hsl(152_65%_42%)]/10 flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-[hsl(152_65%_42%)]" />
+            <div className="h-9 w-9 rounded-xl bg-[hsl(160_75%_45%)]/15 flex items-center justify-center ring-1 ring-[hsl(160_75%_45%)]/30">
+              <TrendingUp className="h-4 w-4 text-[hsl(160_75%_45%)]" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[hsl(152_65%_42%)]">{totals.participantes}</div>
+            <div className="text-3xl font-bold text-[hsl(160_75%_45%)]">{totals.participantes}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              média de <span className="font-medium">{totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : 0}</span> por encontro
+              média de <span className="font-semibold text-[hsl(160_75%_45%)]">{totals.total > 0 ? (totals.participantes / totals.total).toFixed(1) : 0}</span> por encontro
             </p>
           </CardContent>
         </Card>
@@ -483,39 +492,51 @@ export function MeetingsReport() {
       {/* Charts Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Evolução Mensal */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary" />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.lime }} />
               Evolução Mensal
             </CardTitle>
           </CardHeader>
           <CardContent>
             {monthlyTrend.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[280px]">
-                <BarChart data={monthlyTrend} barGap={4}>
+                <BarChart data={monthlyTrend} barGap={6}>
+                  <defs>
+                    <linearGradient id="barLime" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(82 85% 60%)" />
+                      <stop offset="100%" stopColor="hsl(82 85% 45%)" />
+                    </linearGradient>
+                    <linearGradient id="barGold" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(45 100% 65%)" />
+                      <stop offset="100%" stopColor="hsl(45 100% 50%)" />
+                    </linearGradient>
+                  </defs>
                   <XAxis 
                     dataKey="month" 
-                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }} 
-                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
-                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }} 
+                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
+                    tickLine={false}
                   />
                   <YAxis 
-                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }} 
-                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
-                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }} 
+                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
+                    tickLine={false}
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    cursor={{ fill: 'hsl(220 10% 12% / 0.5)' }}
+                    cursor={{ fill: 'hsl(220 10% 15% / 0.6)' }}
                   />
-                  <Bar dataKey="individuais" name="Individuais" fill="hsl(78 80% 48%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="celulas" name="Células" fill="hsl(42 90% 52%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="individuais" name="Individuais" fill="url(#barLime)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="celulas" name="Células" fill="url(#barGold)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <Calendar className="h-10 w-10 opacity-20" />
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                  <Calendar className="h-7 w-7 opacity-40" />
+                </div>
                 <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
@@ -523,10 +544,10 @@ export function MeetingsReport() {
         </Card>
 
         {/* Distribuição por Tipo */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-[hsl(42_90%_52%)]" />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.gold }} />
               Distribuição por Tipo
             </CardTitle>
           </CardHeader>
@@ -535,17 +556,26 @@ export function MeetingsReport() {
               <ChartContainer config={chartConfig} className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
+                    <defs>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
                     <Pie
                       data={typeDistribution}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
                       cy="45%"
-                      outerRadius={85}
-                      innerRadius={55}
-                      paddingAngle={3}
-                      strokeWidth={2}
-                      stroke="hsl(220 12% 8%)"
+                      outerRadius={90}
+                      innerRadius={58}
+                      paddingAngle={4}
+                      strokeWidth={0}
+                      filter="url(#glow)"
                     >
                       {typeDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -554,17 +584,19 @@ export function MeetingsReport() {
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Legend 
                       verticalAlign="bottom" 
-                      height={40}
+                      height={45}
                       iconType="circle"
-                      iconSize={8}
-                      formatter={(value) => <span className="text-sm text-foreground ml-1">{value}</span>}
+                      iconSize={10}
+                      formatter={(value) => <span className="text-sm font-medium text-foreground ml-2">{value}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <Users className="h-10 w-10 opacity-20" />
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                  <Users className="h-7 w-7 opacity-40" />
+                </div>
                 <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
@@ -572,10 +604,10 @@ export function MeetingsReport() {
         </Card>
 
         {/* Tendência Semanal */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-[hsl(152_65%_42%)]" />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.emerald }} />
               Tendência Semanal
             </CardTitle>
           </CardHeader>
@@ -584,37 +616,47 @@ export function MeetingsReport() {
               <ChartContainer config={chartConfig} className="h-[280px]">
                 <LineChart data={weeklyTrend}>
                   <defs>
-                    <linearGradient id="gradientLine" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(78 80% 48%)" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(78 80% 48%)" stopOpacity={0} />
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={CHART_COLORS.lime} />
+                      <stop offset="100%" stopColor={CHART_COLORS.emerald} />
                     </linearGradient>
+                    <filter id="lineGlow">
+                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
                   </defs>
                   <XAxis 
                     dataKey="week" 
-                    tick={{ fontSize: 11, fill: 'hsl(60 5% 55%)' }}
-                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
-                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tick={{ fontSize: 11, fill: 'hsl(60 10% 70%)' }}
+                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
+                    tickLine={false}
                   />
                   <YAxis 
-                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }}
-                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
-                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }}
+                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
+                    tickLine={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line 
                     type="monotone" 
                     dataKey="total" 
                     name="Total"
-                    stroke="hsl(78 80% 48%)" 
+                    stroke="url(#lineGradient)" 
                     strokeWidth={3}
-                    dot={{ fill: "hsl(78 80% 48%)", strokeWidth: 0, r: 4 }}
-                    activeDot={{ fill: "hsl(78 80% 58%)", strokeWidth: 0, r: 6 }}
+                    filter="url(#lineGlow)"
+                    dot={{ fill: CHART_COLORS.lime, strokeWidth: 0, r: 5 }}
+                    activeDot={{ fill: CHART_COLORS.emerald, strokeWidth: 3, stroke: 'hsl(220 12% 8%)', r: 7 }}
                   />
                 </LineChart>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <TrendingUp className="h-10 w-10 opacity-20" />
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                  <TrendingUp className="h-7 w-7 opacity-40" />
+                </div>
                 <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
@@ -622,36 +664,44 @@ export function MeetingsReport() {
         </Card>
 
         {/* Top Discipuladores */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-[hsl(210_70%_55%)]" />
+              <div className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.cyan }} />
               Top Discipuladores
             </CardTitle>
           </CardHeader>
           <CardContent>
             {topDiscipuladores.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[280px]">
-                <BarChart data={topDiscipuladores} layout="vertical" barSize={20}>
+                <BarChart data={topDiscipuladores} layout="vertical" barSize={22}>
+                  <defs>
+                    {CHART_COLORS_ARRAY.map((color, i) => (
+                      <linearGradient key={i} id={`barGrad${i}`} x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+                        <stop offset="100%" stopColor={color} stopOpacity={1} />
+                      </linearGradient>
+                    ))}
+                  </defs>
                   <XAxis 
                     type="number" 
-                    tick={{ fontSize: 12, fill: 'hsl(60 5% 55%)' }}
-                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
-                    tickLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tick={{ fontSize: 12, fill: 'hsl(60 10% 70%)' }}
+                    axisLine={{ stroke: 'hsl(220 10% 20%)' }}
+                    tickLine={false}
                   />
                   <YAxis 
                     type="category" 
                     dataKey="name" 
-                    tick={{ fontSize: 11, fill: 'hsl(60 10% 96%)' }} 
-                    width={75}
-                    axisLine={{ stroke: 'hsl(220 10% 18%)' }}
+                    tick={{ fontSize: 12, fill: 'hsl(60 10% 90%)', fontWeight: 500 }} 
+                    width={80}
+                    axisLine={false}
                     tickLine={false}
                   />
                   <ChartTooltip 
                     content={<ChartTooltipContent />}
-                    cursor={{ fill: 'hsl(220 10% 12% / 0.5)' }}
+                    cursor={{ fill: 'hsl(220 10% 15% / 0.6)' }}
                   />
-                  <Bar dataKey="encontros" name="Encontros" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="encontros" name="Encontros" radius={[0, 8, 8, 0]}>
                     {topDiscipuladores.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -659,8 +709,10 @@ export function MeetingsReport() {
                 </BarChart>
               </ChartContainer>
             ) : (
-              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <Users className="h-10 w-10 opacity-20" />
+              <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground gap-3">
+                <div className="h-14 w-14 rounded-2xl bg-muted/30 flex items-center justify-center">
+                  <Users className="h-7 w-7 opacity-40" />
+                </div>
                 <span className="text-sm">Nenhum dado disponível</span>
               </div>
             )}
