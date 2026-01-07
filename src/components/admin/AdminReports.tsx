@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { VisaoGeralReport } from "./reports/VisaoGeralReport";
 import { CursosTrillhasReport } from "./reports/CursosTrillhasReport";
 import { DiscipuladoReport } from "./reports/DiscipuladoReport";
@@ -251,10 +252,19 @@ export function AdminReports() {
         </DropdownMenu>
       </div>
 
-      {/* Content */}
-      <div className="mt-6">
-        {renderContent()}
-      </div>
+      {/* Content with animation */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="mt-6"
+        >
+          {renderContent()}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
