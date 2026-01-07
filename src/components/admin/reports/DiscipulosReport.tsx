@@ -17,6 +17,7 @@ import { useSorting } from "@/hooks/useSorting";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CHART_COLORS, CHART_COLORS_ARRAY } from "@/lib/chartColors";
 
 interface DiscipuloStats {
   id: string;
@@ -42,19 +43,6 @@ interface Summary {
   academiaProgress: number;
 }
 
-// Harmonized chart palette - lime/dark theme aligned
-const CHART_COLORS = {
-  lime: "hsl(78 80% 48%)",        // Primary lime (matches theme)
-  teal: "hsl(168 65% 45%)",       // Complementary teal
-  cyan: "hsl(188 75% 48%)",       // Fresh cyan
-  violet: "hsl(265 55% 55%)",     // Soft violet
-  rose: "hsl(340 65% 55%)",       // Muted rose
-  emerald: "hsl(152 60% 42%)",    // Deep emerald
-  sky: "hsl(200 70% 50%)",        // Cool sky
-  mint: "hsl(160 50% 50%)",       // Soft mint
-};
-
-const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
 
 export function DiscipulosReport() {
   const [loading, setLoading] = useState(true);
