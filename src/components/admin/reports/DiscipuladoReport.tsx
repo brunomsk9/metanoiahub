@@ -1,20 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
-import { Heart, CheckCircle2, Users, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Cell, PieChart, Pie, Legend, ResponsiveContainer } from "recharts";
+import { Heart, CheckCircle2, Users, TrendingUp, Filter } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface StageStats {
   name: string;
+  shortName: string;
   completed: number;
   total: number;
   percentage: number;
   fill: string;
+}
+
+interface Discipulador {
+  id: string;
+  nome: string;
 }
 
 interface DiscipuladoStats {
@@ -24,15 +31,36 @@ interface DiscipuladoStats {
   stages: StageStats[];
 }
 
+const STAGE_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+];
+
 export function DiscipuladoReport() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodOption>("6m");
+  const [selectedDiscipulador, setSelectedDiscipulador] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [stats, setStats] = useState<DiscipuladoStats | null>(null);
   const [monthlyProgress, setMonthlyProgress] = useState<{ month: string; novos: number; concluidos: number }[]>([]);
+  const [discipuladores, setDiscipuladores] = useState<Discipulador[]>([]);
+  const [allRelationships, setAllRelationships] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
   }, [period]);
+
+  // Recalculate stats when filters change
+  useEffect(() => {
+    if (allRelationships.length > 0) {
+      calculateStats();
+    }
+  }, [selectedDiscipulador, selectedStatus, allRelationships]);
 
   const fetchData = async () => {
     try {
@@ -63,86 +91,19 @@ export function DiscipuladoReport() {
         rels = rels.filter(r => new Date(r.created_at) >= periodStart);
       }
 
-      const activeRels = rels.filter(r => r.status === 'active');
-      const completedRels = rels.filter(r => r.status === 'completed');
+      setAllRelationships(rels);
 
-      // Calculate stage progress
-      const stages: StageStats[] = [
-        {
-          name: 'Conexão Inicial 1',
-          completed: activeRels.filter(r => r.conexao_inicial_1).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.conexao_inicial_1).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--chart-1))'
-        },
-        {
-          name: 'Conexão Inicial 2',
-          completed: activeRels.filter(r => r.conexao_inicial_2).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.conexao_inicial_2).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--chart-2))'
-        },
-        {
-          name: 'Jornada Metanoia Presencial',
-          completed: activeRels.filter(r => r.alicerce_completed_presencial).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.alicerce_completed_presencial).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--chart-3))'
-        },
-        {
-          name: 'Academia Nível 1',
-          completed: activeRels.filter(r => r.academia_nivel_1).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.academia_nivel_1).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--chart-4))'
-        },
-        {
-          name: 'Academia Nível 2',
-          completed: activeRels.filter(r => r.academia_nivel_2).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.academia_nivel_2).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--chart-5))'
-        },
-        {
-          name: 'Academia Nível 3',
-          completed: activeRels.filter(r => r.academia_nivel_3).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.academia_nivel_3).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--primary))'
-        },
-        {
-          name: 'Academia Nível 4',
-          completed: activeRels.filter(r => r.academia_nivel_4).length,
-          total: activeRels.length,
-          percentage: activeRels.length > 0 ? Math.round((activeRels.filter(r => r.academia_nivel_4).length / activeRels.length) * 100) : 0,
-          fill: 'hsl(var(--chart-1))'
-        }
-      ];
-
-      // Calculate average duration for completed relationships
-      let avgDuration = 0;
-      if (completedRels.length > 0) {
-        const durations = completedRels
-          .filter(r => r.completed_at && r.started_at)
-          .map(r => {
-            const start = new Date(r.started_at);
-            const end = new Date(r.completed_at!);
-            return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-          });
-        
-        if (durations.length > 0) {
-          avgDuration = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
-        }
+      // Fetch discipuladores for filter
+      const discipuladorIds = [...new Set(rels.map(r => r.discipulador_id))];
+      if (discipuladorIds.length > 0) {
+        const { data: discProfiles } = await supabase
+          .from('profiles')
+          .select('id, nome')
+          .in('id', discipuladorIds);
+        setDiscipuladores(discProfiles || []);
       }
 
-      setStats({
-        totalActive: activeRels.length,
-        totalCompleted: completedRels.length,
-        avgDuration,
-        stages
-      });
-
-      // Monthly progress based on period
+      // Calculate monthly progress
       const monthsToShow = period === "30d" ? 1 : period === "3m" ? 3 : period === "6m" ? 6 : period === "1y" ? 12 : 6;
       const now = new Date();
       const monthly: { month: string; novos: number; concluidos: number }[] = [];
@@ -176,6 +137,128 @@ export function DiscipuladoReport() {
     }
   };
 
+  const calculateStats = () => {
+    let rels = [...allRelationships];
+
+    // Apply discipulador filter
+    if (selectedDiscipulador !== "all") {
+      rels = rels.filter(r => r.discipulador_id === selectedDiscipulador);
+    }
+
+    // Apply status filter
+    if (selectedStatus !== "all") {
+      rels = rels.filter(r => r.status === selectedStatus);
+    }
+
+    const activeRels = rels.filter(r => r.status === 'active');
+    const completedRels = rels.filter(r => r.status === 'completed');
+    const baseTotal = selectedStatus === "all" ? activeRels.length : rels.length;
+
+    // Calculate stage progress
+    const stages: StageStats[] = [
+      {
+        name: 'Conexão Inicial 1',
+        shortName: 'CI 1',
+        completed: rels.filter(r => r.conexao_inicial_1).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.conexao_inicial_1).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[0]
+      },
+      {
+        name: 'Conexão Inicial 2',
+        shortName: 'CI 2',
+        completed: rels.filter(r => r.conexao_inicial_2).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.conexao_inicial_2).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[1]
+      },
+      {
+        name: 'Jornada Metanoia',
+        shortName: 'Jornada',
+        completed: rels.filter(r => r.alicerce_completed_presencial).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.alicerce_completed_presencial).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[2]
+      },
+      {
+        name: 'Academia Nível 1',
+        shortName: 'Acad. 1',
+        completed: rels.filter(r => r.academia_nivel_1).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.academia_nivel_1).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[3]
+      },
+      {
+        name: 'Academia Nível 2',
+        shortName: 'Acad. 2',
+        completed: rels.filter(r => r.academia_nivel_2).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.academia_nivel_2).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[4]
+      },
+      {
+        name: 'Academia Nível 3',
+        shortName: 'Acad. 3',
+        completed: rels.filter(r => r.academia_nivel_3).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.academia_nivel_3).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[5]
+      },
+      {
+        name: 'Academia Nível 4',
+        shortName: 'Acad. 4',
+        completed: rels.filter(r => r.academia_nivel_4).length,
+        total: baseTotal,
+        percentage: baseTotal > 0 ? Math.round((rels.filter(r => r.academia_nivel_4).length / baseTotal) * 100) : 0,
+        fill: STAGE_COLORS[6]
+      }
+    ];
+
+    // Calculate average duration for completed relationships
+    let avgDuration = 0;
+    if (completedRels.length > 0) {
+      const durations = completedRels
+        .filter(r => r.completed_at && r.started_at)
+        .map(r => {
+          const start = new Date(r.started_at);
+          const end = new Date(r.completed_at!);
+          return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        });
+      
+      if (durations.length > 0) {
+        avgDuration = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
+      }
+    }
+
+    setStats({
+      totalActive: activeRels.length,
+      totalCompleted: completedRels.length,
+      avgDuration,
+      stages
+    });
+  };
+
+  const discipuladorOptions = useMemo(() => [
+    { value: "all", label: "Todos os discipuladores" },
+    ...discipuladores.map(d => ({ value: d.id, label: d.nome }))
+  ], [discipuladores]);
+
+  const statusOptions = [
+    { value: "all", label: "Todos os status" },
+    { value: "active", label: "Ativos" },
+    { value: "completed", label: "Concluídos" },
+    { value: "inactive", label: "Inativos" }
+  ];
+
+  // Prepare pie chart data (only stages with completed > 0)
+  const pieChartData = useMemo(() => 
+    stats?.stages.filter(s => s.completed > 0).map(s => ({
+      name: s.shortName,
+      value: s.completed,
+      fill: s.fill
+    })) || []
+  , [stats]);
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -188,15 +271,47 @@ export function DiscipuladoReport() {
 
   const chartConfig = {
     novos: { label: "Novos", color: "hsl(var(--primary))" },
-    concluidos: { label: "Concluídos", color: "hsl(var(--chart-2))" }
+    concluidos: { label: "Concluídos", color: "hsl(var(--chart-2))" },
+    completed: { label: "Concluídos", color: "hsl(var(--primary))" }
   };
 
   return (
     <div className="space-y-6">
-      {/* Period Filter */}
-      <div className="flex justify-end">
-        <PeriodFilter value={period} onChange={setPeriod} />
-      </div>
+      {/* Filters */}
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs text-muted-foreground mb-1 block">Discipulador</label>
+              <SearchableSelect
+                options={discipuladorOptions}
+                value={selectedDiscipulador}
+                onValueChange={setSelectedDiscipulador}
+                placeholder="Filtrar por discipulador"
+              />
+            </div>
+            <div className="flex-1 min-w-[160px]">
+              <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+              <SearchableSelect
+                options={statusOptions}
+                value={selectedStatus}
+                onValueChange={setSelectedStatus}
+                placeholder="Filtrar por status"
+              />
+            </div>
+            <div className="min-w-[140px]">
+              <label className="text-xs text-muted-foreground mb-1 block">Período</label>
+              <PeriodFilter value={period} onChange={setPeriod} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -249,22 +364,91 @@ export function DiscipuladoReport() {
         </Card>
       </div>
 
-      {/* Stage Progress */}
+      {/* Charts Grid - Improved Layout */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Pie Chart - Distribuição por Etapa */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Distribuição por Etapa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pieChartData.length > 0 ? (
+              <ChartContainer config={chartConfig} className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      innerRadius={50}
+                      paddingAngle={2}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+                Nenhum dado disponível
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Bar Chart - Evolução Mensal */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução Mensal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[280px]">
+              <BarChart data={monthlyProgress}>
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="novos" name="Novos" fill="hsl(var(--primary))" radius={4} />
+                <Bar dataKey="concluidos" name="Concluídos" fill="hsl(var(--chart-2))" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Stage Progress - Full Width */}
       <Card>
         <CardHeader>
           <CardTitle>Progresso por Etapa</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
             {stats?.stages.map((stage, index) => (
-              <div key={index} className="space-y-2">
+              <div key={index} className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{stage.name}</span>
+                  <span className="font-medium text-sm">{stage.name}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {stage.completed}/{stage.total}
                     </span>
-                    <Badge variant={stage.percentage > 50 ? "default" : "secondary"}>
+                    <Badge 
+                      variant={stage.percentage > 50 ? "default" : "secondary"}
+                      className="min-w-[45px] justify-center"
+                    >
                       {stage.percentage}%
                     </Badge>
                   </div>
@@ -275,51 +459,6 @@ export function DiscipuladoReport() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Stage Distribution Chart */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Etapa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <BarChart data={stats?.stages || []} layout="vertical">
-                <XAxis type="number" />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={120}
-                  tick={{ fontSize: 11 }}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="completed" radius={4}>
-                  {stats?.stages.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Evolução Mensal</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <BarChart data={monthlyProgress}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="novos" fill="hsl(var(--primary))" radius={4} />
-                <Bar dataKey="concluidos" fill="hsl(var(--chart-2))" radius={4} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
