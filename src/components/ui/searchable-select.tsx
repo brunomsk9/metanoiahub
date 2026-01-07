@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,8 @@ interface SearchableSelectProps {
   triggerClassName?: string;
   disabled?: boolean;
   icon?: React.ReactNode;
+  showClearButton?: boolean;
+  size?: "sm" | "default" | "lg";
 }
 
 export function SearchableSelect({
@@ -47,11 +49,14 @@ export function SearchableSelect({
   triggerClassName,
   disabled = false,
   icon,
+  showClearButton = true,
+  size = "default",
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
   const selectedOption = options.find((opt) => opt.value === value);
+  const hasValue = value && value !== "all" && value !== "";
 
   const filteredOptions = React.useMemo(() => {
     if (!search.trim()) return options;
@@ -63,6 +68,17 @@ export function SearchableSelect({
     );
   }, [options, search]);
 
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onValueChange("all");
+  };
+
+  const sizeClasses = {
+    sm: "h-8 text-xs px-2.5",
+    default: "h-9 text-sm px-3",
+    lg: "h-10 text-sm px-4"
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -72,35 +88,65 @@ export function SearchableSelect({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "justify-between font-normal",
+            "justify-between font-normal w-full",
+            "bg-background/50 border-border/50",
+            "hover:bg-background/80 hover:border-primary/30",
+            "focus:ring-1 focus:ring-primary/20 focus:border-primary/50",
+            "transition-all duration-200",
             !value && "text-muted-foreground",
+            hasValue && "border-primary/30 bg-primary/5",
+            sizeClasses[size],
             triggerClassName
           )}
         >
-          <span className="flex items-center gap-2 truncate">
-            {icon && <span className="shrink-0">{icon}</span>}
+          <span className="flex items-center gap-2 truncate flex-1">
+            {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
             {selectedOption ? (
               <span className="truncate flex items-center gap-2">
                 {selectedOption.icon}
-                {selectedOption.label}
+                <span className={cn(hasValue && "text-foreground font-medium")}>
+                  {selectedOption.label}
+                </span>
               </span>
             ) : (
-              placeholder
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            {showClearButton && hasValue && (
+              <span
+                onClick={handleClear}
+                className="p-0.5 rounded-sm hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </span>
+            )}
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+          </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={cn("p-0", className)} align="start">
-        <Command shouldFilter={false}>
-          <CommandInput
-            placeholder={searchPlaceholder}
-            value={search}
-            onValueChange={setSearch}
-          />
-          <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
-            <CommandGroup>
+      <PopoverContent 
+        className={cn(
+          "p-0 w-[--radix-popover-trigger-width]",
+          "bg-card/95 backdrop-blur-xl border-primary/20",
+          className
+        )} 
+        align="start"
+      >
+        <Command shouldFilter={false} className="bg-transparent">
+          <div className="border-b border-border/50">
+            <CommandInput
+              placeholder={searchPlaceholder}
+              value={search}
+              onValueChange={setSearch}
+              className="border-0 focus:ring-0 bg-transparent"
+            />
+          </div>
+          <CommandList className="max-h-[280px]">
+            <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+              {emptyMessage}
+            </CommandEmpty>
+            <CommandGroup className="p-1">
               {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
@@ -110,17 +156,23 @@ export function SearchableSelect({
                     setOpen(false);
                     setSearch("");
                   }}
-                  className="flex items-center gap-2"
+                  className={cn(
+                    "flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer",
+                    "hover:bg-primary/10",
+                    value === option.value && "bg-primary/10 text-primary"
+                  )}
                 >
                   <Check
                     className={cn(
-                      "h-4 w-4 shrink-0",
+                      "h-4 w-4 shrink-0 text-primary",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {option.icon && <span className="shrink-0">{option.icon}</span>}
                   <span className="flex-1 truncate">
-                    {option.label}
+                    <span className={cn(value === option.value && "font-medium")}>
+                      {option.label}
+                    </span>
                     {option.description && (
                       <span className="ml-2 text-xs text-muted-foreground">
                         {option.description}

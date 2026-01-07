@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TablePagination } from "@/components/ui/table-pagination";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Flame, GraduationCap, CheckCircle2, BookOpen, TrendingUp, Calendar } from "lucide-react";
+import { Users, Flame, GraduationCap, CheckCircle2, BookOpen, TrendingUp, Calendar, Filter } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { usePagination } from "@/hooks/usePagination";
 import { useSorting } from "@/hooks/useSorting";
@@ -286,18 +286,32 @@ export function DiscipulosReport() {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 justify-between items-center">
-        <div className="flex flex-wrap gap-3">
-          <SearchableSelect
-            options={discipuladorOptions}
-            value={selectedDiscipulador}
-            onValueChange={setSelectedDiscipulador}
-            placeholder="Filtrar por discipulador"
-            className="w-56"
-          />
-        </div>
-        <PeriodFilter value={period} onChange={setPeriod} />
-      </div>
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Discipulador</label>
+              <SearchableSelect
+                options={discipuladorOptions}
+                value={selectedDiscipulador}
+                onValueChange={setSelectedDiscipulador}
+                placeholder="Todos os discipuladores"
+                searchPlaceholder="Buscar discipulador..."
+              />
+            </div>
+            <div className="min-w-[140px]">
+              <label className="text-xs text-muted-foreground mb-1.5 block">Período</label>
+              <PeriodFilter value={period} onChange={setPeriod} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
