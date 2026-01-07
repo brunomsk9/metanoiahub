@@ -54,16 +54,16 @@ interface DiscipuladorStats {
   totalParticipantes: number;
 }
 
-// Refined chart palette - warm & vibrant, no black
+// Harmonized chart palette - lime/dark theme aligned
 const CHART_COLORS = {
-  lime: "hsl(82 75% 52%)",        // Fresh lime
-  gold: "hsl(42 95% 55%)",        // Warm gold
-  emerald: "hsl(158 65% 48%)",    // Soft emerald
-  cyan: "hsl(182 70% 48%)",       // Ocean cyan
-  violet: "hsl(268 65% 58%)",     // Gentle violet
-  rose: "hsl(345 75% 58%)",       // Soft rose
-  sky: "hsl(198 80% 52%)",        // Clear sky
-  amber: "hsl(32 90% 52%)",       // Warm amber
+  lime: "hsl(78 80% 48%)",        // Primary lime (matches theme)
+  teal: "hsl(168 65% 45%)",       // Complementary teal
+  cyan: "hsl(188 75% 48%)",       // Fresh cyan
+  violet: "hsl(265 55% 55%)",     // Soft violet
+  rose: "hsl(340 65% 55%)",       // Muted rose
+  emerald: "hsl(152 60% 42%)",    // Deep emerald
+  sky: "hsl(200 70% 50%)",        // Cool sky
+  mint: "hsl(160 50% 50%)",       // Soft mint
 };
 
 const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
@@ -289,7 +289,7 @@ export function MeetingsReport() {
   const typeDistribution = useMemo(() => {
     return [
       { name: "Individuais", value: totals.individuais, fill: CHART_COLORS.lime },
-      { name: "Células", value: totals.celulas, fill: CHART_COLORS.gold },
+      { name: "Células", value: totals.celulas, fill: CHART_COLORS.teal },
     ].filter((d) => d.value > 0);
   }, [totals]);
 
@@ -357,7 +357,7 @@ export function MeetingsReport() {
 
   const chartConfig = {
     individuais: { label: "Individuais", color: CHART_COLORS.lime },
-    celulas: { label: "Células", color: CHART_COLORS.gold },
+    celulas: { label: "Células", color: CHART_COLORS.teal },
     total: { label: "Total", color: CHART_COLORS.lime },
     encontros: { label: "Encontros", color: CHART_COLORS.lime },
   };
@@ -454,7 +454,7 @@ export function MeetingsReport() {
             title: "Células",
             value: totals.celulas,
             percent: totals.total > 0 ? Math.round((totals.celulas / totals.total) * 100) : 0,
-            color: CHART_COLORS.gold,
+            color: CHART_COLORS.teal,
             Icon: Users,
             hasProgress: true
           },
@@ -544,9 +544,9 @@ export function MeetingsReport() {
                           <stop offset="0%" stopColor={CHART_COLORS.lime} />
                           <stop offset="100%" stopColor="hsl(82 75% 38%)" />
                         </linearGradient>
-                        <linearGradient id="barGold" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={CHART_COLORS.gold} />
-                          <stop offset="100%" stopColor="hsl(42 95% 42%)" />
+                        <linearGradient id="barTeal" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={CHART_COLORS.teal} />
+                          <stop offset="100%" stopColor="hsl(168 65% 32%)" />
                         </linearGradient>
                       </defs>
                       <XAxis 
@@ -574,7 +574,7 @@ export function MeetingsReport() {
                         iconSize={8}
                       />
                       <Bar dataKey="individuais" name="Individuais" fill="url(#barLime)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="celulas" name="Células" fill="url(#barGold)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="celulas" name="Células" fill="url(#barTeal)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -600,7 +600,7 @@ export function MeetingsReport() {
           <Card className="border-border/50 overflow-hidden h-full">
             <CardHeader className="pb-2 px-3 sm:px-6">
               <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" style={{ background: CHART_COLORS.gold }} />
+                <div className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" style={{ background: CHART_COLORS.teal }} />
                 Distribuição por Tipo
               </CardTitle>
             </CardHeader>
