@@ -71,7 +71,10 @@ export function MeetingsReport() {
   const getDateRange = (periodOption: PeriodOption) => {
     const now = new Date();
     const periodStart = getDateFromPeriod(periodOption);
-    return { start: periodStart || subMonths(now, 3), end: now };
+    // Include future meetings within next 30 days
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 30);
+    return { start: periodStart || subMonths(now, 3), end: futureDate };
   };
 
   const { start: periodStart, end: periodEnd } = getDateRange(period);
