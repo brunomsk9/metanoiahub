@@ -8,74 +8,60 @@ import { DiscipulosReport } from "./reports/DiscipulosReport";
 import { VolunteerEngagementReport } from "./reports/VolunteerEngagementReport";
 import { VolunteersExportReport } from "./reports/VolunteersExportReport";
 import { MultiMinistryVolunteersReport } from "./reports/MultiMinistryVolunteersReport";
-import { WeeklyDiscipleshipReport } from "./reports/WeeklyDiscipleshipReport";
+import { MeetingsReport } from "./reports/MeetingsReport";
 import { ServiceAttendance } from "./ServiceAttendance";
 import { NewsletterManager } from "./NewsletterManager";
-import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck, FileSpreadsheet, UserCheck, Calendar, Mail, UserPlus, User } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  GraduationCap, 
+  Heart, 
+  Users, 
+  CalendarCheck, 
+  FileSpreadsheet, 
+  UserCheck, 
+  Calendar, 
+  Mail, 
+  User,
+  MessageCircle
+} from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export function AdminReports() {
   const [activeTab, setActiveTab] = useState("visao-geral");
 
+  const tabs = [
+    { value: "visao-geral", label: "Visão Geral", shortLabel: "Geral", icon: LayoutDashboard },
+    { value: "cursos", label: "Cursos e Trilhas", shortLabel: "Cursos", icon: GraduationCap },
+    { value: "discipulado", label: "Discipulado", shortLabel: "Disc.", icon: Heart },
+    { value: "encontros", label: "Encontros", shortLabel: "Enc.", icon: MessageCircle },
+    { value: "performance", label: "Discipuladores", shortLabel: "Disc.", icon: Users },
+    { value: "discipulos", label: "Discípulos", shortLabel: "Disc.", icon: User },
+    { value: "presenca", label: "Presença", shortLabel: "Pres.", icon: Calendar },
+    { value: "voluntarios", label: "Voluntários", shortLabel: "Vol.", icon: CalendarCheck },
+    { value: "multi-ministerio", label: "Multi-Ministério", shortLabel: "Multi", icon: UserCheck },
+    { value: "newsletter", label: "Newsletter", shortLabel: "News", icon: Mail },
+    { value: "exportar", label: "Exportar", shortLabel: "Exp.", icon: FileSpreadsheet },
+  ];
+
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex flex-wrap h-auto gap-1">
-          <TabsTrigger value="visao-geral" className="gap-2">
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="hidden sm:inline">Visão Geral</span>
-            <span className="sm:hidden">Geral</span>
-          </TabsTrigger>
-          <TabsTrigger value="cursos" className="gap-2">
-            <GraduationCap className="h-4 w-4" />
-            <span className="hidden sm:inline">Cursos e Trilhas</span>
-            <span className="sm:hidden">Cursos</span>
-          </TabsTrigger>
-          <TabsTrigger value="discipulado" className="gap-2">
-            <Heart className="h-4 w-4" />
-            <span className="hidden sm:inline">Discipulado</span>
-            <span className="sm:hidden">Disc.</span>
-          </TabsTrigger>
-          <TabsTrigger value="encontros" className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            <span className="hidden sm:inline">Encontros</span>
-            <span className="sm:hidden">Enc.</span>
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Discipuladores</span>
-            <span className="sm:hidden">Disc.</span>
-          </TabsTrigger>
-          <TabsTrigger value="discipulos" className="gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Discípulos</span>
-            <span className="sm:hidden">Disc.</span>
-          </TabsTrigger>
-          <TabsTrigger value="presenca" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Presença</span>
-            <span className="sm:hidden">Pres.</span>
-          </TabsTrigger>
-          <TabsTrigger value="voluntarios" className="gap-2">
-            <CalendarCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Voluntários</span>
-            <span className="sm:hidden">Vol.</span>
-          </TabsTrigger>
-          <TabsTrigger value="multi-ministerio" className="gap-2">
-            <UserCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Multi-Ministério</span>
-            <span className="sm:hidden">Multi</span>
-          </TabsTrigger>
-          <TabsTrigger value="newsletter" className="gap-2">
-            <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Newsletter</span>
-            <span className="sm:hidden">News</span>
-          </TabsTrigger>
-          <TabsTrigger value="exportar" className="gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            <span className="hidden sm:inline">Exportar</span>
-            <span className="sm:hidden">Exp.</span>
-          </TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full">
+          <TabsList className="inline-flex h-auto gap-1 p-1 w-max min-w-full">
+            {tabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.value} 
+                value={tab.value} 
+                className="gap-2 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground whitespace-nowrap"
+              >
+                <tab.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <ScrollBar orientation="horizontal" className="invisible" />
+        </ScrollArea>
 
         <TabsContent value="visao-geral" className="mt-6">
           <VisaoGeralReport />
@@ -90,7 +76,7 @@ export function AdminReports() {
         </TabsContent>
 
         <TabsContent value="encontros" className="mt-6">
-          <WeeklyDiscipleshipReport />
+          <MeetingsReport />
         </TabsContent>
 
         <TabsContent value="performance" className="mt-6">
