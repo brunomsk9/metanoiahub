@@ -4,13 +4,14 @@ import { VisaoGeralReport } from "./reports/VisaoGeralReport";
 import { CursosTrillhasReport } from "./reports/CursosTrillhasReport";
 import { DiscipuladoReport } from "./reports/DiscipuladoReport";
 import { PerformanceDiscipuladoresReport } from "./reports/PerformanceDiscipuladoresReport";
+import { DiscipulosReport } from "./reports/DiscipulosReport";
 import { VolunteerEngagementReport } from "./reports/VolunteerEngagementReport";
 import { VolunteersExportReport } from "./reports/VolunteersExportReport";
 import { MultiMinistryVolunteersReport } from "./reports/MultiMinistryVolunteersReport";
 import { WeeklyDiscipleshipReport } from "./reports/WeeklyDiscipleshipReport";
 import { ServiceAttendance } from "./ServiceAttendance";
 import { NewsletterManager } from "./NewsletterManager";
-import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck, FileSpreadsheet, UserCheck, Calendar, Mail, UserPlus } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Heart, Users, CalendarCheck, FileSpreadsheet, UserCheck, Calendar, Mail, UserPlus, User } from "lucide-react";
 
 export function AdminReports() {
   const [activeTab, setActiveTab] = useState("visao-geral");
@@ -41,8 +42,13 @@ export function AdminReports() {
           </TabsTrigger>
           <TabsTrigger value="performance" className="gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Performance</span>
-            <span className="sm:hidden">Perf.</span>
+            <span className="hidden sm:inline">Discipuladores</span>
+            <span className="sm:hidden">Disc.</span>
+          </TabsTrigger>
+          <TabsTrigger value="discipulos" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Discípulos</span>
+            <span className="sm:hidden">Disc.</span>
           </TabsTrigger>
           <TabsTrigger value="presenca" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -89,6 +95,10 @@ export function AdminReports() {
 
         <TabsContent value="performance" className="mt-6">
           <PerformanceDiscipuladoresReport />
+        </TabsContent>
+
+        <TabsContent value="discipulos" className="mt-6">
+          <DiscipulosReport />
         </TabsContent>
 
         <TabsContent value="presenca" className="mt-6">
