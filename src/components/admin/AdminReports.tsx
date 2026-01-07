@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VisaoGeralReport } from "./reports/VisaoGeralReport";
 import { CursosTrillhasReport } from "./reports/CursosTrillhasReport";
 import { DiscipuladoReport } from "./reports/DiscipuladoReport";
@@ -103,171 +102,159 @@ export function AdminReports() {
     return <IconComponent className="h-4 w-4" />;
   };
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "visao-geral":
+        return <VisaoGeralReport />;
+      case "cursos":
+        return <CursosTrillhasReport />;
+      case "discipulado":
+        return <DiscipuladoReport />;
+      case "encontros":
+        return <MeetingsReport />;
+      case "performance":
+        return <PerformanceDiscipuladoresReport />;
+      case "discipulos":
+        return <DiscipulosReport />;
+      case "presenca":
+        return <ServiceAttendance />;
+      case "voluntarios":
+        return <VolunteerEngagementReport />;
+      case "multi-ministerio":
+        return <MultiMinistryVolunteersReport />;
+      case "newsletter":
+        return <NewsletterManager />;
+      case "exportar":
+        return <VolunteersExportReport />;
+      default:
+        return <VisaoGeralReport />;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Desktop Navigation */}
-        <div className="hidden md:block">
-          <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg border border-border/50">
-            {tabGroups.map((group, groupIndex) => (
-              <div key={group.label} className="flex items-center">
-                {groupIndex > 0 && (
-                  <div className="w-px h-6 bg-border/50 mx-1" />
-                )}
-                {group.tabs.length === 1 ? (
-                  <TabsTrigger 
-                    value={group.tabs[0].value}
-                    className={cn(
-                      "gap-2 px-3 py-2 rounded-md transition-all",
-                      "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                      "data-[state=active]:shadow-sm"
-                    )}
-                  >
-                    {renderTabIcon(group.tabs[0].icon)}
-                    <span>{group.tabs[0].label}</span>
-                  </TabsTrigger>
-                ) : (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant={group.tabs.some(t => t.value === activeTab) ? "default" : "ghost"}
-                        size="sm"
-                        className={cn(
-                          "gap-2 h-9",
-                          group.tabs.some(t => t.value === activeTab) && "shadow-sm"
-                        )}
-                      >
-                        {group.tabs.some(t => t.value === activeTab) && activeTabInfo ? (
-                          <>
-                            {renderTabIcon(activeTabInfo.icon)}
-                            <span>{activeTabInfo.label}</span>
-                          </>
-                        ) : (
-                          <>
-                            {renderTabIcon(group.tabs[0].icon)}
-                            <span>{group.label}</span>
-                          </>
-                        )}
-                        <ChevronDown className="h-3 w-3 opacity-60" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="min-w-[200px]">
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">
-                        {group.label}
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {group.tabs.map((tab) => (
-                        <DropdownMenuItem 
-                          key={tab.value}
-                          onClick={() => setActiveTab(tab.value)}
-                          className={cn(
-                            "gap-2 cursor-pointer",
-                            activeTab === tab.value && "bg-primary/10 text-primary"
-                          )}
-                        >
-                          {renderTabIcon(tab.icon)}
-                          <span>{tab.label}</span>
-                          {activeTab === tab.value && (
-                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
-                              Ativo
-                            </Badge>
-                          )}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  {activeTabInfo && renderTabIcon(activeTabInfo.icon)}
-                  <span>{activeTabInfo?.label || "Selecionar relatório"}</span>
-                </div>
-                <ChevronDown className="h-4 w-4 opacity-60" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[calc(100vw-2rem)] max-w-sm">
-              {tabGroups.map((group, groupIndex) => (
-                <div key={group.label}>
-                  {groupIndex > 0 && <DropdownMenuSeparator />}
-                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                    {group.label}
-                  </DropdownMenuLabel>
-                  {group.tabs.map((tab) => (
-                    <DropdownMenuItem 
-                      key={tab.value}
-                      onClick={() => setActiveTab(tab.value)}
+      {/* Desktop Navigation */}
+      <div className="hidden md:block">
+        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg border border-border/50">
+          {tabGroups.map((group, groupIndex) => (
+            <div key={group.label} className="flex items-center">
+              {groupIndex > 0 && (
+                <div className="w-px h-6 bg-border/50 mx-1" />
+              )}
+              {group.tabs.length === 1 ? (
+                <Button
+                  variant={activeTab === group.tabs[0].value ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setActiveTab(group.tabs[0].value)}
+                  className={cn(
+                    "gap-2 h-9",
+                    activeTab === group.tabs[0].value && "shadow-sm"
+                  )}
+                >
+                  {renderTabIcon(group.tabs[0].icon)}
+                  <span>{group.tabs[0].label}</span>
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant={group.tabs.some(t => t.value === activeTab) ? "default" : "ghost"}
+                      size="sm"
                       className={cn(
-                        "gap-2 cursor-pointer",
-                        activeTab === tab.value && "bg-primary/10 text-primary font-medium"
+                        "gap-2 h-9",
+                        group.tabs.some(t => t.value === activeTab) && "shadow-sm"
                       )}
                     >
-                      {renderTabIcon(tab.icon)}
-                      <span>{tab.label}</span>
-                      {activeTab === tab.value && (
-                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                      {group.tabs.some(t => t.value === activeTab) && activeTabInfo ? (
+                        <>
+                          {renderTabIcon(activeTabInfo.icon)}
+                          <span>{activeTabInfo.label}</span>
+                        </>
+                      ) : (
+                        <>
+                          {renderTabIcon(group.tabs[0].icon)}
+                          <span>{group.label}</span>
+                        </>
                       )}
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                      <ChevronDown className="h-3 w-3 opacity-60" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[200px] bg-popover z-50">
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                      {group.label}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {group.tabs.map((tab) => (
+                      <DropdownMenuItem 
+                        key={tab.value}
+                        onClick={() => setActiveTab(tab.value)}
+                        className={cn(
+                          "gap-2 cursor-pointer",
+                          activeTab === tab.value && "bg-primary/10 text-primary"
+                        )}
+                      >
+                        {renderTabIcon(tab.icon)}
+                        <span>{tab.label}</span>
+                        {activeTab === tab.value && (
+                          <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                            Ativo
+                          </Badge>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Tab Contents */}
-        <TabsContent value="visao-geral" className="mt-6">
-          <VisaoGeralReport />
-        </TabsContent>
+      {/* Mobile Navigation */}
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {activeTabInfo && renderTabIcon(activeTabInfo.icon)}
+                <span>{activeTabInfo?.label || "Selecionar relatório"}</span>
+              </div>
+              <ChevronDown className="h-4 w-4 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[calc(100vw-2rem)] max-w-sm bg-popover z-50">
+            {tabGroups.map((group, groupIndex) => (
+              <div key={group.label}>
+                {groupIndex > 0 && <DropdownMenuSeparator />}
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                  {group.label}
+                </DropdownMenuLabel>
+                {group.tabs.map((tab) => (
+                  <DropdownMenuItem 
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={cn(
+                      "gap-2 cursor-pointer",
+                      activeTab === tab.value && "bg-primary/10 text-primary font-medium"
+                    )}
+                  >
+                    {renderTabIcon(tab.icon)}
+                    <span>{tab.label}</span>
+                    {activeTab === tab.value && (
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </div>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        <TabsContent value="cursos" className="mt-6">
-          <CursosTrillhasReport />
-        </TabsContent>
-
-        <TabsContent value="discipulado" className="mt-6">
-          <DiscipuladoReport />
-        </TabsContent>
-
-        <TabsContent value="encontros" className="mt-6">
-          <MeetingsReport />
-        </TabsContent>
-
-        <TabsContent value="performance" className="mt-6">
-          <PerformanceDiscipuladoresReport />
-        </TabsContent>
-
-        <TabsContent value="discipulos" className="mt-6">
-          <DiscipulosReport />
-        </TabsContent>
-
-        <TabsContent value="presenca" className="mt-6">
-          <ServiceAttendance />
-        </TabsContent>
-
-        <TabsContent value="voluntarios" className="mt-6">
-          <VolunteerEngagementReport />
-        </TabsContent>
-
-        <TabsContent value="multi-ministerio" className="mt-6">
-          <MultiMinistryVolunteersReport />
-        </TabsContent>
-
-        <TabsContent value="newsletter" className="mt-6">
-          <NewsletterManager />
-        </TabsContent>
-
-        <TabsContent value="exportar" className="mt-6">
-          <VolunteersExportReport />
-        </TabsContent>
-      </Tabs>
+      {/* Content */}
+      <div className="mt-6">
+        {renderContent()}
+      </div>
     </div>
   );
 }
