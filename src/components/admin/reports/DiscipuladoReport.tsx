@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, Cell, PieChart, Pie, Legend, ResponsiveCon
 import { Heart, CheckCircle2, Users, TrendingUp, Filter } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { CHART_COLORS, CHART_COLORS_ARRAY } from "@/lib/chartColors";
 
 interface StageStats {
   name: string;
@@ -31,19 +32,6 @@ interface DiscipuladoStats {
   stages: StageStats[];
 }
 
-// Harmonized chart palette - lime/dark theme aligned
-const CHART_COLORS = {
-  lime: "hsl(78 80% 48%)",        // Primary lime (matches theme)
-  teal: "hsl(168 65% 45%)",       // Complementary teal
-  cyan: "hsl(188 75% 48%)",       // Fresh cyan
-  violet: "hsl(265 55% 55%)",     // Soft violet
-  rose: "hsl(340 65% 55%)",       // Muted rose
-  emerald: "hsl(152 60% 42%)",    // Deep emerald
-  sky: "hsl(200 70% 50%)",        // Cool sky
-  mint: "hsl(160 50% 50%)",       // Soft mint
-};
-
-const CHART_COLORS_ARRAY = Object.values(CHART_COLORS);
 const STAGE_COLORS = CHART_COLORS_ARRAY;
 
 export function DiscipuladoReport() {
