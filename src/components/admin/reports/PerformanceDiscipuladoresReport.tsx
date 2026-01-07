@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,10 +9,12 @@ import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { SortableHeader } from "@/components/ui/sortable-header";
-import { Users, Flame, Calendar, CheckCircle2, TrendingUp } from "lucide-react";
+import { Users, Flame, Calendar, CheckCircle2, TrendingUp, Filter, Search } from "lucide-react";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
 import { usePagination } from "@/hooks/usePagination";
 import { useSorting } from "@/hooks/useSorting";
+import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface DiscipuladorStats {
   id: string;
@@ -27,6 +29,8 @@ interface DiscipuladorStats {
 export function PerformanceDiscipuladoresReport() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodOption>("6m");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [minDisciples, setMinDisciples] = useState<string>("all");
   const [discipuladores, setDiscipuladores] = useState<DiscipuladorStats[]>([]);
   const [summary, setSummary] = useState({
     totalDiscipuladores: 0,
@@ -180,6 +184,32 @@ export function PerformanceDiscipuladoresReport() {
     }
   };
 
+  // Filter discipuladores based on search and min disciples
+  const filteredDiscipuladores = useMemo(() => {
+    let filtered = discipuladores;
+
+    if (searchTerm) {
+      filtered = filtered.filter(d => 
+        d.nome.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (minDisciples !== "all") {
+      const min = parseInt(minDisciples);
+      filtered = filtered.filter(d => d.totalDiscipulos >= min);
+    }
+
+    return filtered;
+  }, [discipuladores, searchTerm, minDisciples]);
+
+  const minDisciplesOptions = [
+    { value: "all", label: "Todos" },
+    { value: "1", label: "1+ discípulos" },
+    { value: "3", label: "3+ discípulos" },
+    { value: "5", label: "5+ discípulos" },
+    { value: "10", label: "10+ discípulos" }
+  ];
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -194,14 +224,48 @@ export function PerformanceDiscipuladoresReport() {
     totalDiscipulos: { label: "Discípulos", color: "hsl(var(--primary))" }
   };
 
-  const topDiscipuladores = discipuladores.slice(0, 10);
+  const topDiscipuladores = filteredDiscipuladores.slice(0, 10);
 
   return (
     <div className="space-y-6">
-      {/* Period Filter */}
-      <div className="flex justify-end">
-        <PeriodFilter value={period} onChange={setPeriod} />
-      </div>
+      {/* Filters */}
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs text-muted-foreground mb-1 block">Buscar por nome</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Nome do discipulador..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            <div className="min-w-[160px]">
+              <label className="text-xs text-muted-foreground mb-1 block">Mínimo de discípulos</label>
+              <SearchableSelect
+                options={minDisciplesOptions}
+                value={minDisciples}
+                onValueChange={setMinDisciples}
+                placeholder="Filtrar"
+              />
+            </div>
+            <div className="min-w-[140px]">
+              <label className="text-xs text-muted-foreground mb-1 block">Período</label>
+              <PeriodFilter value={period} onChange={setPeriod} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -281,10 +345,15 @@ export function PerformanceDiscipuladoresReport() {
       {/* Detailed Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Detalhamento por Discipulador</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Detalhamento por Discipulador</span>
+            <Badge variant="secondary" className="font-mono">
+              {filteredDiscipuladores.length} resultados
+            </Badge>
+          </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <DiscipuladoresTable discipuladores={discipuladores} />
+          <DiscipuladoresTable discipuladores={filteredDiscipuladores} />
         </CardContent>
       </Card>
     </div>
