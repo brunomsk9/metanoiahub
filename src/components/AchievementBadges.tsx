@@ -94,7 +94,7 @@ interface AchievementBadgesProps {
   showAll?: boolean;
 }
 
-export function AchievementBadges({ compact = false, showAll = false }: AchievementBadgesProps) {
+export default function AchievementBadges({ compact = false, showAll = false }: AchievementBadgesProps) {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout";
 import { PageTransition } from "@/components/PageTransition";
-import { AchievementBadges } from "@/components/AchievementBadges";
+import AchievementBadges from "@/components/AchievementBadges";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Target, Flame, BookOpen, Heart, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";

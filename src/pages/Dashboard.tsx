@@ -23,7 +23,7 @@ import { DashboardSkeleton } from "@/components/skeletons/PageSkeletons";
 const DiscipuladorDashboardCards = lazy(() => import("@/components/DiscipuladorDashboardCards").then(m => ({ default: m.DiscipuladorDashboardCards })));
 const MeetingsManager = lazy(() => import("@/components/MeetingsManager").then(m => ({ default: m.MeetingsManager })));
 const WeeklyChecklist = lazy(() => import("@/components/WeeklyChecklist").then(m => ({ default: m.WeeklyChecklist })));
-const AchievementBadges = lazy(() => import("@/components/AchievementBadges").then(m => ({ default: m.AchievementBadges })));
+const AchievementBadges = lazy(() => import("@/components/AchievementBadges"));
 
 interface ReadingPlanWithProgress {
   id: string;
