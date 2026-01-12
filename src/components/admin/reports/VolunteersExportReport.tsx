@@ -206,10 +206,10 @@ export function VolunteersExportReport() {
 
     const selectedMinistryName = getSelectedMinistryName();
 
-    const headers = ["Nome", "Telefone", "Gênero", "Ministérios", "Funções"];
+    const headers = ["Nome", "Email", "Gênero", "Ministérios", "Funções"];
     const rows = volunteersToExport.map(v => [
       v.nome,
-      v.telefone || "",
+      v.email || "",
       v.genero === "masculino" ? "Masculino" : v.genero === "feminino" ? "Feminino" : "",
       v.ministries.map(m => m.nome).join("; "),
       v.ministries.map(m => m.funcao || "Voluntário").join("; "),
@@ -422,7 +422,7 @@ export function VolunteersExportReport() {
                       />
                     </TableHead>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Telefone</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Gênero</TableHead>
                     <TableHead>Ministérios</TableHead>
                   </TableRow>
@@ -437,7 +437,7 @@ export function VolunteersExportReport() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">{volunteer.nome}</TableCell>
-                      <TableCell>{volunteer.telefone || "-"}</TableCell>
+                      <TableCell>{volunteer.email || "-"}</TableCell>
                       <TableCell>
                         {volunteer.genero === "masculino" ? "Masculino" : 
                          volunteer.genero === "feminino" ? "Feminino" : "-"}
