@@ -449,39 +449,26 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
             <p className="text-muted-foreground">Nenhum recurso cadastrado ainda.</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-muted/30 border-b border-border/50">
-              <tr>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Título</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Categoria</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Tags</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/30">
+          <>
+            {/* Mobile: Cards layout */}
+            <div className="block sm:hidden divide-y divide-border/30">
               {resources.map((resource) => (
-                <tr key={resource.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium text-foreground">{resource.titulo}</p>
+                <div key={resource.id} className="p-4 space-y-3">
+                  {/* Header: Title and Category */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{resource.titulo}</p>
                       {resource.descricao && (
-                        <p className="text-sm text-muted-foreground truncate max-w-xs">{resource.descricao}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{resource.descricao}</p>
                       )}
                     </div>
-                  </td>
-                  <td className="py-3 px-4 hidden sm:table-cell">
-                    <div className="flex flex-col gap-1">
-                      <span className={`inline-flex px-2 py-1 text-xs rounded-full w-fit ${categoriaColors[resource.categoria]}`}>
-                        {categoriaLabels[resource.categoria]}
-                      </span>
-                      {resource.categoria === 'playbook' && resource.ministry_id && (
-                        <span className="text-xs text-muted-foreground">
-                          {ministries.find(m => m.id === resource.ministry_id)?.nome || 'Ministério'}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 hidden md:table-cell">
+                    <span className={`inline-flex px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoriaColors[resource.categoria]}`}>
+                      {categoriaLabels[resource.categoria]}
+                    </span>
+                  </div>
+                  
+                  {/* Tags */}
+                  {(resource.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {(resource.tags || []).slice(0, 3).map((tag) => (
                         <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded bg-muted/50 text-muted-foreground">
@@ -492,58 +479,165 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                         <span className="text-xs text-muted-foreground/50">+{(resource.tags || []).length - 3}</span>
                       )}
                     </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex justify-end gap-1">
-                      {resource.link_externo && (
+                  )}
+                  
+                  {/* Action buttons - always visible */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                    {resource.link_externo && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => window.open(resource.link_externo!, '_blank')} 
+                        className="flex-1 text-blue-500 border-blue-500/30 hover:bg-blue-500/10"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Link
+                      </Button>
+                    )}
+                    {resource.video_url && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => window.open(resource.video_url!, '_blank')} 
+                        className="flex-1 text-red-500 border-red-500/30 hover:bg-red-500/10"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Vídeo
+                      </Button>
+                    )}
+                    {resource.url_pdf && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => window.open(resource.url_pdf!, '_blank')} 
+                        className="flex-1 text-amber-500 border-amber-500/30 hover:bg-amber-500/10"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        PDF
+                      </Button>
+                    )}
+                    {isAdmin && (
+                      <>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => window.open(resource.link_externo!, '_blank')} 
-                          className="h-8 w-8 text-blue-500 hover:text-blue-700"
-                          title="Abrir link externo"
+                          onClick={() => handleOpenDialog(resource)} 
+                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
                         >
-                          <ExternalLink className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      )}
-                      {resource.video_url && (
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => window.open(resource.video_url!, '_blank')} 
-                          className="h-8 w-8 text-red-500 hover:text-red-700"
-                          title="Assistir vídeo"
+                          onClick={() => handleDelete(resource.id)} 
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive"
                         >
-                          <Play className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
-                      {resource.url_pdf && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => window.open(resource.url_pdf!, '_blank')} 
-                          className="h-8 w-8 text-amber-500 hover:text-amber-700"
-                          title="Abrir PDF"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {isAdmin && (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(resource.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                      </>
+                    )}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop: Table layout */}
+            <table className="w-full hidden sm:table">
+              <thead className="bg-muted/30 border-b border-border/50">
+                <tr>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Título</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Categoria</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Tags</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                {resources.map((resource) => (
+                  <tr key={resource.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium text-foreground">{resource.titulo}</p>
+                        {resource.descricao && (
+                          <p className="text-sm text-muted-foreground truncate max-w-xs">{resource.descricao}</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex px-2 py-1 text-xs rounded-full w-fit ${categoriaColors[resource.categoria]}`}>
+                          {categoriaLabels[resource.categoria]}
+                        </span>
+                        {resource.categoria === 'playbook' && resource.ministry_id && (
+                          <span className="text-xs text-muted-foreground">
+                            {ministries.find(m => m.id === resource.ministry_id)?.nome || 'Ministério'}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 hidden md:table-cell">
+                      <div className="flex flex-wrap gap-1">
+                        {(resource.tags || []).slice(0, 3).map((tag) => (
+                          <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded bg-muted/50 text-muted-foreground">
+                            {tag}
+                          </span>
+                        ))}
+                        {(resource.tags || []).length > 3 && (
+                          <span className="text-xs text-muted-foreground/50">+{(resource.tags || []).length - 3}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-end gap-1">
+                        {resource.link_externo && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => window.open(resource.link_externo!, '_blank')} 
+                            className="h-8 w-8 text-blue-500 hover:text-blue-700"
+                            title="Abrir link externo"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {resource.video_url && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => window.open(resource.video_url!, '_blank')} 
+                            className="h-8 w-8 text-red-500 hover:text-red-700"
+                            title="Assistir vídeo"
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {resource.url_pdf && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => window.open(resource.url_pdf!, '_blank')} 
+                            className="h-8 w-8 text-amber-500 hover:text-amber-700"
+                            title="Abrir PDF"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {isAdmin && (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resource)} className="h-8 w-8 text-gray-500 hover:text-gray-700">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(resource.id)} className="h-8 w-8 text-gray-500 hover:text-red-600">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
         )}
       </div>
     </div>
