@@ -527,45 +527,47 @@ export function VisaoGeralReport() {
             <CardDescription>Crescimento de usuários, discipulados e encontros</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[280px]">
-              <AreaChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="colorUsuarios" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.lime} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={CHART_COLORS.lime} stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorDiscipulados" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.teal} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={CHART_COLORS.teal} stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area 
-                  type="monotone" 
-                  dataKey="usuarios" 
-                  stroke={CHART_COLORS.lime} 
-                  fillOpacity={1}
-                  fill="url(#colorUsuarios)"
-                  strokeWidth={2}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="discipulados" 
-                  stroke={CHART_COLORS.teal} 
-                  fillOpacity={1}
-                  fill="url(#colorDiscipulados)"
-                  strokeWidth={2}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="encontros" 
-                  stroke={CHART_COLORS.cyan} 
-                  strokeWidth={2}
-                  dot={{ fill: CHART_COLORS.cyan, r: 3 }}
-                />
-              </AreaChart>
+            <ChartContainer config={chartConfig} className="h-[280px] w-full overflow-hidden">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthlyData}>
+                  <defs>
+                    <linearGradient id="colorUsuarios" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={CHART_COLORS.lime} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={CHART_COLORS.lime} stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorDiscipulados" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={CHART_COLORS.teal} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={CHART_COLORS.teal} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="usuarios" 
+                    stroke={CHART_COLORS.lime} 
+                    fillOpacity={1}
+                    fill="url(#colorUsuarios)"
+                    strokeWidth={2}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="discipulados" 
+                    stroke={CHART_COLORS.teal} 
+                    fillOpacity={1}
+                    fill="url(#colorDiscipulados)"
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="encontros" 
+                    stroke={CHART_COLORS.cyan} 
+                    strokeWidth={2}
+                    dot={{ fill: CHART_COLORS.cyan, r: 3 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
