@@ -96,7 +96,11 @@ export function AccessReport() {
       }
 
       // Get auth details with emails and last login
-      const { data: authDetails } = await supabase.rpc('get_user_auth_details_secure');
+      // Super admins use get_user_auth_details_secure (all users)
+      // Regular admins use get_church_user_auth_details (only their church)
+      const { data: authDetails } = isSuperAdmin
+        ? await supabase.rpc('get_user_auth_details_secure')
+        : await supabase.rpc('get_church_user_auth_details');
 
       // Get profiles with church info
       let profilesQuery = supabase

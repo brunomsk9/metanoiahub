@@ -1929,6 +1929,16 @@ export type Database = {
           total_transferidos: number
         }[]
       }
+      get_church_user_auth_details: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          id: string
+          last_sign_in_at: string
+        }[]
+      }
       get_disciple_profile: {
         Args: { discipulo_id_param: string }
         Returns: {
