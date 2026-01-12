@@ -116,9 +116,9 @@ export function TrackCard({ id, title, description, thumbnail, coursesCount, onC
     <div 
       className={`group rounded-2xl overflow-hidden bg-card border shadow-sm transition-all duration-300 ${
         isLocked 
-          ? 'cursor-not-allowed opacity-70 border-border' 
-          : 'cursor-pointer border-border hover:shadow-xl hover:-translate-y-1'
-      } ${isBase ? 'ring-2 ring-primary/50' : ''}`}
+          ? 'cursor-not-allowed opacity-75 border-border' 
+          : 'cursor-pointer border-border hover:shadow-xl hover:-translate-y-1 hover:border-primary/30'
+      } ${isBase ? 'ring-2 ring-primary/40' : ''}`}
       onClick={handleClick}
     >
       <div className="aspect-[16/9] overflow-hidden relative">
@@ -126,26 +126,26 @@ export function TrackCard({ id, title, description, thumbnail, coursesCount, onC
           src={thumbnail}
           alt={title}
           className={`w-full h-full object-cover transition-transform duration-500 ${
-            isLocked ? 'grayscale' : 'group-hover:scale-110'
+            isLocked ? 'grayscale' : 'group-hover:scale-105'
           }`}
         />
         {isLocked && (
-          <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
-            <div className="bg-card/90 rounded-full p-3">
-              <Lock className="w-6 h-6 text-muted-foreground" />
+          <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center backdrop-blur-[1px]">
+            <div className="bg-card/95 rounded-full p-3 shadow-lg">
+              <Lock className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
             </div>
           </div>
         )}
         {isBase && !isLocked && (
           <div className="absolute top-3 left-3">
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground shadow-md">
               Jornada Metanoia
             </span>
           </div>
         )}
       </div>
-      <div className="p-5">
-        <h3 className={`text-lg font-display font-semibold mb-2 transition-colors ${
+      <div className="p-4 md:p-5">
+        <h3 className={`text-base md:text-lg font-display font-semibold mb-2 transition-colors line-clamp-2 ${
           isLocked ? 'text-muted-foreground' : 'text-foreground group-hover:text-primary'
         }`}>
           {title}
@@ -153,11 +153,11 @@ export function TrackCard({ id, title, description, thumbnail, coursesCount, onC
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{description}</p>
         <div className="flex items-center gap-2">
           {isLocked ? (
-            <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+            <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
               Complete a Jornada Metanoia primeiro
             </span>
           ) : (
-            <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+            <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/15 text-primary">
               {coursesCount} cursos
             </span>
           )}

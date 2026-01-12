@@ -87,22 +87,22 @@ export default function Ministry() {
           <PageBreadcrumb items={[{ label: currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial' }]} />
 
           {/* Header */}
-          <header className="section-pattern rounded-2xl p-6 border border-border/50">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+          <header className="section-pattern rounded-2xl p-5 md:p-6 border border-border/50">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 {currentSection === 'escalas' ? (
-                  <Calendar className="w-7 h-7 text-primary" />
+                  <Calendar className="w-6 h-6 md:w-7 md:h-7 text-primary" />
                 ) : (
-                  <Users2 className="w-7 h-7 text-primary" />
+                  <Users2 className="w-6 h-6 md:w-7 md:h-7 text-primary" />
                 )}
               </div>
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-display font-bold">
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold">
                   <span className="text-gradient">
                     {currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial'}
                   </span>
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 line-clamp-2">
                   {currentSection === 'escalas' 
                     ? 'Gerencie as escalas de voluntários para cultos e eventos'
                     : 'Gerencie ministérios, líderes e voluntários'

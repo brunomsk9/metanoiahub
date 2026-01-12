@@ -297,12 +297,12 @@ export default function MySchedules() {
 
           {/* Availability Section */}
           {upcomingServices.length > 0 && (
-            <section className="glass-effect rounded-2xl p-5 border border-border/50">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <CalendarCheck className="w-5 h-5 text-primary" />
+            <section className="glass-effect rounded-2xl p-4 md:p-5 border border-border/50">
+              <h2 className="text-base md:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <CalendarCheck className="w-5 h-5 text-primary shrink-0" />
                 Informar Disponibilidade
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {upcomingServices.map((service) => {
                   const availability = availabilities.get(service.id);
                   const isUpdating = updatingAvailability === service.id;
@@ -312,16 +312,16 @@ export default function MySchedules() {
                       key={service.id} 
                       className="rounded-xl bg-secondary/30 border border-border/30 p-4 hover:border-border/50 transition-colors"
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex flex-col gap-3">
                         <div className="flex-1">
-                          <p className="font-medium text-foreground">{service.nome}</p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                          <p className="font-medium text-foreground text-sm md:text-base">{service.nome}</p>
+                          <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5" />
+                              <Calendar className="w-3.5 h-3.5 shrink-0" />
                               {format(new Date(service.data_hora), "dd/MM/yyyy", { locale: ptBR })}
                             </span>
                             <span className="flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5" />
+                              <Clock className="w-3.5 h-3.5 shrink-0" />
                               {format(new Date(service.data_hora), "HH:mm", { locale: ptBR })}
                             </span>
                           </div>
@@ -410,12 +410,12 @@ export default function MySchedules() {
             <div className="space-y-6">
               {upcomingSchedules.length > 0 && (
                 <section>
-                  <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary" />
+                  <h2 className="text-base md:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-primary shrink-0" />
                     Próximas Escalas
-                    <Badge variant="secondary" className="ml-2">{upcomingSchedules.length}</Badge>
+                    <Badge variant="secondary" className="ml-2 text-xs">{upcomingSchedules.length}</Badge>
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {upcomingSchedules.map((schedule) => (
                       <div 
                         key={schedule.id} 

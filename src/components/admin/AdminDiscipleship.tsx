@@ -971,26 +971,26 @@ export function AdminDiscipleship() {
                 
                 return (
                 <Collapsible key={rel.id} className="group">
-                  <div className="rounded-lg border bg-card overflow-hidden">
+                  <div className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/20 transition-colors">
                     {/* Compact header - always visible */}
                     <div className="flex items-center gap-3 p-3 sm:p-4">
                       {/* Avatar */}
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-primary font-semibold text-base">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-primary font-bold text-lg">
                           {(rel.discipulo?.nome || 'D')[0].toUpperCase()}
                         </span>
                       </div>
                       
-                      {/* Main info - flex column on small screens */}
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <p className="font-medium text-sm sm:text-base leading-tight">
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base leading-tight text-foreground">
                           {rel.discipulo?.nome || 'Sem nome'}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
                           {isAdmin && rel.discipulador && (
                             <span className="flex items-center gap-1.5">
-                              <Users className="w-3 h-3 shrink-0" />
-                              <span className="truncate max-w-[100px] sm:max-w-[150px]">{rel.discipulador.nome}</span>
+                              <Users className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                              <span className="truncate max-w-[90px] sm:max-w-[140px]">{rel.discipulador.nome}</span>
                               <Badge 
                                 variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit ? "destructive" : "secondary"}
                                 className="text-[10px] px-1.5 py-0 h-4 shrink-0"
@@ -999,36 +999,36 @@ export function AdminDiscipleship() {
                               </Badge>
                             </span>
                           )}
-                          <span className="flex items-center gap-1">
-                            <Flame className="w-3 h-3 text-orange-500 shrink-0" />
-                            <span>{rel.discipulo?.current_streak || 0} dias</span>
+                          <span className="flex items-center gap-1.5">
+                            <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                            <span className="font-medium">{rel.discipulo?.current_streak || 0}d</span>
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Award className="w-3 h-3 text-primary shrink-0" />
-                            <span>{rel.discipulo?.xp_points || 0} XP</span>
+                          <span className="flex items-center gap-1.5">
+                            <Award className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="font-medium">{rel.discipulo?.xp_points || 0}</span>
                           </span>
                         </div>
                       </div>
                       
                       {/* Status indicators - always visible */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         {rel.alicerce_completed_presencial ? (
-                          <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-success/10" title="Jornada Concluída">
-                            <Award className="w-4 h-4 text-success" />
-                            <span className="text-xs text-success font-medium hidden sm:inline">Concluído</span>
+                          <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-success/15 border border-success/20" title="Jornada Concluída">
+                            <Award className="w-4 h-4 text-success shrink-0" />
+                            <span className="text-xs text-success font-semibold hidden sm:inline">Concluído</span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50" title="Em Jornada">
-                            <Lock className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground hidden sm:inline">Em Jornada</span>
+                          <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-muted/60 border border-border/50" title="Em Jornada">
+                            <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className="text-xs text-muted-foreground font-medium hidden sm:inline">Em Jornada</span>
                           </div>
                         )}
-                        {getStatusBadge(rel.status)}
+                        <div className="hidden xs:block">{getStatusBadge(rel.status)}</div>
                         
                         {/* Expand button for mobile and tablet */}
                         <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 lg:hidden">
-                            <ChevronDown className="h-5 w-5 transition-transform group-data-[state=open]:rotate-180" />
+                          <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden hover:bg-primary/10">
+                            <ChevronDown className="h-5 w-5 transition-transform duration-200 group-data-[state=open]:rotate-180 text-muted-foreground" />
                           </Button>
                         </CollapsibleTrigger>
                       </div>
