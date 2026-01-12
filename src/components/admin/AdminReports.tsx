@@ -9,6 +9,7 @@ import { VolunteerEngagementReport } from "./reports/VolunteerEngagementReport";
 import { VolunteersExportReport } from "./reports/VolunteersExportReport";
 import { MultiMinistryVolunteersReport } from "./reports/MultiMinistryVolunteersReport";
 import { MeetingsReport } from "./reports/MeetingsReport";
+import { AccessReport } from "./reports/AccessReport";
 import { ServiceAttendance } from "./ServiceAttendance";
 import { NewsletterManager } from "./NewsletterManager";
 import { 
@@ -23,7 +24,8 @@ import {
   Mail, 
   User,
   MessageCircle,
-  ChevronDown
+  ChevronDown,
+  LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -53,6 +55,7 @@ const tabGroups: TabGroup[] = [
     label: "Geral",
     tabs: [
       { value: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
+      { value: "acesso", label: "Acessos", icon: LogIn },
     ]
   },
   {
@@ -107,6 +110,8 @@ export function AdminReports() {
     switch (activeTab) {
       case "visao-geral":
         return <VisaoGeralReport />;
+      case "acesso":
+        return <AccessReport />;
       case "cursos":
         return <CursosTrillhasReport />;
       case "discipulado":
