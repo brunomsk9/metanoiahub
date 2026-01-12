@@ -7,7 +7,8 @@ import { SearchableSelect, SearchableSelectOption } from "@/components/ui/search
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Download, Users, Filter, FileSpreadsheet, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Download, Users, Filter, FileSpreadsheet, FileText, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useUserChurchId } from "@/hooks/useUserChurchId";
 import html2pdf from "html2pdf.js";
@@ -42,6 +43,7 @@ export function VolunteersExportReport() {
   const [selectedVolunteers, setSelectedVolunteers] = useState<Set<string>>(new Set());
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfColumns, setPdfColumns] = useState<Set<PdfColumn>>(new Set(['nome', 'email', 'ministerio']));
+  const [searchQuery, setSearchQuery] = useState("");
 
   const togglePdfColumn = (col: PdfColumn) => {
     const newCols = new Set(pdfColumns);
@@ -145,7 +147,7 @@ export function VolunteersExportReport() {
     enabled: !!churchId,
   });
 
-  // Filter volunteers by selected ministry and gender
+  // Filter volunteers by selected ministry, gender, and search query
   const filteredVolunteers = useMemo(() => {
     let filtered = volunteers;
     
@@ -159,8 +161,16 @@ export function VolunteersExportReport() {
       filtered = filtered.filter(v => v.genero === selectedGender);
     }
     
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(v => 
+        v.nome.toLowerCase().includes(query) ||
+        (v.email && v.email.toLowerCase().includes(query))
+      );
+    }
+    
     return filtered;
-  }, [volunteers, selectedMinistry, selectedGender]);
+  }, [volunteers, selectedMinistry, selectedGender, searchQuery]);
 
   // Toggle volunteer selection
   const toggleVolunteer = (id: string) => {
@@ -336,39 +346,51 @@ export function VolunteersExportReport() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-              <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "Todos os Ministérios" },
-                  ...ministries.map(ministry => ({ value: ministry.id, label: ministry.nome }))
-                ]}
-                value={selectedMinistry}
-                onValueChange={setSelectedMinistry}
-                placeholder="Selecione um ministério"
-                searchPlaceholder="Buscar ministério..."
-                triggerClassName="w-full sm:w-[220px]"
-              />
-              
-              <SearchableSelect
-                options={[
-                  { value: "all", label: "Todos os Gêneros" },
-                  { value: "masculino", label: "Masculino" },
-                  { value: "feminino", label: "Feminino" },
-                ]}
-                value={selectedGender}
-                onValueChange={setSelectedGender}
-                placeholder="Gênero"
-                searchPlaceholder="Buscar gênero..."
-                triggerClassName="w-full sm:w-[160px]"
+          <div className="flex flex-col gap-4">
+            <div className="relative w-full sm:w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
               />
             </div>
             
-            <Badge variant="secondary" className="gap-1">
-              <Users className="h-3 w-3" />
-              {filteredVolunteers.length} voluntários
-            </Badge>
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                <SearchableSelect
+                  options={[
+                    { value: "all", label: "Todos os Ministérios" },
+                    ...ministries.map(ministry => ({ value: ministry.id, label: ministry.nome }))
+                  ]}
+                  value={selectedMinistry}
+                  onValueChange={setSelectedMinistry}
+                  placeholder="Selecione um ministério"
+                  searchPlaceholder="Buscar ministério..."
+                  triggerClassName="w-full sm:w-[220px]"
+                />
+                
+                <SearchableSelect
+                  options={[
+                    { value: "all", label: "Todos os Gêneros" },
+                    { value: "masculino", label: "Masculino" },
+                    { value: "feminino", label: "Feminino" },
+                  ]}
+                  value={selectedGender}
+                  onValueChange={setSelectedGender}
+                  placeholder="Gênero"
+                  searchPlaceholder="Buscar gênero..."
+                  triggerClassName="w-full sm:w-[160px]"
+                />
+              </div>
+              
+              <Badge variant="secondary" className="gap-1">
+                <Users className="h-3 w-3" />
+                {filteredVolunteers.length} voluntários
+              </Badge>
+            </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between border-t pt-4">
