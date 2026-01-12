@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminResources } from '@/components/admin/AdminResources';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { Loader2, ShieldAlert, ArrowLeft, FolderOpen } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, FolderOpen, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 
@@ -88,14 +88,14 @@ export default function Resources() {
   return (
     <AppShell>
       <PageTransition>
-        <div className="container max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <div className="space-y-4 md:space-y-6">
           <PageBreadcrumb items={[{ label: 'Recursos' }]} />
           
           {/* Header */}
           <header className="section-pattern rounded-2xl p-6 border border-border/50">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Loader2 className="w-7 h-7 text-primary" />
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <FileText className="w-6 h-6 md:w-7 md:h-7 text-primary" />
               </div>
               <div>
                 <h1 className="text-2xl lg:text-3xl font-display font-bold">
