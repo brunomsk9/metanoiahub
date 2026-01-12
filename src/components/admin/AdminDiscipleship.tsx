@@ -962,7 +962,7 @@ export function AdminDiscipleship() {
               {searchTerm ? 'Nenhum resultado encontrado.' : 'Nenhum relacionamento encontrado.'}
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-3">
               {filteredRelationships.map(rel => {
                 const conexaoCount = [rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length;
                 const academiaCount = [rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length;

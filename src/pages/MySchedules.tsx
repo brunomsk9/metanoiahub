@@ -302,7 +302,7 @@ export default function MySchedules() {
                 <CalendarCheck className="w-5 h-5 text-primary" />
                 Informar Disponibilidade
               </h2>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {upcomingServices.map((service) => {
                   const availability = availabilities.get(service.id);
                   const isUpdating = updatingAvailability === service.id;
@@ -415,7 +415,7 @@ export default function MySchedules() {
                     Próximas Escalas
                     <Badge variant="secondary" className="ml-2">{upcomingSchedules.length}</Badge>
                   </h2>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {upcomingSchedules.map((schedule) => (
                       <div 
                         key={schedule.id} 
@@ -447,22 +447,22 @@ export default function MySchedules() {
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 mb-4">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
-                              <Calendar className="w-4 h-4 text-primary" />
-                              <span>
+                              <Calendar className="w-4 h-4 text-primary shrink-0" />
+                              <span className="truncate">
                                 {format(new Date(schedule.service.data_hora), "dd 'de' MMM", { locale: ptBR })}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
-                              <Clock className="w-4 h-4 text-primary" />
+                              <Clock className="w-4 h-4 text-primary shrink-0" />
                               <span>
                                 {format(new Date(schedule.service.data_hora), "HH:mm", { locale: ptBR })}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
-                              <Users className="w-4 h-4 text-primary" />
-                              <span>{schedule.position.nome}</span>
+                            <div className="col-span-2 sm:col-span-1 flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">
+                              <Users className="w-4 h-4 text-primary shrink-0" />
+                              <span className="truncate">{schedule.position.nome}</span>
                             </div>
                           </div>
 

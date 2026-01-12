@@ -450,10 +450,11 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
           </div>
         ) : (
           <>
-            {/* Mobile: Cards layout */}
-            <div className="block sm:hidden divide-y divide-border/30">
-              {resources.map((resource) => (
-                <div key={resource.id} className="p-4 space-y-3">
+            {/* Mobile & Tablet: Cards layout */}
+            <div className="block md:hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                {resources.map((resource) => (
+                  <div key={resource.id} className="p-4 space-y-3 rounded-xl bg-secondary/20 border border-border/30">
                   {/* Header: Title and Category */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -539,10 +540,11 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
 
             {/* Desktop: Table layout */}
-            <table className="w-full hidden sm:table">
+            <table className="w-full hidden md:table">
               <thead className="bg-muted/30 border-b border-border/50">
                 <tr>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Título</th>
