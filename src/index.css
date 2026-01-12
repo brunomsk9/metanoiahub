@@ -259,7 +259,7 @@
   }
 
   .card-elevated:hover {
-    @apply border-primary/25 shadow-md;
+    @apply border-primary/30 shadow-md;
   }
 
   /* Interactive card with lift effect */
@@ -269,7 +269,7 @@
   }
 
   .card-interactive:hover {
-    @apply border-primary/35 shadow-lg -translate-y-0.5;
+    @apply border-primary/40 shadow-lg -translate-y-0.5;
   }
 
   .card-interactive:active {
@@ -278,7 +278,7 @@
 
   /* Stats card with subtle gradient accent */
   .stats-card {
-    @apply rounded-2xl p-5 bg-card border border-border relative overflow-hidden shadow-sm transition-all;
+    @apply rounded-xl p-4 md:p-5 bg-card border border-border relative overflow-hidden shadow-sm transition-all;
     transition-duration: var(--transition-base);
   }
 
@@ -290,21 +290,26 @@
   }
 
   .stats-card:hover {
-    @apply border-primary/25 shadow-md;
+    @apply border-primary/30 shadow-md;
   }
 
   .stats-card:hover::before {
     @apply opacity-100;
   }
 
-  /* Glass effect card */
+  /* Glass effect card - improved opacity for better readability */
   .glass-card {
-    @apply rounded-2xl bg-card/70 backdrop-blur-md border border-primary/15 shadow-md transition-all;
+    @apply rounded-2xl bg-card/80 backdrop-blur-xl border border-border/60 shadow-md transition-all;
     transition-duration: var(--transition-base);
   }
 
   .glass-card:hover {
-    @apply border-primary/30 shadow-glow;
+    @apply border-primary/40 shadow-glow;
+  }
+
+  /* Glass effect for overlays and modals */
+  .glass-effect {
+    @apply rounded-2xl bg-card/85 backdrop-blur-xl border border-border/50 shadow-lg transition-all;
   }
 
   /* ============================================
@@ -321,11 +326,11 @@
   }
 
   .nav-item-active {
-    @apply bg-primary/10 text-primary font-medium;
+    @apply bg-primary/15 text-primary font-medium;
   }
 
   .nav-item-active:hover {
-    @apply bg-primary/20;
+    @apply bg-primary/25;
   }
 
   /* ============================================
@@ -567,11 +572,11 @@
   }
 
   .block-header-icon {
-    @apply w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary;
+    @apply w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0;
   }
 
   .block-header-title {
-    @apply text-lg font-semibold text-foreground;
+    @apply text-base md:text-lg font-semibold text-foreground;
   }
 
   /* Metric card */
@@ -580,11 +585,71 @@
   }
 
   .metric-value {
-    @apply text-3xl font-bold text-gradient;
+    @apply text-2xl md:text-3xl font-bold text-gradient;
   }
 
   .metric-label {
-    @apply text-sm text-muted-foreground mt-1;
+    @apply text-xs md:text-sm text-muted-foreground mt-1;
+  }
+
+  /* ============================================
+     RESPONSIVE LIST ITEMS
+     ============================================ */
+  
+  .list-item {
+    @apply flex items-center gap-3 p-3 md:p-4 rounded-xl bg-card border border-border transition-all;
+  }
+
+  .list-item:hover {
+    @apply border-primary/30 bg-card-hover;
+  }
+
+  .list-item-avatar {
+    @apply w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0;
+  }
+
+  .list-item-content {
+    @apply flex-1 min-w-0 space-y-0.5;
+  }
+
+  .list-item-title {
+    @apply font-medium text-sm md:text-base text-foreground truncate;
+  }
+
+  .list-item-subtitle {
+    @apply text-xs md:text-sm text-muted-foreground;
+  }
+
+  .list-item-actions {
+    @apply flex items-center gap-1 md:gap-2 shrink-0;
+  }
+
+  /* ============================================
+     RESOURCE/CONTENT CARDS
+     ============================================ */
+  
+  .content-card {
+    @apply p-4 md:p-5 rounded-xl bg-card border border-border transition-all;
+  }
+
+  .content-card:hover {
+    @apply border-primary/30 shadow-md;
+  }
+
+  .content-card-header {
+    @apply flex items-start justify-between gap-3 mb-3;
+  }
+
+  .content-card-title {
+    @apply font-medium text-foreground line-clamp-2;
+  }
+
+  .content-card-description {
+    @apply text-sm text-muted-foreground line-clamp-2;
+  }
+
+  .content-card-footer {
+    @apply flex flex-wrap items-center gap-2 pt-3 border-t border-border/50;
   }
 }
 

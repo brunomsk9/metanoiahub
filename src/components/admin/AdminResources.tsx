@@ -452,47 +452,47 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
           <>
             {/* Mobile & Tablet: Cards layout */}
             <div className="block md:hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4">
                 {resources.map((resource) => (
-                  <div key={resource.id} className="p-4 space-y-3 rounded-xl bg-secondary/20 border border-border/30">
+                  <div key={resource.id} className="content-card space-y-3">
                   {/* Header: Title and Category */}
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="content-card-header">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{resource.titulo}</p>
+                      <p className="content-card-title">{resource.titulo}</p>
                       {resource.descricao && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{resource.descricao}</p>
+                        <p className="content-card-description mt-1">{resource.descricao}</p>
                       )}
                     </div>
-                    <span className={`inline-flex px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoriaColors[resource.categoria]}`}>
+                    <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap shrink-0 ${categoriaColors[resource.categoria]}`}>
                       {categoriaLabels[resource.categoria]}
                     </span>
                   </div>
                   
                   {/* Tags */}
                   {(resource.tags || []).length > 0 && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {(resource.tags || []).slice(0, 3).map((tag) => (
-                        <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded bg-muted/50 text-muted-foreground">
+                        <span key={tag} className="inline-flex px-2 py-0.5 text-xs rounded-md bg-muted/60 text-muted-foreground font-medium">
                           {tag}
                         </span>
                       ))}
                       {(resource.tags || []).length > 3 && (
-                        <span className="text-xs text-muted-foreground/50">+{(resource.tags || []).length - 3}</span>
+                        <span className="text-xs text-muted-foreground/60 font-medium">+{(resource.tags || []).length - 3}</span>
                       )}
                     </div>
                   )}
                   
                   {/* Action buttons - always visible */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                  <div className="content-card-footer">
                     {resource.link_externo && (
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => window.open(resource.link_externo!, '_blank')} 
-                        className="flex-1 text-blue-500 border-blue-500/30 hover:bg-blue-500/10"
+                        className="flex-1 h-9 text-blue-600 border-blue-500/40 hover:bg-blue-500/10 hover:border-blue-500/60"
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Link
+                        <ExternalLink className="h-4 w-4 mr-1.5 shrink-0" />
+                        <span className="truncate">Link</span>
                       </Button>
                     )}
                     {resource.video_url && (
@@ -500,10 +500,10 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                         variant="outline" 
                         size="sm" 
                         onClick={() => window.open(resource.video_url!, '_blank')} 
-                        className="flex-1 text-red-500 border-red-500/30 hover:bg-red-500/10"
+                        className="flex-1 h-9 text-red-600 border-red-500/40 hover:bg-red-500/10 hover:border-red-500/60"
                       >
-                        <Play className="h-4 w-4 mr-2" />
-                        Vídeo
+                        <Play className="h-4 w-4 mr-1.5 shrink-0" />
+                        <span className="truncate">Vídeo</span>
                       </Button>
                     )}
                     {resource.url_pdf && (
@@ -511,19 +511,19 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                         variant="outline" 
                         size="sm" 
                         onClick={() => window.open(resource.url_pdf!, '_blank')} 
-                        className="flex-1 text-amber-500 border-amber-500/30 hover:bg-amber-500/10"
+                        className="flex-1 h-9 text-amber-600 border-amber-500/40 hover:bg-amber-500/10 hover:border-amber-500/60"
                       >
-                        <FileText className="h-4 w-4 mr-2" />
-                        PDF
+                        <FileText className="h-4 w-4 mr-1.5 shrink-0" />
+                        <span className="truncate">PDF</span>
                       </Button>
                     )}
                     {isAdmin && (
-                      <>
+                      <div className="flex items-center gap-1 ml-auto">
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           onClick={() => handleOpenDialog(resource)} 
-                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                          className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -531,11 +531,11 @@ export function AdminResources({ isAdmin = true }: AdminResourcesProps) {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => handleDelete(resource.id)} 
-                          className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>

@@ -90,17 +90,17 @@ export default function Discipleship() {
           <PageBreadcrumb items={[{ label: 'Discipulado' }]} />
 
           {/* Header */}
-          <header className="section-pattern rounded-2xl p-6 border border-border/50">
+          <header className="section-pattern rounded-2xl p-5 md:p-6 border border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Heart className="w-7 h-7 text-primary" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Heart className="w-6 h-6 md:w-7 md:h-7 text-primary" />
                 </div>
-                <div>
-                  <h1 className="text-2xl lg:text-3xl font-display font-bold">
+                <div className="min-w-0">
+                  <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold">
                     <span className="text-gradient">Discipulado</span>
                   </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 line-clamp-2">
                     Acompanhe o progresso dos seus discípulos e gerencie relacionamentos
                   </p>
                 </div>
@@ -109,7 +109,8 @@ export default function Discipleship() {
               {isDiscipulador && (
                 <Button 
                   onClick={() => setShowMeetingDialog(true)}
-                  className="shrink-0"
+                  className="shrink-0 w-full sm:w-auto"
+                  size="default"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Encontro
