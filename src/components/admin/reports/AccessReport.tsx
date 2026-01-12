@@ -17,7 +17,8 @@ import { toast } from "sonner";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
-import { format, formatDistanceToNow, subDays, eachDayOfInterval, startOfDay } from "date-fns";
+import { DateRangeFilter, DateRange } from "./DateRangeFilter";
+import { format, formatDistanceToNow, subDays, eachDayOfInterval, startOfDay, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CHART_COLORS, CHART_COLORS_ARRAY, chartAnimationVariants } from "@/lib/chartColors";
 import { useUserRoles } from "@/hooks/useUserRoles";
@@ -56,6 +57,7 @@ export function AccessReport() {
   const { isSuperAdmin, isLoading: rolesLoading } = useUserRoles();
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<PeriodOption>("30d");
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedChurch, setSelectedChurch] = useState<string>("all");
   const [users, setUsers] = useState<UserAccessData[]>([]);
@@ -68,7 +70,23 @@ export function AccessReport() {
     if (!rolesLoading) {
       fetchData();
     }
-  }, [period, selectedChurch, rolesLoading, isSuperAdmin]);
+  }, [period, dateRange, selectedChurch, rolesLoading, isSuperAdmin]);
+
+  // Clear period filter when date range is set
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range);
+    if (range.from || range.to) {
+      setPeriod("all");
+    }
+  };
+
+  // Clear date range when period filter is set
+  const handlePeriodChange = (newPeriod: PeriodOption) => {
+    setPeriod(newPeriod);
+    if (newPeriod !== "all") {
+      setDateRange({ from: undefined, to: undefined });
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -225,11 +243,27 @@ export function AccessReport() {
     }
   };
 
-  // Filter users by search
+  // Filter users by search and date range
   const filteredUsers = users.filter(u => {
     const matchesSearch = searchTerm === "" || 
       u.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Apply date range filter on last login
+    if (dateRange.from || dateRange.to) {
+      if (!u.last_sign_in_at) return false;
+      const loginDate = new Date(u.last_sign_in_at);
+      if (dateRange.from && dateRange.to) {
+        if (!isWithinInterval(loginDate, { start: dateRange.from, end: dateRange.to })) {
+          return false;
+        }
+      } else if (dateRange.from && loginDate < dateRange.from) {
+        return false;
+      } else if (dateRange.to && loginDate > dateRange.to) {
+        return false;
+      }
+    }
+    
     return matchesSearch;
   }).sort((a, b) => {
     // Sort by last login (most recent first), nulls last
@@ -366,7 +400,12 @@ export function AccessReport() {
               </SelectContent>
             </Select>
           )}
-          <PeriodFilter value={period} onChange={setPeriod} />
+          <PeriodFilter value={period} onChange={handlePeriodChange} />
+          <DateRangeFilter 
+            value={dateRange} 
+            onChange={handleDateRangeChange}
+            className="h-9"
+          />
           <Button 
             variant="outline" 
             size="sm" 
