@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import DOMPurify from "dompurify";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, BookOpen, Loader2, FileText, Book, Download, Eye, X, Maximize2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, ArrowUp, Focus, Minimize2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, BookOpen, Loader2, CheckCircle2, Circle, List, Play, ChevronDown, ChevronUp, Home, ArrowUp, Focus, Minimize2 } from "lucide-react";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { ChecklistInterativo } from "@/components/ChecklistInterativo";
 import { MentorChatButton } from "@/components/MentorChat";
 import { PageTransition } from "@/components/PageTransition";
+import { PdfEbookViewer } from "@/components/PdfEbookViewer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CelebrationModal } from "@/components/CelebrationModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -80,8 +80,7 @@ export default function Lesson() {
   const [showTexto, setShowTexto] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [showPdfViewer, setShowPdfViewer] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // PDF viewer state removed - now handled by PdfEbookViewer component
   const [isCompleted, setIsCompleted] = useState(false);
   const [nextLesson, setNextLesson] = useState<NextLesson | null>(null);
   const [isLastLesson, setIsLastLesson] = useState(false);
@@ -355,28 +354,6 @@ export default function Lesson() {
 
   const trackTitle = lesson.course?.track?.titulo || lesson.course?.titulo || '';
 
-  // Helper to get PDF embed URL
-  const getPdfEmbedUrl = (url: string) => {
-    if (url.includes('drive.google.com/file/d/')) {
-      const fileId = url.match(/\/d\/([^\/]+)/)?.[1];
-      if (fileId) {
-        return `https://drive.google.com/file/d/${fileId}/preview`;
-      }
-    }
-    // For other URLs, try to embed directly
-    return url;
-  };
-
-  const getPdfDownloadUrl = (url: string) => {
-    if (url.includes('drive.google.com/file/d/')) {
-      const fileId = url.match(/\/d\/([^\/]+)/)?.[1];
-      if (fileId) {
-        return `https://drive.google.com/uc?export=download&id=${fileId}`;
-      }
-    }
-    return url;
-  };
-
   return (
     <PageTransition>
     <div className="min-h-screen bg-background">
@@ -625,69 +602,12 @@ export default function Lesson() {
 
               {/* Material Principal (PDF/Ebook/Livro) */}
               {lesson.url_pdf && (
-                <div className="mb-4 space-y-4">
-                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                    <div className="flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3">
-                        {lesson.tipo_material === 'livro' ? (
-                          <Book className="w-5 h-5 text-amber-500" />
-                        ) : (
-                          <FileText className="w-5 h-5 text-red-500" />
-                        )}
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {lesson.tipo_material === 'pdf' && 'PDF da Aula'}
-                            {lesson.tipo_material === 'ebook' && 'Ebook'}
-                            {lesson.tipo_material === 'livro' && 'Livro'}
-                            {!lesson.tipo_material && 'Material'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">Visualize abaixo ou baixe</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowPdfViewer(!showPdfViewer)}
-                          className="gap-2"
-                        >
-                          <Eye className="w-4 h-4" />
-                          {showPdfViewer ? 'Ocultar' : 'Visualizar'}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(getPdfDownloadUrl(lesson.url_pdf!), '_blank')}
-                          className="gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          Baixar
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Embedded PDF Viewer */}
-                  {showPdfViewer && (
-                    <div className="relative rounded-lg overflow-hidden border border-border bg-muted animate-fade-in">
-                      <div className="absolute top-2 right-2 z-10 flex gap-2">
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          onClick={() => setIsFullscreen(true)}
-                          className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-                        >
-                          <Maximize2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <iframe
-                        src={getPdfEmbedUrl(lesson.url_pdf!)}
-                        className="w-full h-[500px]"
-                        allow="autoplay"
-                        title="PDF Viewer"
-                      />
-                    </div>
-                  )}
+                <div className="mb-4">
+                  <PdfEbookViewer
+                    url={lesson.url_pdf}
+                    title={lesson.titulo}
+                    type={lesson.tipo_material as 'pdf' | 'ebook' | 'livro' | null}
+                  />
                 </div>
               )}
               
@@ -794,40 +714,7 @@ export default function Lesson() {
 
       <MentorChatButton />
 
-      {/* Fullscreen PDF Dialog */}
-      <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-        <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 overflow-hidden">
-          <div className="relative w-full h-full">
-            <div className="absolute top-3 right-3 z-10 flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => window.open(getPdfDownloadUrl(lesson.url_pdf!), '_blank')}
-                className="gap-2 bg-background/80 backdrop-blur-sm"
-              >
-                <Download className="w-4 h-4" />
-                Baixar
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                onClick={() => setIsFullscreen(false)}
-                className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            {lesson.url_pdf && (
-              <iframe
-                src={getPdfEmbedUrl(lesson.url_pdf)}
-                className="w-full h-full"
-                allow="autoplay"
-                title="PDF Viewer Fullscreen"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Fullscreen PDF Dialog - Now handled by PdfEbookViewer component */}
 
       {/* XP Gain Animation */}
       <XPGainToast 
