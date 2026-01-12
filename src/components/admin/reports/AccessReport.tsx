@@ -477,19 +477,18 @@ export function AccessReport() {
             </CardHeader>
             <CardContent>
               {activityDistribution.length > 0 ? (
-                <ChartContainer config={{}} className="h-[220px] w-full">
+                <ChartContainer config={{}} className="h-[220px] w-full overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={activityDistribution}
                         cx="50%"
                         cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
+                        innerRadius={40}
+                        outerRadius={65}
                         paddingAngle={2}
                         dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        labelLine={false}
+                        label={false}
                       >
                         {activityDistribution.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -503,6 +502,17 @@ export function AccessReport() {
                 <div className="h-[220px] flex items-center justify-center text-muted-foreground">
                   <AlertCircle className="h-5 w-5 mr-2" />
                   Sem dados de atividade
+                </div>
+              )}
+              {/* Legend */}
+              {activityDistribution.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-4 mt-4 text-sm">
+                  {activityDistribution.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }} />
+                      <span className="text-muted-foreground">{item.name}: {item.value}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
