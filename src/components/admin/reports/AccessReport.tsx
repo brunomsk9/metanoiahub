@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { Button } from "@/components/ui/button";
 import { 
   LogIn, Users, Clock, Activity, Search, Building2, 
-  UserCheck, UserX, Calendar, TrendingUp, AlertCircle
+  UserCheck, UserX, Calendar, TrendingUp, AlertCircle, Download
 } from "lucide-react";
+import { toast } from "sonner";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { PeriodFilter, PeriodOption, getDateFromPeriod } from "./PeriodFilter";
@@ -264,6 +266,56 @@ export function AccessReport() {
     return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">Inativo</Badge>;
   };
 
+  const getActivityStatus = (lastLogin: string | null): string => {
+    if (!lastLogin) return "Nunca acessou";
+    const daysSince = Math.floor((Date.now() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSince <= 7) return "Ativo";
+    if (daysSince <= 30) return "Moderado";
+    return "Inativo";
+  };
+
+  const exportToCSV = () => {
+    if (filteredUsers.length === 0) {
+      toast.error("Não há dados para exportar");
+      return;
+    }
+
+    const headers = isSuperAdmin
+      ? ["Nome", "Email", "Igreja", "Último Acesso", "Cadastro", "Status"]
+      : ["Nome", "Email", "Último Acesso", "Cadastro", "Status"];
+
+    const rows = filteredUsers.map(user => {
+      const lastAccess = user.last_sign_in_at
+        ? format(new Date(user.last_sign_in_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
+        : "-";
+      const createdAt = format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR });
+      const status = getActivityStatus(user.last_sign_in_at);
+
+      if (isSuperAdmin) {
+        return [user.nome, user.email, user.church_name || "-", lastAccess, createdAt, status];
+      }
+      return [user.nome, user.email, lastAccess, createdAt, status];
+    });
+
+    const csvContent = [
+      headers.join(";"),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(";"))
+    ].join("\n");
+
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `relatorio-acessos-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`${filteredUsers.length} registros exportados com sucesso`);
+  };
+
   const chartConfig = {
     count: { label: "Logins", color: CHART_COLORS.lime }
   };
@@ -315,6 +367,15 @@ export function AccessReport() {
             </Select>
           )}
           <PeriodFilter value={period} onChange={setPeriod} />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportToCSV}
+            disabled={filteredUsers.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
         </div>
       </div>
 
