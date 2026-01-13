@@ -88,11 +88,12 @@ interface DiscipleCardProps {
   index: number;
 }
 
-// Stat pill component for reuse
-const StatPill = memo(({ icon: Icon, value, className }: { icon: typeof Flame; value: string | number; className?: string }) => (
-  <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium", className)}>
-    <Icon className="w-3 h-3" />
-    {value}
+// Stat pill component for reuse - improved visual hierarchy
+const StatPill = memo(({ icon: Icon, value, className, label }: { icon: typeof Flame; value: string | number; className?: string; label?: string }) => (
+  <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium backdrop-blur-sm", className)}>
+    <Icon className="w-3 h-3 shrink-0" />
+    <span className="font-semibold">{value}</span>
+    {label && <span className="text-[9px] opacity-70 hidden xs:inline">{label}</span>}
   </span>
 ));
 StatPill.displayName = "StatPill";
@@ -128,80 +129,116 @@ function DiscipleCardComponent({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="group">
-      <div className="disciple-card">
-        {/* Progress bar */}
-        <div className="h-1 bg-muted/20 rounded-t-xl overflow-hidden">
+      <div className="disciple-card overflow-hidden">
+        {/* Progress bar - more prominent */}
+        <div className="h-1.5 bg-muted/30">
           <div 
-            className="h-full bg-primary/70 transition-all"
+            className={cn(
+              "h-full transition-all duration-300",
+              totalProgress >= 100 ? "bg-primary" : totalProgress >= 50 ? "bg-accent" : "bg-warning/70"
+            )}
             style={{ width: `${totalProgress}%` }}
           />
         </div>
 
-        {/* Header */}
-        <div className="flex items-center gap-2.5 p-2.5 sm:p-3">
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className={cn(
-              "w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold text-base sm:text-lg",
-              isCompleted 
-                ? "bg-primary/20 text-primary ring-2 ring-primary/25" 
-                : "bg-muted/40 text-muted-foreground"
-            )}>
-              {initial}
-            </div>
-            <div className={cn(
-              "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card flex items-center justify-center",
-              isCompleted ? "bg-primary" : "bg-muted-foreground/40"
-            )}>
-              {isCompleted ? <CheckCircle className="w-2 h-2 text-primary-foreground" /> : <Lock className="w-2 h-2 text-muted" />}
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-1.5">
-              <p className="font-semibold text-sm text-foreground truncate" title={rel.discipulo?.nome}>
-                {rel.discipulo?.nome || "Sem nome"}
-              </p>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 hover:bg-primary/10 rounded-lg">
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180 text-muted-foreground" />
-                </Button>
-              </CollapsibleTrigger>
+        {/* Header - Clickable to expand */}
+        <CollapsibleTrigger asChild>
+          <div className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/20 transition-colors">
+            {/* Avatar with status ring */}
+            <div className="relative shrink-0">
+              <div className={cn(
+                "w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm",
+                isCompleted 
+                  ? "bg-gradient-to-br from-primary/25 to-primary/10 text-primary ring-2 ring-primary/30" 
+                  : "bg-gradient-to-br from-muted/60 to-muted/30 text-muted-foreground"
+              )}>
+                {initial}
+              </div>
+              <div className={cn(
+                "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-card flex items-center justify-center shadow-sm",
+                isCompleted ? "bg-primary" : "bg-muted-foreground/50"
+              )}>
+                {isCompleted ? <CheckCircle className="w-2.5 h-2.5 text-primary-foreground" /> : <Lock className="w-2 h-2 text-muted" />}
+              </div>
             </div>
 
-            {/* Meta row - compact mode shows only essential stats on mobile */}
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              {isAdmin && rel.discipulador && !compactMode && (
-                <span className="hidden sm:flex text-[10px] text-muted-foreground items-center gap-1 mr-1">
-                  <Users className="w-3 h-3 shrink-0" />
-                  <span className="truncate max-w-[80px]">{rel.discipulador.nome}</span>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold text-sm sm:text-base text-foreground truncate" title={rel.discipulo?.nome}>
+                  {rel.discipulo?.nome || "Sem nome"}
+                </p>
+                <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180 text-muted-foreground/60" />
+              </div>
+
+              {/* Stats row - always visible, responsive */}
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {/* Streak - always prominent */}
+                <StatPill 
+                  icon={Flame} 
+                  value={rel.discipulo?.current_streak || 0} 
+                  className="bg-gradient-to-r from-orange-500/20 to-amber-500/15 text-orange-500 border border-orange-500/20" 
+                />
+                
+                {/* Compact mode: show minimal info */}
+                {compactMode ? (
+                  <>
+                    {/* Progress summary as percentage */}
+                    <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 rounded-md bg-muted/30">
+                      {Math.round(totalProgress)}%
+                    </span>
+                    {isCompleted && (
+                      <StatPill icon={Award} value="✓" className="bg-primary/20 text-primary border border-primary/30" />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Full stats */}
+                    <StatPill 
+                      icon={Award} 
+                      value={rel.discipulo?.xp_points || 0} 
+                      className="bg-accent/15 text-accent border border-accent/20 hidden xs:inline-flex" 
+                    />
+                    <StatPill 
+                      icon={Link} 
+                      value={`${conexaoCount}/2`} 
+                      className={cn(
+                        "border",
+                        conexaoCount === 2 
+                          ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/25" 
+                          : "bg-sky-500/10 text-sky-500 border-sky-500/20"
+                      )} 
+                    />
+                    <StatPill 
+                      icon={GraduationCap} 
+                      value={`${academiaCount}/4`} 
+                      className={cn(
+                        "border",
+                        academiaCount === 4 
+                          ? "bg-primary/20 text-primary border-primary/30" 
+                          : "bg-violet-500/10 text-violet-500 border-violet-500/20"
+                      )} 
+                    />
+                  </>
+                )}
+              </div>
+              
+              {/* Discipulador info - admin only, desktop */}
+              {isAdmin && rel.discipulador && (
+                <div className="hidden sm:flex items-center gap-1.5 mt-1.5">
+                  <Users className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{rel.discipulador.nome}</span>
                   <Badge
                     variant={discipuladorCount >= maxDisciplesLimit ? "destructive" : "outline"}
-                    className="text-[8px] px-1 py-0 h-3.5 shrink-0"
+                    className="text-[8px] px-1.5 py-0 h-4"
                   >
                     {discipuladorCount}/{maxDisciplesLimit}
                   </Badge>
-                </span>
+                </div>
               )}
-
-              {/* Status badge - always show */}
-              {isCompleted ? (
-                <StatPill icon={Award} value="✓" className="bg-primary/15 text-primary" />
-              ) : (
-                <StatPill icon={Lock} value="..." className="bg-muted/40 text-muted-foreground" />
-              )}
-              
-              {/* Streak - always show */}
-              <StatPill icon={Flame} value={rel.discipulo?.current_streak || 0} className="bg-warning/10 text-warning" />
-              
-              {/* XP and progress - hide in compact mode on mobile */}
-              <StatPill icon={Award} value={rel.discipulo?.xp_points || 0} className={cn("bg-accent/10 text-accent", compactMode && "hidden sm:inline-flex")} />
-              <StatPill icon={Link} value={`${conexaoCount}/2`} className={cn("bg-info/10 text-info", compactMode && "hidden sm:inline-flex")} />
-              <StatPill icon={GraduationCap} value={`${academiaCount}/4`} className={cn("bg-primary/10 text-primary", compactMode && "hidden sm:inline-flex")} />
             </div>
           </div>
-        </div>
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="px-2.5 pb-2.5 sm:px-3 sm:pb-3 space-y-2.5">
             {/* Progress Rows */}
