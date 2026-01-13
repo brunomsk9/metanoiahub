@@ -3,19 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Eye, BookOpen, Flame, CheckCircle, Award, Lock, GraduationCap, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, ChevronDown, BarChart3 } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Users, UserPlus, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, BarChart3, Heart, Sparkles } from "lucide-react";
 import { ActionButtons } from "@/components/ui/action-buttons";
 import { useNavigate } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -25,7 +20,9 @@ import { DiscipleshipOrganogram } from "./DiscipleshipOrganogram";
 import { CreateUserModal } from "./CreateUserModal";
 import { BulkAssignDisciplesModal } from "./BulkAssignDisciplesModal";
 import { DiscipleshipCharts } from "./DiscipleshipCharts";
+import { DiscipleCard } from "./DiscipleCard";
 import { useChurch } from "@/contexts/ChurchContext";
+import { motion } from "framer-motion";
 
 interface Profile {
   id: string;
@@ -622,23 +619,13 @@ export function AdminDiscipleship() {
     fetchData();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Ativo</Badge>;
-      case 'paused':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">Pausado</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">Concluído</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center animate-pulse">
+          <Heart className="w-8 h-8 text-primary" />
+        </div>
+        <p className="text-sm text-muted-foreground">Carregando discipulados...</p>
       </div>
     );
   }
@@ -937,570 +924,77 @@ export function AdminDiscipleship() {
         onUserCreated={fetchData}
       />
 
-      {/* Relationships list */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Users className="w-5 h-5 text-primary shrink-0" />
-              <span className="truncate">
-                {isAdmin ? `Relacionamentos (${relationships.length})` : `Meus Discípulos (${relationships.length})`}
-              </span>
-            </CardTitle>
-            <div className="relative w-full sm:w-64 md:w-72">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-10"
-              />
+      {/* Relationships list - Modern Design */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-4 border-b border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Heart className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">
+                    {isAdmin ? "Relacionamentos" : "Meus Discípulos"}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {relationships.length} {relationships.length === 1 ? "vínculo" : "vínculos"} ativos
+                  </p>
+                </div>
+              </div>
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11 bg-muted/30 border-border/50 focus:bg-background"
+                />
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {filteredRelationships.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              {searchTerm ? 'Nenhum resultado encontrado.' : 'Nenhum relacionamento encontrado.'}
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {filteredRelationships.map(rel => {
-                const conexaoCount = [rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length;
-                const academiaCount = [rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length;
-                
-                return (
-                <Collapsible key={rel.id} className="group">
-                  <div className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/20 transition-colors">
-                    {/* Compact header - always visible */}
-                    <div className="flex items-center gap-3 p-3 sm:p-4">
-                      {/* Avatar */}
-                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-primary font-bold text-lg">
-                          {(rel.discipulo?.nome || 'D')[0].toUpperCase()}
-                        </span>
-                      </div>
-                      
-                      {/* Main info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-base leading-tight text-foreground">
-                          {rel.discipulo?.nome || 'Sem nome'}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-                          {isAdmin && rel.discipulador && (
-                            <span className="flex items-center gap-1.5">
-                              <Users className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                              <span className="truncate max-w-[90px] sm:max-w-[140px]">{rel.discipulador.nome}</span>
-                              <Badge 
-                                variant={(discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit ? "destructive" : "secondary"}
-                                className="text-[10px] px-1.5 py-0 h-4 shrink-0"
-                              >
-                                {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
-                              </Badge>
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1.5">
-                            <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                            <span className="font-medium">{rel.discipulo?.current_streak || 0}d</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Award className="w-3.5 h-3.5 text-primary shrink-0" />
-                            <span className="font-medium">{rel.discipulo?.xp_points || 0}</span>
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Status indicators - always visible */}
-                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        {rel.alicerce_completed_presencial ? (
-                          <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-success/15 border border-success/20" title="Jornada Concluída">
-                            <Award className="w-4 h-4 text-success shrink-0" />
-                            <span className="text-xs text-success font-semibold hidden sm:inline">Concluído</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-muted/60 border border-border/50" title="Em Jornada">
-                            <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <span className="text-xs text-muted-foreground font-medium hidden sm:inline">Em Jornada</span>
-                          </div>
-                        )}
-                        <div className="hidden xs:block">{getStatusBadge(rel.status)}</div>
-                        
-                        {/* Expand button for mobile and tablet */}
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden hover:bg-primary/10">
-                            <ChevronDown className="h-5 w-5 transition-transform duration-200 group-data-[state=open]:rotate-180 text-muted-foreground" />
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      
-                      {/* Desktop: Jornadas inline - only on large screens */}
-                      <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/50">
-                        {/* Conexão Inicial */}
-                        <div className="flex items-center gap-1.5">
-                          <Link className="w-3.5 h-3.5 text-accent" />
-                          {[1, 2].map((nivel) => {
-                            const key = `conexao_inicial_${nivel}` as keyof Relationship;
-                            const isChecked = rel[key] as boolean;
-                            return (
-                              <Checkbox
-                                key={nivel}
-                                id={`conexao-${rel.id}-${nivel}`}
-                                checked={isChecked}
-                                onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
-                                className="h-4 w-4 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                                animated
-                              />
-                            );
-                          })}
-                        </div>
-
-                        <div className="w-px h-4 bg-border" />
-
-                        {/* Academia das Nações */}
-                        <div className="flex items-center gap-1.5">
-                          <GraduationCap className="w-3.5 h-3.5 text-primary" />
-                          {[1, 2, 3, 4].map((nivel) => {
-                            const key = `academia_nivel_${nivel}` as keyof Relationship;
-                            const isChecked = rel[key] as boolean;
-                            return (
-                              <Checkbox
-                                key={nivel}
-                                id={`academia-${rel.id}-${nivel}`}
-                                checked={isChecked}
-                                onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                                className="h-4 w-4 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                animated
-                              />
-                            );
-                          })}
-                        </div>
-                      </div>
-                      
-                      {/* Desktop: Action buttons - only on large screens */}
-                      <div className="hidden lg:flex items-center gap-1">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleViewProgress(rel.discipulo_id)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Progresso de {rel.discipulo?.nome}</DialogTitle>
-                            </DialogHeader>
-                            {discipleProgress && viewingProgress === rel.discipulo_id && (
-                              <div className="space-y-6 pt-4">
-                                {/* Jornada Metanoia Progress */}
-                                <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-semibold text-foreground flex items-center gap-2">
-                                      <Award className="w-4 h-4 text-primary" />
-                                      Progresso Jornada Metanoia
-                                    </span>
-                                    {rel.alicerce_completed_presencial ? (
-                                      <Badge className="bg-success/10 text-success border-success/20">
-                                        Concluído ✓
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="outline">Em andamento</Badge>
-                                    )}
-                                  </div>
-                                  <Progress 
-                                    value={discipleProgress.jornadaTotal > 0 
-                                      ? (discipleProgress.jornadaCompleted / discipleProgress.jornadaTotal) * 100 
-                                      : 0} 
-                                  />
-                                  <p className="text-sm text-muted-foreground">
-                                    {discipleProgress.jornadaCompleted}/{discipleProgress.jornadaTotal} aulas concluídas
-                                  </p>
-                                  
-                                  {!rel.alicerce_completed_presencial && (
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button size="sm" className="w-full mt-2">
-                                          <CheckCircle className="w-4 h-4 mr-2" />
-                                          Marcar como Concluído (Presencial)
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Confirmar Conclusão Presencial</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            Ao confirmar, você está atestando que {rel.discipulo?.nome} completou a Jornada Metanoia presencialmente com você. 
-                                            Isso irá desbloquear todas as trilhas para o discípulo.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleMarkJornadaComplete(rel.id, rel.discipulo?.nome || '')}>
-                                            Confirmar Conclusão
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  )}
-                                </div>
-
-                                {/* Conexão Inicial Progress */}
-                                <div className="space-y-3 p-4 rounded-lg bg-accent/10 border border-accent/20">
-                                  <div className="flex items-center gap-2">
-                                    <Link className="w-4 h-4 text-accent" />
-                                    <span className="font-semibold text-foreground">Conexão Inicial</span>
-                                  </div>
-                                  <div className="flex items-center gap-4">
-                                    {[1, 2].map((nivel) => {
-                                      const key = `conexao_inicial_${nivel}` as keyof Relationship;
-                                      const isChecked = rel[key] as boolean;
-                                      return (
-                                        <div key={nivel} className="flex items-center gap-2">
-                                          <Checkbox
-                                            id={`progress-conexao-${rel.id}-${nivel}`}
-                                            checked={isChecked}
-                                            onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
-                                            animated
-                                          />
-                                          <label 
-                                            htmlFor={`progress-conexao-${rel.id}-${nivel}`}
-                                            className="text-sm cursor-pointer"
-                                          >
-                                            Encontro {nivel}
-                                          </label>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    {[rel.conexao_inicial_1, rel.conexao_inicial_2].filter(Boolean).length}/2 encontros concluídos
-                                  </p>
-                                </div>
-
-                                {/* Academia das Nações Progress */}
-                                <div className="space-y-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
-                                  <div className="flex items-center gap-2">
-                                    <GraduationCap className="w-4 h-4 text-primary" />
-                                    <span className="font-semibold text-foreground">Academia das Nações</span>
-                                  </div>
-                                  <div className="flex items-center gap-4">
-                                    {[1, 2, 3, 4].map((nivel) => {
-                                      const key = `academia_nivel_${nivel}` as keyof Relationship;
-                                      const isChecked = rel[key] as boolean;
-                                      return (
-                                        <div key={nivel} className="flex items-center gap-2">
-                                          <Checkbox
-                                            id={`progress-academia-${rel.id}-${nivel}`}
-                                            checked={isChecked}
-                                            onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                                            animated
-                                          />
-                                          <label 
-                                            htmlFor={`progress-academia-${rel.id}-${nivel}`}
-                                            className="text-sm cursor-pointer"
-                                          >
-                                            Nível {nivel}
-                                          </label>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    {[rel.academia_nivel_1, rel.academia_nivel_2, rel.academia_nivel_3, rel.academia_nivel_4].filter(Boolean).length}/4 níveis concluídos
-                                  </p>
-                                </div>
-
-                                {/* Lessons Progress */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="flex items-center gap-2">
-                                      <BookOpen className="w-4 h-4 text-primary" />
-                                      Aulas Concluídas (Total)
-                                    </span>
-                                    <span className="font-medium">
-                                      {discipleProgress.lessonsCompleted}/{discipleProgress.totalLessons}
-                                    </span>
-                                  </div>
-                                  <Progress 
-                                    value={(discipleProgress.lessonsCompleted / discipleProgress.totalLessons) * 100} 
-                                  />
-                                </div>
-
-                                {/* Reading Plans */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="flex items-center gap-2">
-                                      <CheckCircle className="w-4 h-4 text-green-500" />
-                                      Dias de Leitura Concluídos
-                                    </span>
-                                    <span className="font-medium">
-                                      {discipleProgress.readingPlansProgress} dias
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Weekly Habits */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="flex items-center gap-2">
-                                      <Flame className="w-4 h-4 text-orange-500" />
-                                      Hábitos esta Semana
-                                    </span>
-                                    <span className="font-medium">
-                                      {discipleProgress.habitsThisWeek} registros
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Streak */}
-                                <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm text-muted-foreground">Streak Atual</span>
-                                    <span className="text-2xl font-bold text-primary">
-                                      {rel.discipulo?.current_streak || 0} 🔥
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
-
-                        {/* Transfer Button - only for admins */}
-                        {isAdmin && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            onClick={() => handleOpenTransferDialog(rel)}
-                            title="Transferir para outro discipulador"
-                          >
-                            <ArrowRightLeft className="w-4 h-4" />
-                          </Button>
-                        )}
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remover Relacionamento</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja remover <strong>{rel.discipulo?.nome}</strong> do discipulado de <strong>{rel.discipulador?.nome}</strong>?
-                                <br /><br />
-                                Esta ação será registrada no histórico e não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleRemoveRelationship(rel.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Remover
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                    
-                    {/* Mobile/Tablet: Expandable content */}
-                    <CollapsibleContent className="lg:hidden">
-                      <div className="px-4 pb-4 pt-2 space-y-4 border-t border-border/50">
-                        {/* Jornadas - card layout */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {/* Conexão Inicial */}
-                          <div className="p-3 rounded-lg bg-accent/5 border border-accent/20">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <Link className="w-4 h-4 text-accent" />
-                                <span className="text-sm font-medium">Conexão Inicial</span>
-                              </div>
-                              <Badge variant="outline" className="text-xs">
-                                {conexaoCount}/2
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              {[1, 2].map((nivel) => {
-                                const key = `conexao_inicial_${nivel}` as keyof Relationship;
-                                const isChecked = rel[key] as boolean;
-                                return (
-                                  <div key={nivel} className="flex items-center gap-2">
-                                    <Checkbox
-                                      id={`mobile-conexao-${rel.id}-${nivel}`}
-                                      checked={isChecked}
-                                      onCheckedChange={() => handleToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
-                                      className="h-6 w-6 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                                      animated
-                                    />
-                                    <label 
-                                      htmlFor={`mobile-conexao-${rel.id}-${nivel}`}
-                                      className="text-sm cursor-pointer"
-                                    >
-                                      {nivel}
-                                    </label>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Academia das Nações */}
-                          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <GraduationCap className="w-4 h-4 text-primary" />
-                                <span className="text-sm font-medium">Academia</span>
-                              </div>
-                              <Badge variant="outline" className="text-xs">
-                                {academiaCount}/4
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              {[1, 2, 3, 4].map((nivel) => {
-                                const key = `academia_nivel_${nivel}` as keyof Relationship;
-                                const isChecked = rel[key] as boolean;
-                                return (
-                                  <div key={nivel} className="flex items-center gap-2">
-                                    <Checkbox
-                                      id={`mobile-academia-${rel.id}-${nivel}`}
-                                      checked={isChecked}
-                                      onCheckedChange={() => handleToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                                      className="h-6 w-6 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                      animated
-                                    />
-                                    <label 
-                                      htmlFor={`mobile-academia-${rel.id}-${nivel}`}
-                                      className="text-sm cursor-pointer"
-                                    >
-                                      {nivel}
-                                    </label>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="default"
-                                className="flex-1 h-10"
-                                onClick={() => handleViewProgress(rel.discipulo_id)}
-                              >
-                                <Eye className="w-4 h-4 mr-2" />
-                                Ver Progresso
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Progresso de {rel.discipulo?.nome}</DialogTitle>
-                              </DialogHeader>
-                              {discipleProgress && viewingProgress === rel.discipulo_id && (
-                                <div className="space-y-4 pt-4">
-                                  {/* Compact mobile progress view */}
-                                  <div className="space-y-2 p-3 rounded-lg bg-primary/5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-sm flex items-center gap-2">
-                                        <Award className="w-4 h-4 text-primary" />
-                                        Jornada Metanoia
-                                      </span>
-                                      {rel.alicerce_completed_presencial ? (
-                                        <Badge className="bg-success/10 text-success text-xs">Concluído</Badge>
-                                      ) : (
-                                        <span className="text-xs">{discipleProgress.jornadaCompleted}/{discipleProgress.jornadaTotal}</span>
-                                      )}
-                                    </div>
-                                    <Progress 
-                                      value={discipleProgress.jornadaTotal > 0 
-                                        ? (discipleProgress.jornadaCompleted / discipleProgress.jornadaTotal) * 100 
-                                        : 0} 
-                                      className="h-2"
-                                    />
-                                  </div>
-                                  
-                                  <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div className="p-3 rounded-lg bg-muted/50 text-center">
-                                      <BookOpen className="w-4 h-4 mx-auto mb-1 text-primary" />
-                                      <p className="font-medium">{discipleProgress.lessonsCompleted}/{discipleProgress.totalLessons}</p>
-                                      <p className="text-xs text-muted-foreground">Aulas</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-muted/50 text-center">
-                                      <Flame className="w-4 h-4 mx-auto mb-1 text-orange-500" />
-                                      <p className="font-medium">{rel.discipulo?.current_streak || 0}</p>
-                                      <p className="text-xs text-muted-foreground">Streak</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-
-                          {isAdmin && (
-                            <Button 
-                              variant="outline" 
-                              size="default"
-                              className="h-10 text-blue-600 border-blue-200 hover:bg-blue-50"
-                              onClick={() => handleOpenTransferDialog(rel)}
-                            >
-                              <ArrowRightLeft className="w-4 h-4 mr-2" />
-                              <span className="hidden sm:inline">Transferir</span>
-                            </Button>
-                          )}
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="default"
-                                className="h-10 text-destructive border-destructive/30 hover:bg-destructive/10"
-                              >
-                                <Trash2 className="w-4 h-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Remover</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Remover Relacionamento</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja remover <strong>{rel.discipulo?.nome}</strong>?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleRemoveRelationship(rel.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Remover
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-              )})}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            {filteredRelationships.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground font-medium">
+                  {searchTerm ? "Nenhum resultado encontrado" : "Nenhum relacionamento ativo"}
+                </p>
+                <p className="text-sm text-muted-foreground/70 mt-1">
+                  {searchTerm ? "Tente buscar com outros termos" : "Adicione discípulos para começar"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {filteredRelationships.map((rel, index) => (
+                  <DiscipleCard
+                    key={rel.id}
+                    relationship={rel}
+                    isAdmin={isAdmin}
+                    maxDisciplesLimit={maxDisciplesLimit}
+                    discipuladorDiscipleCount={discipuladorDiscipleCount}
+                    discipleProgress={discipleProgress}
+                    viewingProgress={viewingProgress}
+                    onViewProgress={handleViewProgress}
+                    onToggleConexaoInicial={handleToggleConexaoInicial}
+                    onToggleAcademiaNivel={handleToggleAcademiaNivel}
+                    onMarkJornadaComplete={handleMarkJornadaComplete}
+                    onOpenTransferDialog={handleOpenTransferDialog}
+                    onRemoveRelationship={handleRemoveRelationship}
+                    index={index}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
       </TabsContent>
 
       <TabsContent value="organogram">
