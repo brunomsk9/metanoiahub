@@ -657,7 +657,7 @@
      ============================================ */
   
   .disciple-card {
-    @apply relative rounded-2xl bg-gradient-to-br from-card to-card-elevated border border-border/80 overflow-hidden transition-all;
+    @apply relative rounded-xl sm:rounded-2xl bg-gradient-to-br from-card to-card-elevated border border-border/80 overflow-hidden transition-all;
     transition-duration: var(--transition-base);
   }
 
@@ -666,63 +666,63 @@
   }
 
   .disciple-card-header {
-    @apply flex items-center gap-4 p-4 md:p-5;
+    @apply flex items-start sm:items-center gap-3 p-3 sm:p-4 md:p-5;
   }
 
   .disciple-avatar {
-    @apply w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/20;
+    @apply w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/20;
   }
 
   .disciple-avatar-text {
-    @apply text-lg md:text-xl font-bold text-primary;
+    @apply text-base sm:text-lg md:text-xl font-bold text-primary;
   }
 
   .disciple-info {
-    @apply flex-1 min-w-0;
+    @apply flex-1 min-w-0 overflow-hidden;
   }
 
   .disciple-name {
-    @apply font-semibold text-base md:text-lg text-foreground leading-tight;
+    @apply font-semibold text-sm sm:text-base md:text-lg text-foreground leading-tight truncate;
   }
 
   .disciple-meta {
-    @apply flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs md:text-sm text-muted-foreground;
+    @apply flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[11px] sm:text-xs md:text-sm text-muted-foreground;
   }
 
   .disciple-meta-item {
-    @apply flex items-center gap-1.5;
+    @apply flex items-center gap-1 max-w-full;
   }
 
   .disciple-status {
-    @apply flex items-center gap-2 shrink-0;
+    @apply flex items-center gap-1.5 sm:gap-2 shrink-0;
   }
 
   .disciple-card-body {
-    @apply px-4 md:px-5 pb-4 md:pb-5 space-y-3;
+    @apply px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5 space-y-3;
   }
 
   .disciple-progress-row {
-    @apply flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50;
+    @apply flex items-start sm:items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-muted/30 border border-border/50;
   }
 
   .disciple-progress-icon {
-    @apply w-8 h-8 rounded-lg flex items-center justify-center shrink-0;
+    @apply w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0;
   }
 
   .disciple-progress-content {
-    @apply flex-1 min-w-0;
+    @apply flex-1 min-w-0 overflow-hidden;
   }
 
   .disciple-progress-label {
-    @apply text-xs font-medium text-muted-foreground mb-1;
+    @apply text-[11px] sm:text-xs font-medium text-muted-foreground mb-1 truncate;
   }
 
   .disciple-progress-checkboxes {
-    @apply flex items-center gap-2;
+    @apply flex flex-wrap items-center gap-1.5 sm:gap-2;
   }
 
   .disciple-card-actions {
-    @apply flex items-center gap-2 pt-3 border-t border-border/50;
+    @apply flex flex-wrap items-center gap-2 pt-3 border-t border-border/50;
   }
 
   /* Status badges */
