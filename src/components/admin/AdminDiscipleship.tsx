@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import { DiscipleshipCharts } from "./DiscipleshipCharts";
 import { DiscipleCard } from "./DiscipleCard";
 import { useChurch } from "@/contexts/ChurchContext";
 import { motion } from "framer-motion";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface Profile {
   id: string;
@@ -101,7 +102,9 @@ export function AdminDiscipleship() {
   
   // Compact mode state for mobile
   const [compactMode, setCompactMode] = useState(true);
-
+  
+  // Virtualization ref
+  const listContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchData();
     fetchMaxDisciplesLimit();
@@ -405,6 +408,14 @@ export function AdminDiscipleship() {
     const discipleName = rel.discipulo?.nome?.toLowerCase() || '';
     const discipuladorName = rel.discipulador?.nome?.toLowerCase() || '';
     return discipleName.includes(search) || discipuladorName.includes(search);
+  });
+
+  // Virtualizer for performance with large lists
+  const rowVirtualizer = useVirtualizer({
+    count: filteredRelationships.length,
+    getScrollElement: () => listContainerRef.current,
+    estimateSize: () => 100, // Estimated card height
+    overscan: 5,
   });
 
   const handleRemoveRelationship = async (id: string) => {
@@ -986,26 +997,53 @@ export function AdminDiscipleship() {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {filteredRelationships.map((rel, index) => (
-                  <DiscipleCard
-                    key={rel.id}
-                    relationship={rel}
-                    isAdmin={isAdmin}
-                    maxDisciplesLimit={maxDisciplesLimit}
-                    discipuladorDiscipleCount={discipuladorDiscipleCount}
-                    discipleProgress={discipleProgress}
-                    viewingProgress={viewingProgress}
-                    compactMode={compactMode}
-                    onViewProgress={handleViewProgress}
-                    onToggleConexaoInicial={handleToggleConexaoInicial}
-                    onToggleAcademiaNivel={handleToggleAcademiaNivel}
-                    onMarkJornadaComplete={handleMarkJornadaComplete}
-                    onOpenTransferDialog={handleOpenTransferDialog}
-                    onRemoveRelationship={handleRemoveRelationship}
-                    index={index}
-                  />
-                ))}
+              <div 
+                ref={listContainerRef}
+                className="max-h-[70vh] overflow-auto scrollbar-thin"
+              >
+                <div
+                  style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                    width: '100%',
+                    position: 'relative',
+                  }}
+                >
+                  {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                    const rel = filteredRelationships[virtualItem.index];
+                    return (
+                      <div
+                        key={rel.id}
+                        data-index={virtualItem.index}
+                        ref={rowVirtualizer.measureElement}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          transform: `translateY(${virtualItem.start}px)`,
+                        }}
+                        className="pb-4"
+                      >
+                        <DiscipleCard
+                          relationship={rel}
+                          isAdmin={isAdmin}
+                          maxDisciplesLimit={maxDisciplesLimit}
+                          discipuladorDiscipleCount={discipuladorDiscipleCount}
+                          discipleProgress={discipleProgress}
+                          viewingProgress={viewingProgress}
+                          compactMode={compactMode}
+                          onViewProgress={handleViewProgress}
+                          onToggleConexaoInicial={handleToggleConexaoInicial}
+                          onToggleAcademiaNivel={handleToggleAcademiaNivel}
+                          onMarkJornadaComplete={handleMarkJornadaComplete}
+                          onOpenTransferDialog={handleOpenTransferDialog}
+                          onRemoveRelationship={handleRemoveRelationship}
+                          index={virtualItem.index}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </CardContent>
