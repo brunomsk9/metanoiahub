@@ -16,6 +16,7 @@ import {
   Link,
   ArrowRightLeft,
   ChevronDown,
+  Check,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -248,21 +249,27 @@ function DiscipleCardComponent({
                 <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1">
                   <Link className="w-3 h-3 shrink-0" /> Conexão ({conexaoCount}/2)
                 </p>
-                <div className="flex items-center justify-start gap-3">
+                <div className="flex items-center gap-2">
                   {[1, 2].map((nivel) => {
                     const key = `conexao_inicial_${nivel}` as keyof Relationship;
                     const isChecked = rel[key] as boolean;
                     return (
-                      <label key={nivel} htmlFor={`conexao-${rel.id}-${nivel}`} className="flex items-center gap-1.5 cursor-pointer">
-                        <Checkbox
-                          id={`conexao-${rel.id}-${nivel}`}
-                          checked={isChecked}
-                          onCheckedChange={() => onToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
-                          className="h-6 w-6 shrink-0 rounded-md data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                          animated
-                        />
-                        <span className="text-xs font-medium">{nivel}</span>
-                      </label>
+                      <button
+                        key={nivel}
+                        onClick={() => onToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
+                        className={`
+                          flex-1 h-9 px-3 rounded-full text-xs font-semibold
+                          transition-all duration-200 ease-out
+                          border-2 flex items-center justify-center gap-1.5
+                          ${isChecked 
+                            ? 'bg-accent text-accent-foreground border-accent shadow-sm' 
+                            : 'bg-background/50 text-muted-foreground border-border/60 hover:border-accent/50 hover:bg-accent/10'
+                          }
+                        `}
+                      >
+                        {isChecked && <Check className="w-3.5 h-3.5" />}
+                        <span>Nível {nivel}</span>
+                      </button>
                     );
                   })}
                 </div>
@@ -273,21 +280,26 @@ function DiscipleCardComponent({
                 <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1">
                   <GraduationCap className="w-3 h-3 shrink-0" /> Academia ({academiaCount}/4)
                 </p>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
                   {[1, 2, 3, 4].map((nivel) => {
                     const key = `academia_nivel_${nivel}` as keyof Relationship;
                     const isChecked = rel[key] as boolean;
                     return (
-                      <label key={nivel} htmlFor={`academia-${rel.id}-${nivel}`} className="flex items-center gap-0.5 cursor-pointer">
-                        <Checkbox
-                          id={`academia-${rel.id}-${nivel}`}
-                          checked={isChecked}
-                          onCheckedChange={() => onToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                          className="h-5 w-5 shrink-0 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          animated
-                        />
-                        <span className="text-[11px] font-medium">{nivel}</span>
-                      </label>
+                      <button
+                        key={nivel}
+                        onClick={() => onToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
+                        className={`
+                          flex-1 h-8 min-w-0 rounded-full text-[11px] font-bold
+                          transition-all duration-200 ease-out
+                          border-2 flex items-center justify-center
+                          ${isChecked 
+                            ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
+                            : 'bg-background/50 text-muted-foreground border-border/60 hover:border-primary/50 hover:bg-primary/10'
+                          }
+                        `}
+                      >
+                        {isChecked ? <Check className="w-3.5 h-3.5" /> : nivel}
+                      </button>
                     );
                   })}
                 </div>
