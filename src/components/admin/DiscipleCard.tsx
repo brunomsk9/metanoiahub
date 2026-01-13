@@ -150,31 +150,33 @@ export function DiscipleCard({
 
             {/* Info */}
             <div className="disciple-info">
-              <p className="disciple-name">{rel.discipulo?.nome || "Sem nome"}</p>
+              <p className="disciple-name" title={rel.discipulo?.nome || "Sem nome"}>
+                {rel.discipulo?.nome || "Sem nome"}
+              </p>
               <div className="disciple-meta">
                 {isAdmin && rel.discipulador && (
-                  <span className="disciple-meta-item">
-                    <Users className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate max-w-[120px]">{rel.discipulador.nome}</span>
+                  <span className="disciple-meta-item hidden sm:flex">
+                    <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate max-w-[80px] sm:max-w-[120px]">{rel.discipulador.nome}</span>
                     <Badge
                       variant={
                         (discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit
                           ? "destructive"
                           : "secondary"
                       }
-                      className="text-[10px] px-1.5 py-0 h-4 shrink-0 ml-1"
+                      className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 h-3.5 sm:h-4 shrink-0"
                     >
                       {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
                     </Badge>
                   </span>
                 )}
                 <span className="stat-pill stat-pill-fire">
-                  <Flame className="w-3.5 h-3.5" />
-                  {rel.discipulo?.current_streak || 0}d
+                  <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span className="text-[10px] sm:text-xs">{rel.discipulo?.current_streak || 0}d</span>
                 </span>
                 <span className="stat-pill stat-pill-xp">
-                  <Award className="w-3.5 h-3.5" />
-                  {rel.discipulo?.xp_points || 0}
+                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span className="text-[10px] sm:text-xs">{rel.discipulo?.xp_points || 0}</span>
                 </span>
               </div>
             </div>
@@ -182,24 +184,24 @@ export function DiscipleCard({
             {/* Status */}
             <div className="disciple-status">
               {rel.alicerce_completed_presencial ? (
-                <div className="status-badge status-badge-success" title="Jornada Concluída">
-                  <Award className="w-4 h-4" />
-                  <span className="hidden sm:inline">Concluído</span>
+                <div className="status-badge status-badge-success px-1.5 sm:px-2.5 py-0.5 sm:py-1" title="Jornada Concluída">
+                  <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline text-[11px] sm:text-xs">Concluído</span>
                 </div>
               ) : (
-                <div className="status-badge status-badge-muted" title="Em Jornada">
-                  <Lock className="w-4 h-4" />
-                  <span className="hidden sm:inline">Em Jornada</span>
+                <div className="status-badge status-badge-muted px-1.5 sm:px-2.5 py-0.5 sm:py-1" title="Em Jornada">
+                  <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline text-[11px] sm:text-xs">Em Jornada</span>
                 </div>
               )}
-              <div className="hidden sm:block">{getStatusBadge(rel.status)}</div>
+              <div className="hidden md:block">{getStatusBadge(rel.status)}</div>
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 hover:bg-primary/10 transition-colors"
+                  className="h-8 w-8 sm:h-10 sm:w-10 hover:bg-primary/10 transition-colors"
                 >
-                  <ChevronDown className="h-5 w-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-muted-foreground" />
+                  <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-muted-foreground" />
                 </Button>
               </CollapsibleTrigger>
             </div>
@@ -288,11 +290,11 @@ export function DiscipleCard({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 h-9"
+                      className="flex-1 h-8 sm:h-9 text-xs sm:text-sm"
                       onClick={() => onViewProgress(rel.discipulo_id)}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver Progresso
+                      <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                      <span className="hidden xs:inline">Ver </span>Progresso
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-lg">
@@ -407,10 +409,10 @@ export function DiscipleCard({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950"
+                    className="h-8 sm:h-9 text-xs sm:text-sm text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950"
                     onClick={() => onOpenTransferDialog(rel)}
                   >
-                    <ArrowRightLeft className="w-4 h-4 mr-2" />
+                    <ArrowRightLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">Transferir</span>
                   </Button>
                 )}
@@ -420,9 +422,9 @@ export function DiscipleCard({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-9 text-destructive border-destructive/30 hover:bg-destructive/10"
+                      className="h-8 sm:h-9 text-xs sm:text-sm text-destructive border-destructive/30 hover:bg-destructive/10"
                     >
-                      <Trash2 className="w-4 h-4 sm:mr-2" />
+                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Remover</span>
                     </Button>
                   </AlertDialogTrigger>
