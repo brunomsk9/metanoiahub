@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -131,79 +132,125 @@ export function DiscipleCard({
     }
   };
 
+  // Calculate total progress percentage
+  const totalProgress = ((conexaoCount / 2) + (academiaCount / 4) + (rel.alicerce_completed_presencial ? 1 : 0)) / 3 * 100;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
+      transition={{ delay: index * 0.03, duration: 0.25 }}
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="group">
-        <div className="disciple-card">
-          {/* Card Header */}
-          <div className="disciple-card-header">
-            {/* Avatar */}
-            <div className="disciple-avatar">
-              <span className="disciple-avatar-text">
-                {(rel.discipulo?.nome || "D")[0].toUpperCase()}
-              </span>
-            </div>
+        <div className="disciple-card relative">
+          {/* Progress indicator bar at top */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-muted/30 rounded-t-xl overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary/60 to-primary transition-all duration-500"
+              style={{ width: `${totalProgress}%` }}
+            />
+          </div>
 
-            {/* Info */}
-            <div className="disciple-info">
-              <p className="disciple-name" title={rel.discipulo?.nome || "Sem nome"}>
-                {rel.discipulo?.nome || "Sem nome"}
-              </p>
-              <div className="disciple-meta">
-                {isAdmin && rel.discipulador && (
-                  <span className="disciple-meta-item hidden sm:flex">
-                    <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate max-w-[80px] sm:max-w-[120px]">{rel.discipulador.nome}</span>
-                    <Badge
-                      variant={
-                        (discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit
-                          ? "destructive"
-                          : "secondary"
-                      }
-                      className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 h-3.5 sm:h-4 shrink-0"
-                    >
-                      {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
-                    </Badge>
-                  </span>
+          {/* Card Header - Optimized for mobile */}
+          <div className="flex items-center gap-3 p-3 sm:p-4 pt-4 sm:pt-5">
+            {/* Avatar with status ring */}
+            <div className="relative shrink-0">
+              <div className={cn(
+                "w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-lg sm:text-xl transition-all",
+                rel.alicerce_completed_presencial 
+                  ? "bg-gradient-to-br from-primary/25 to-primary/10 text-primary ring-2 ring-primary/30" 
+                  : "bg-gradient-to-br from-muted/50 to-muted/30 text-muted-foreground"
+              )}>
+                {(rel.discipulo?.nome || "D")[0].toUpperCase()}
+              </div>
+              {/* Status dot */}
+              <div className={cn(
+                "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-card flex items-center justify-center",
+                rel.alicerce_completed_presencial ? "bg-primary" : "bg-muted-foreground/50"
+              )}>
+                {rel.alicerce_completed_presencial ? (
+                  <CheckCircle className="w-2.5 h-2.5 text-primary-foreground" />
+                ) : (
+                  <Lock className="w-2 h-2 text-muted" />
                 )}
-                <span className="stat-pill stat-pill-fire">
-                  <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span className="text-[10px] sm:text-xs">{rel.discipulo?.current_streak || 0}d</span>
-                </span>
-                <span className="stat-pill stat-pill-xp">
-                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span className="text-[10px] sm:text-xs">{rel.discipulo?.xp_points || 0}</span>
-                </span>
               </div>
             </div>
 
-            {/* Status */}
-            <div className="disciple-status">
-              {rel.alicerce_completed_presencial ? (
-                <div className="status-badge status-badge-success px-1.5 sm:px-2.5 py-0.5 sm:py-1" title="Jornada Concluída">
-                  <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline text-[11px] sm:text-xs">Concluído</span>
+            {/* Info section */}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm sm:text-base text-foreground truncate leading-tight" title={rel.discipulo?.nome || "Sem nome"}>
+                    {rel.discipulo?.nome || "Sem nome"}
+                  </p>
+                  {isAdmin && rel.discipulador && (
+                    <p className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Users className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{rel.discipulador.nome}</span>
+                      <Badge
+                        variant={
+                          (discipuladorDiscipleCount[rel.discipulador_id] || 0) >= maxDisciplesLimit
+                            ? "destructive"
+                            : "outline"
+                        }
+                        className="text-[9px] px-1 py-0 h-3.5 shrink-0 ml-0.5"
+                      >
+                        {discipuladorDiscipleCount[rel.discipulador_id] || 0}/{maxDisciplesLimit}
+                      </Badge>
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <div className="status-badge status-badge-muted px-1.5 sm:px-2.5 py-0.5 sm:py-1" title="Em Jornada">
-                  <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline text-[11px] sm:text-xs">Em Jornada</span>
-                </div>
-              )}
-              <div className="hidden md:block">{getStatusBadge(rel.status)}</div>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 sm:h-10 sm:w-10 hover:bg-primary/10 transition-colors"
-                >
-                  <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-muted-foreground" />
-                </Button>
-              </CollapsibleTrigger>
+                
+                {/* Expand button */}
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 hover:bg-primary/10 transition-colors rounded-lg"
+                  >
+                    <ChevronDown className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-180 text-muted-foreground" />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              
+              {/* Stats row - Always visible */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Status badge */}
+                {rel.alicerce_completed_presencial ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-primary/15 text-primary border border-primary/20">
+                    <Award className="w-3 h-3" />
+                    <span>Concluído</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-muted/50 text-muted-foreground border border-border/50">
+                    <Lock className="w-3 h-3" />
+                    <span>Em Jornada</span>
+                  </span>
+                )}
+                
+                {/* Streak */}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                  <Flame className="w-3 h-3" />
+                  {rel.discipulo?.current_streak || 0}
+                </span>
+                
+                {/* XP */}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Award className="w-3 h-3" />
+                  {rel.discipulo?.xp_points || 0}
+                </span>
+                
+                {/* Quick progress indicators */}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-accent/10 text-accent-foreground">
+                  <Link className="w-3 h-3" />
+                  {conexaoCount}/2
+                </span>
+                
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs font-medium bg-primary/10 text-primary">
+                  <GraduationCap className="w-3 h-3" />
+                  {academiaCount}/4
+                </span>
+              </div>
             </div>
           </div>
 
