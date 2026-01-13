@@ -168,15 +168,15 @@ function DiscipleCardComponent({
               </CollapsibleTrigger>
             </div>
 
-            {/* Meta row */}
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            {/* Meta row - optimized for mobile */}
+            <div className="flex items-center gap-1 mt-1 overflow-x-auto scrollbar-hide">
               {isAdmin && rel.discipulador && (
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1 mr-1">
-                  <Users className="w-3 h-3" />
-                  <span className="truncate max-w-[60px] sm:max-w-[80px]">{rel.discipulador.nome}</span>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 shrink-0">
+                  <Users className="w-2.5 h-2.5" />
+                  <span className="truncate max-w-[50px] sm:max-w-[80px]">{rel.discipulador.nome}</span>
                   <Badge
                     variant={discipuladorCount >= maxDisciplesLimit ? "destructive" : "outline"}
-                    className="text-[8px] px-1 py-0 h-3.5"
+                    className="text-[8px] px-0.5 py-0 h-3 ml-0.5"
                   >
                     {discipuladorCount}/{maxDisciplesLimit}
                   </Badge>
@@ -184,14 +184,14 @@ function DiscipleCardComponent({
               )}
               
               {isCompleted ? (
-                <StatPill icon={Award} value="✓" className="bg-primary/15 text-primary" />
+                <StatPill icon={Award} value="✓" className="bg-primary/15 text-primary shrink-0" />
               ) : (
-                <StatPill icon={Lock} value="..." className="bg-muted/40 text-muted-foreground" />
+                <StatPill icon={Lock} value="..." className="bg-muted/40 text-muted-foreground shrink-0" />
               )}
-              <StatPill icon={Flame} value={rel.discipulo?.current_streak || 0} className="bg-orange-500/10 text-orange-500" />
-              <StatPill icon={Award} value={rel.discipulo?.xp_points || 0} className="bg-amber-500/10 text-amber-500" />
-              <StatPill icon={Link} value={`${conexaoCount}/2`} className="bg-accent/10 text-accent-foreground" />
-              <StatPill icon={GraduationCap} value={`${academiaCount}/4`} className="bg-primary/10 text-primary" />
+              <StatPill icon={Flame} value={rel.discipulo?.current_streak || 0} className="bg-orange-500/10 text-orange-500 shrink-0" />
+              <StatPill icon={Award} value={rel.discipulo?.xp_points || 0} className="bg-amber-500/10 text-amber-500 shrink-0" />
+              <StatPill icon={Link} value={`${conexaoCount}/2`} className="bg-accent/10 text-accent-foreground shrink-0" />
+              <StatPill icon={GraduationCap} value={`${academiaCount}/4`} className="bg-primary/10 text-primary shrink-0" />
             </div>
           </div>
         </div>
