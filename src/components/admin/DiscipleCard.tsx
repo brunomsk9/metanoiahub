@@ -294,12 +294,17 @@ function DiscipleCardComponent({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1.5 pt-1.5 border-t border-border/50">
+            {/* Actions - improved UX */}
+            <div className="flex items-center gap-2 pt-2 border-t border-border/40">
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => onViewProgress(rel.discipulo_id)}>
-                    <Eye className="w-3.5 h-3.5 mr-1" /> Progresso
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="flex-1 h-10 text-xs font-medium bg-muted/50 hover:bg-muted/80 border border-border/50"
+                    onClick={() => onViewProgress(rel.discipulo_id)}
+                  >
+                    <Eye className="w-4 h-4 mr-1.5" /> Progresso
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
@@ -325,8 +330,8 @@ function DiscipleCardComponent({
                         {!isCompleted && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" className="w-full h-8 text-xs">
-                                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Marcar Concluído
+                              <Button size="sm" className="w-full h-9 text-xs">
+                                <CheckCircle className="w-4 h-4 mr-1.5" /> Marcar Concluído
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -366,15 +371,26 @@ function DiscipleCardComponent({
               </Dialog>
 
               {isAdmin && (
-                <Button variant="outline" size="sm" className="h-8 px-2" onClick={() => onOpenTransferDialog(rel)}>
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-10 w-10 shrink-0 hover:bg-accent/10 hover:border-accent/50 hover:text-accent transition-colors"
+                  onClick={() => onOpenTransferDialog(rel)}
+                  title="Transferir discípulo"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
                 </Button>
               )}
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 px-2 text-destructive border-destructive/30 hover:bg-destructive/10">
-                    <Trash2 className="w-3.5 h-3.5" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-10 w-10 shrink-0 text-destructive/70 border-destructive/20 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive transition-colors"
+                    title="Remover relacionamento"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
