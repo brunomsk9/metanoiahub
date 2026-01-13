@@ -89,33 +89,46 @@ export default function Discipleship() {
           {/* Breadcrumb */}
           <PageBreadcrumb items={[{ label: 'Discipulado' }]} />
 
-          {/* Header */}
-          <header className="section-pattern rounded-2xl p-5 md:p-6 border border-border/50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <Heart className="w-6 h-6 md:w-7 md:h-7 text-primary" />
+          {/* Modern Header */}
+          <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card to-card-elevated border border-border/80">
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'radial-gradient(circle at 25% 25%, hsl(var(--primary)) 1px, transparent 1px)',
+                backgroundSize: '48px 48px'
+              }} />
+            </div>
+            
+            <div className="relative p-5 md:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/20 shadow-lg shadow-primary/10">
+                    <Heart className="w-7 h-7 md:w-8 md:h-8 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold tracking-tight">
+                      <span className="text-gradient">Discipulado</span>
+                    </h1>
+                    <p className="text-sm md:text-base text-muted-foreground mt-1 max-w-md">
+                      {isDiscipulador && !isAdmin 
+                        ? "Acompanhe o crescimento espiritual dos seus discípulos"
+                        : "Gerencie relacionamentos e acompanhe o progresso da igreja"
+                      }
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold">
-                    <span className="text-gradient">Discipulado</span>
-                  </h1>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 line-clamp-2">
-                    Acompanhe o progresso dos seus discípulos e gerencie relacionamentos
-                  </p>
-                </div>
+                
+                {isDiscipulador && (
+                  <Button 
+                    onClick={() => setShowMeetingDialog(true)}
+                    className="shrink-0 w-full sm:w-auto h-11 px-6 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+                    size="lg"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Novo Encontro
+                  </Button>
+                )}
               </div>
-              
-              {isDiscipulador && (
-                <Button 
-                  onClick={() => setShowMeetingDialog(true)}
-                  className="shrink-0 w-full sm:w-auto"
-                  size="default"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Encontro
-                </Button>
-              )}
             </div>
           </header>
 
@@ -123,13 +136,16 @@ export default function Discipleship() {
 
           {/* Log de Encontros Recentes - apenas para discipuladores */}
           {isDiscipulador && (
-            <section className="mt-8 pt-6 border-t border-border/40">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <h3 className="text-sm font-medium text-muted-foreground">
+            <section className="mt-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
+                  <Calendar className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
                     Histórico de Encontros
                   </h3>
+                  <p className="text-sm text-muted-foreground">Seus encontros recentes</p>
                 </div>
               </div>
               <MeetingsHistoryLog maxItems={5} />
