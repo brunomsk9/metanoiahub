@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Users, UserPlus, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, BarChart3, Heart, Sparkles } from "lucide-react";
+import { Users, UserPlus, Search, Link, Check, ChevronsUpDown, History, ArrowRightLeft, Loader2, Settings, GitBranch, Plus, BarChart3, Heart, Sparkles, Minimize2, Maximize2 } from "lucide-react";
 import { ActionButtons } from "@/components/ui/action-buttons";
 import { useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
@@ -98,6 +98,9 @@ export function AdminDiscipleship() {
   // Bulk assign modal state
   const [bulkAssignModalOpen, setBulkAssignModalOpen] = useState(false);
   const [bulkAssignDiscipulador, setBulkAssignDiscipulador] = useState<Profile | null>(null);
+  
+  // Compact mode state for mobile
+  const [compactMode, setCompactMode] = useState(true);
 
   useEffect(() => {
     fetchData();
@@ -946,14 +949,26 @@ export function AdminDiscipleship() {
                   </p>
                 </div>
               </div>
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-11 bg-muted/30 border-border/50 focus:bg-background"
-                />
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {/* Compact mode toggle - visible only on mobile */}
+                <Button
+                  variant={compactMode ? "secondary" : "outline"}
+                  size="icon"
+                  className="sm:hidden h-11 w-11 shrink-0"
+                  onClick={() => setCompactMode(!compactMode)}
+                  title={compactMode ? "Mostrar mais detalhes" : "Modo compacto"}
+                >
+                  {compactMode ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+                </Button>
+                <div className="relative flex-1 sm:w-72">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-11 bg-muted/30 border-border/50 focus:bg-background"
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -981,6 +996,7 @@ export function AdminDiscipleship() {
                     discipuladorDiscipleCount={discipuladorDiscipleCount}
                     discipleProgress={discipleProgress}
                     viewingProgress={viewingProgress}
+                    compactMode={compactMode}
                     onViewProgress={handleViewProgress}
                     onToggleConexaoInicial={handleToggleConexaoInicial}
                     onToggleAcademiaNivel={handleToggleAcademiaNivel}

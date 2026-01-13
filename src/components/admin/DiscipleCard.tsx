@@ -78,6 +78,7 @@ interface DiscipleCardProps {
   discipuladorDiscipleCount: Record<string, number>;
   discipleProgress: DiscipleProgress | null;
   viewingProgress: string | null;
+  compactMode?: boolean;
   onViewProgress: (discipleId: string) => void;
   onToggleConexaoInicial: (relationshipId: string, nivel: 1 | 2, currentValue: boolean) => void;
   onToggleAcademiaNivel: (relationshipId: string, nivel: 1 | 2 | 3 | 4, currentValue: boolean) => void;
@@ -103,6 +104,7 @@ function DiscipleCardComponent({
   discipuladorDiscipleCount,
   discipleProgress,
   viewingProgress,
+  compactMode = false,
   onViewProgress,
   onToggleConexaoInicial,
   onToggleAcademiaNivel,
@@ -168,9 +170,9 @@ function DiscipleCardComponent({
               </CollapsibleTrigger>
             </div>
 
-            {/* Meta row - wrap on phone to avoid clipping */}
+            {/* Meta row - compact mode shows only essential stats on mobile */}
             <div className="flex items-center gap-1 mt-1 flex-wrap">
-              {isAdmin && rel.discipulador && (
+              {isAdmin && rel.discipulador && !compactMode && (
                 <span className="hidden sm:flex text-[10px] text-muted-foreground items-center gap-1 mr-1">
                   <Users className="w-3 h-3 shrink-0" />
                   <span className="truncate max-w-[80px]">{rel.discipulador.nome}</span>
@@ -183,15 +185,20 @@ function DiscipleCardComponent({
                 </span>
               )}
 
+              {/* Status badge - always show */}
               {isCompleted ? (
                 <StatPill icon={Award} value="✓" className="bg-primary/15 text-primary" />
               ) : (
                 <StatPill icon={Lock} value="..." className="bg-muted/40 text-muted-foreground" />
               )}
+              
+              {/* Streak - always show */}
               <StatPill icon={Flame} value={rel.discipulo?.current_streak || 0} className="bg-warning/10 text-warning" />
-              <StatPill icon={Award} value={rel.discipulo?.xp_points || 0} className="bg-accent/10 text-accent" />
-              <StatPill icon={Link} value={`${conexaoCount}/2`} className="bg-info/10 text-info" />
-              <StatPill icon={GraduationCap} value={`${academiaCount}/4`} className="bg-primary/10 text-primary" />
+              
+              {/* XP and progress - hide in compact mode on mobile */}
+              <StatPill icon={Award} value={rel.discipulo?.xp_points || 0} className={cn("bg-accent/10 text-accent", compactMode && "hidden sm:inline-flex")} />
+              <StatPill icon={Link} value={`${conexaoCount}/2`} className={cn("bg-info/10 text-info", compactMode && "hidden sm:inline-flex")} />
+              <StatPill icon={GraduationCap} value={`${academiaCount}/4`} className={cn("bg-primary/10 text-primary", compactMode && "hidden sm:inline-flex")} />
             </div>
           </div>
         </div>
