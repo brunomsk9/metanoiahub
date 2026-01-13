@@ -249,7 +249,7 @@ function DiscipleCardComponent({
                 <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1">
                   <Link className="w-3 h-3 shrink-0" /> Conexão ({conexaoCount}/2)
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   {[1, 2].map((nivel) => {
                     const key = `conexao_inicial_${nivel}` as keyof Relationship;
                     const isChecked = rel[key] as boolean;
@@ -258,17 +258,16 @@ function DiscipleCardComponent({
                         key={nivel}
                         onClick={() => onToggleConexaoInicial(rel.id, nivel as 1 | 2, isChecked)}
                         className={`
-                          flex-1 h-9 px-3 rounded-full text-xs font-semibold
+                          flex-1 h-8 min-w-0 rounded-full text-[11px] font-bold
                           transition-all duration-200 ease-out
-                          border-2 flex items-center justify-center gap-1.5
+                          border-2 flex items-center justify-center
                           ${isChecked 
                             ? 'bg-accent text-accent-foreground border-accent shadow-sm' 
                             : 'bg-background/50 text-muted-foreground border-border/60 hover:border-accent/50 hover:bg-accent/10'
                           }
                         `}
                       >
-                        {isChecked && <Check className="w-3.5 h-3.5" />}
-                        <span>Nível {nivel}</span>
+                        {isChecked ? <Check className="w-3.5 h-3.5" /> : nivel}
                       </button>
                     );
                   })}
