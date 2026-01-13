@@ -273,20 +273,20 @@ function DiscipleCardComponent({
                 <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1">
                   <GraduationCap className="w-3 h-3 shrink-0" /> Academia ({academiaCount}/4)
                 </p>
-                <div className="flex items-center justify-start gap-2">
+                <div className="flex items-center justify-between">
                   {[1, 2, 3, 4].map((nivel) => {
                     const key = `academia_nivel_${nivel}` as keyof Relationship;
                     const isChecked = rel[key] as boolean;
                     return (
-                      <label key={nivel} htmlFor={`academia-${rel.id}-${nivel}`} className="flex items-center gap-1 cursor-pointer">
+                      <label key={nivel} htmlFor={`academia-${rel.id}-${nivel}`} className="flex items-center gap-0.5 cursor-pointer">
                         <Checkbox
                           id={`academia-${rel.id}-${nivel}`}
                           checked={isChecked}
                           onCheckedChange={() => onToggleAcademiaNivel(rel.id, nivel as 1 | 2 | 3 | 4, isChecked)}
-                          className="h-6 w-6 shrink-0 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="h-5 w-5 shrink-0 rounded data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           animated
                         />
-                        <span className="text-xs font-medium">{nivel}</span>
+                        <span className="text-[11px] font-medium">{nivel}</span>
                       </label>
                     );
                   })}
