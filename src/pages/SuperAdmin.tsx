@@ -53,7 +53,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, 
   Search, BookOpen, GraduationCap, FileText, LifeBuoy, CalendarDays, 
-  ClipboardList, BarChart3, Bot, Presentation, Sparkles, ChevronDown, LayoutDashboard, Database
+  ClipboardList, BarChart3, Bot, Presentation, Sparkles, ChevronDown, LayoutDashboard, Database,
+  KeyRound, Eye, EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
@@ -159,6 +160,12 @@ export default function SuperAdmin() {
     data_batismo: '',
   });
   const [savingRole, setSavingRole] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<UserData | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   useEffect(() => {
     checkSuperAdminAccess();
@@ -466,6 +473,80 @@ export default function SuperAdmin() {
     setSavingRole(false);
     setIsUserDialogOpen(false);
     loadUsers();
+  };
+
+  const handleOpenPasswordDialog = (user: UserData) => {
+    setPasswordUser(user);
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setIsPasswordDialogOpen(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!passwordUser) return;
+    
+    if (newPassword.length < 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'A senha deve ter pelo menos 6 caracteres.',
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'As senhas não coincidem.',
+      });
+      return;
+    }
+
+    setResettingPassword(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Sessão expirada. Faça login novamente.',
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          user_id: passwordUser.id,
+          new_password: newPassword,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast({
+        title: 'Sucesso',
+        description: `Senha do usuário ${passwordUser.nome} alterada com sucesso.`,
+      });
+      setIsPasswordDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: error.message || 'Erro ao alterar senha.',
+      });
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   const handleDeleteChurch = async (churchId: string) => {
@@ -924,13 +1005,24 @@ export default function SuperAdmin() {
                             {getRoleBadge(user.roles)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenUserDialog(user)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenPasswordDialog(user)}
+                                title="Alterar senha"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenUserDialog(user)}
+                                title="Editar usuário"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -1249,6 +1341,117 @@ export default function SuperAdmin() {
                     </Button>
                   </div>
                 </form>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Password Reset Dialog */}
+          <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <KeyRound className="h-5 w-5 text-primary" />
+                  Alterar Senha
+                </DialogTitle>
+                <DialogDescription>
+                  Defina uma nova senha para o usuário. Ele precisará alterar a senha no próximo login.
+                </DialogDescription>
+              </DialogHeader>
+              {passwordUser && (
+                <div className="space-y-4">
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-primary">
+                        {passwordUser.nome.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{passwordUser.nome}</p>
+                      <p className="text-xs text-muted-foreground truncate">{passwordUser.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Password Fields */}
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="new_password">Nova Senha</Label>
+                      <div className="relative">
+                        <Input
+                          id="new_password"
+                          type={showPassword ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Mínimo 6 caracteres"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm_password">Confirmar Senha</Label>
+                      <Input
+                        id="confirm_password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Digite a senha novamente"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Validation Messages */}
+                  {newPassword && newPassword.length < 6 && (
+                    <p className="text-xs text-destructive">
+                      A senha deve ter pelo menos 6 caracteres
+                    </p>
+                  )}
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <p className="text-xs text-destructive">
+                      As senhas não coincidem
+                    </p>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsPasswordDialogOpen(false)}
+                      className="flex-1"
+                      disabled={resettingPassword}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleResetPassword}
+                      className="flex-1"
+                      disabled={resettingPassword || newPassword.length < 6 || newPassword !== confirmPassword}
+                    >
+                      {resettingPassword ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Alterando...
+                        </>
+                      ) : (
+                        'Alterar Senha'
+                      )}
+                    </Button>
+                  </div>
+                </div>
               )}
             </DialogContent>
           </Dialog>
