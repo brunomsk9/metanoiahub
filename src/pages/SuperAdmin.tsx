@@ -486,11 +486,11 @@ export default function SuperAdmin() {
   const handleResetPassword = async () => {
     if (!passwordUser) return;
     
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       toast({
         variant: 'destructive',
         title: 'Erro',
-        description: 'A senha deve ter pelo menos 6 caracteres.',
+        description: 'A senha deve ter pelo menos 8 caracteres.',
       });
       return;
     }
@@ -1382,7 +1382,7 @@ export default function SuperAdmin() {
                           type={showPassword ? 'text' : 'password'}
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="Use letras, números e caracteres especiais"
                           className="pr-10"
                         />
                         <Button
@@ -1414,9 +1414,12 @@ export default function SuperAdmin() {
                   </div>
 
                   {/* Validation Messages */}
-                  {newPassword && newPassword.length < 6 && (
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    💡 Use uma senha forte: mínimo 8 caracteres, com letras maiúsculas, minúsculas, números e símbolos.
+                  </div>
+                  {newPassword && newPassword.length < 8 && (
                     <p className="text-xs text-destructive">
-                      A senha deve ter pelo menos 6 caracteres
+                      A senha deve ter pelo menos 8 caracteres
                     </p>
                   )}
                   {confirmPassword && newPassword !== confirmPassword && (
@@ -1439,7 +1442,7 @@ export default function SuperAdmin() {
                     <Button
                       onClick={handleResetPassword}
                       className="flex-1"
-                      disabled={resettingPassword || newPassword.length < 6 || newPassword !== confirmPassword}
+                      disabled={resettingPassword || newPassword.length < 8 || newPassword !== confirmPassword}
                     >
                       {resettingPassword ? (
                         <>

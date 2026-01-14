@@ -98,8 +98,19 @@ serve(async (req: Request) => {
 
     if (updateError) {
       console.error("Error updating password:", updateError);
+      
+      // Handle weak password error specifically
+      if (updateError.message?.includes("weak") || updateError.code === "weak_password") {
+        return new Response(
+          JSON.stringify({ 
+            error: "Senha muito fraca ou comum. Use uma senha mais forte com letras, números e caracteres especiais." 
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: `Failed to update password: ${updateError.message}` }),
+        JSON.stringify({ error: `Erro ao atualizar senha: ${updateError.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
