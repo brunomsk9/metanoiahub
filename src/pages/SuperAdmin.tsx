@@ -1010,7 +1010,7 @@ export default function SuperAdmin() {
                             <div className="flex items-center justify-end gap-1">
                               <Button
                                 variant="ghost"
-                                size="sm"
+                                size="icon"
                                 onClick={() => impersonateUser({ 
                                   id: user.id, 
                                   nome: user.nome, 
@@ -1018,7 +1018,7 @@ export default function SuperAdmin() {
                                 })}
                                 disabled={impersonating}
                                 title="Logar como este usuário"
-                                className="text-amber-600 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/20"
+                                className="h-8 w-8 text-orange-600 hover:text-orange-700 hover:bg-orange-100 dark:text-orange-500 dark:hover:bg-orange-900/20"
                               >
                                 <UserCog className="h-4 w-4" />
                               </Button>
