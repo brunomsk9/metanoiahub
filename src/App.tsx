@@ -8,6 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { ThemeProvider } from "next-themes";
 import { ChurchProvider } from "@/contexts/ChurchContext";
 import { Loader2 } from "lucide-react";
+import { ImpersonationBanner } from "@/components/ImpersonationBanner";
 
 // Lazy load all pages for better initial bundle size
 const Index = lazy(() => import("./pages/Index"));
@@ -91,6 +92,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <ChurchProvider>
         <TooltipProvider delayDuration={300}>
+          <ImpersonationBanner />
           <Toaster />
           <Sonner />
           <BrowserRouter>

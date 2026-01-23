@@ -54,8 +54,9 @@ import {
   Loader2, ShieldAlert, ArrowLeft, Plus, Pencil, Church, Users, LogOut, Trash2, 
   Search, BookOpen, GraduationCap, FileText, LifeBuoy, CalendarDays, 
   ClipboardList, BarChart3, Bot, Presentation, Sparkles, ChevronDown, LayoutDashboard, Database,
-  KeyRound, Eye, EyeOff
+  KeyRound, Eye, EyeOff, UserCog
 } from 'lucide-react';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import { cn } from '@/lib/utils';
 import metanoiaLogo from "@/assets/metanoia-hub-logo.png";
 
@@ -126,6 +127,7 @@ interface UserData {
 export default function SuperAdmin() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { impersonateUser, impersonating } = useImpersonation();
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [churches, setChurches] = useState<ChurchData[]>([]);
@@ -1006,6 +1008,20 @@ export default function SuperAdmin() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => impersonateUser({ 
+                                  id: user.id, 
+                                  nome: user.nome, 
+                                  email: user.email 
+                                })}
+                                disabled={impersonating}
+                                title="Logar como este usuário"
+                                className="text-amber-600 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/20"
+                              >
+                                <UserCog className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
