@@ -388,9 +388,9 @@ export function MinistryLeaderScheduleReport({ churchId, isAdmin = false }: Mini
     const opt = {
       margin: 10,
       filename: `escalas-${format(currentMonth, "yyyy-MM")}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
+      image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+      jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "landscape" as const },
     };
 
     toast.loading("Gerando PDF...");
