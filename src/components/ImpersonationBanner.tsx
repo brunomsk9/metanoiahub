@@ -116,40 +116,45 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-warning text-warning-foreground py-2 px-4 shadow-lg border-b border-warning/50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <UserCog className="h-5 w-5 flex-shrink-0" />
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-            <span className="font-semibold text-sm">Modo Impersonação</span>
-            <span className="text-xs sm:text-sm opacity-90">
-              Você está logado como <strong>{impersonationData.impersonatedUser.nome}</strong>
-              <span className="hidden sm:inline"> ({impersonationData.impersonatedUser.email})</span>
-            </span>
+    <>
+      {/* Spacer to prevent content from being hidden behind the banner */}
+      <div className="h-12 sm:h-10" />
+      
+      {/* Fixed banner */}
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 py-2 px-4 shadow-lg">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <UserCog className="h-5 w-5 flex-shrink-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+              <span className="font-bold text-sm">Impersonando:</span>
+              <span className="text-xs sm:text-sm">
+                <strong>{impersonationData.impersonatedUser.nome}</strong>
+                <span className="hidden sm:inline"> ({impersonationData.impersonatedUser.email})</span>
+              </span>
+            </div>
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleReturnToSuperAdmin}
+            disabled={returning}
+            className="bg-amber-900 hover:bg-amber-800 text-white border-0 flex-shrink-0"
+          >
+            {returning ? (
+              <>
+                <span className="animate-spin mr-2">⏳</span>
+                Voltando...
+              </>
+            ) : (
+              <>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Voltar para Super Admin</span>
+                <span className="sm:hidden">Voltar</span>
+              </>
+            )}
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReturnToSuperAdmin}
-          disabled={returning}
-          className="bg-background/80 hover:bg-background text-foreground border-border flex-shrink-0"
-        >
-          {returning ? (
-            <>
-              <span className="animate-spin mr-2">⏳</span>
-              Voltando...
-            </>
-          ) : (
-            <>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Voltar para</span>
-              <span className="sm:hidden">Voltar</span>
-              <span className="hidden sm:inline ml-1">{impersonationData.originalUser.nome}</span>
-            </>
-          )}
-        </Button>
       </div>
-    </div>
+    </>
   );
 }
