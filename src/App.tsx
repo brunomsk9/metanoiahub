@@ -92,10 +92,10 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <ChurchProvider>
         <TooltipProvider delayDuration={300}>
-          <ImpersonationBanner />
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ImpersonationBanner />
             <AnimatedRoutes />
           </BrowserRouter>
         </TooltipProvider>
