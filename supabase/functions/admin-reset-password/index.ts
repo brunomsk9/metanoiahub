@@ -99,12 +99,23 @@ serve(async (req: Request) => {
     if (updateError) {
       console.error("Error updating password:", updateError);
       
-      // Handle weak password error specifically
-      if (updateError.message?.includes("weak") || updateError.code === "weak_password") {
+      // Handle weak password error specifically (includes "pwned" passwords)
+      if (updateError.message?.includes("weak") || updateError.code === "weak_password" || updateError.message?.includes("pwned")) {
+        const isPwned = updateError.message?.includes("pwned") || updateError.message?.includes("known to be weak");
         return new Response(
           JSON.stringify({ 
-            error: "Senha muito fraca ou comum. Use uma senha mais forte com letras, números e caracteres especiais." 
+            error: isPwned 
+              ? "Esta senha foi encontrada em vazamentos de dados conhecidos. Por segurança, escolha uma senha diferente e única."
+              : "Senha muito fraca. Use uma combinação de letras maiúsculas, minúsculas, números e caracteres especiais." 
           }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Handle same password error
+      if (updateError.code === "same_password") {
+        return new Response(
+          JSON.stringify({ error: "A nova senha não pode ser igual à senha atual." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

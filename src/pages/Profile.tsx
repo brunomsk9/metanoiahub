@@ -345,10 +345,16 @@ function ChangePasswordSection() {
     } catch (error: any) {
       let errorMessage = error.message;
       
-      if (error.message?.includes('same_password') || error.status === 422) {
+      // Handle specific error codes from Supabase
+      if (error.code === 'same_password') {
         errorMessage = "A nova senha deve ser diferente da senha atual.";
-      } else if (error.message?.includes('weak_password')) {
-        errorMessage = "A senha é muito fraca. Use letras, números e caracteres especiais.";
+      } else if (error.code === 'weak_password' || error.message?.includes('weak')) {
+        // Check if password is in pwned database
+        if (error.message?.includes('pwned') || error.message?.includes('known to be weak')) {
+          errorMessage = "Esta senha foi encontrada em vazamentos de dados. Por segurança, escolha uma senha diferente e mais complexa.";
+        } else {
+          errorMessage = "A senha é muito fraca. Use letras maiúsculas, minúsculas, números e caracteres especiais.";
+        }
       }
       
       toast({
