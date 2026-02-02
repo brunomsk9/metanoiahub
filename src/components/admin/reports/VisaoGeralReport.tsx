@@ -23,6 +23,7 @@ interface Stats {
   newUsersThisPeriod: number;
   usersGrowth: number;
   // Discipulado
+  activeDisciples: number;
   activeDiscipulados: number;
   totalDiscipuladores: number;
   avgDiscipulosPerMentor: number;
@@ -243,11 +244,18 @@ export function VisaoGeralReport() {
         avgChecklistCompliance = Math.round(totalCompliance / checklistResponses.length);
       }
 
+      // Count unique discípulos (people being discipled)
+      const uniqueDiscipulos = new Set(relationships.map(r => r.discipulo_id)).size;
+      
+      // Count unique discipuladores (each discipulador with relationship = 1 discipulado)
+      const uniqueDiscipuladoresWithRelationship = discipuladoresWithDisciples.size;
+
       setStats({
         totalUsers: allProfilesData.length,
         newUsersThisPeriod: currentPeriodProfiles,
         usersGrowth,
-        activeDiscipulados: relationships.length,
+        activeDisciples: uniqueDiscipulos,
+        activeDiscipulados: uniqueDiscipuladoresWithRelationship,
         totalDiscipuladores,
         avgDiscipulosPerMentor,
         jornadaCompletedCount,
@@ -408,6 +416,13 @@ export function VisaoGeralReport() {
             Icon: Users,
             iconClass: "text-primary",
             highlight: true
+          },
+          {
+            title: "Discípulos Ativos",
+            value: stats?.activeDisciples || 0,
+            subtitle: <p className="text-xs text-muted-foreground">Pessoas sendo discipuladas</p>,
+            Icon: Users,
+            iconClass: "text-orange-500"
           },
           {
             title: "Discipulados Ativos",
