@@ -10,7 +10,8 @@ interface PlatformStats {
   totalLessons: number;
   totalResources: number;
   totalReadingPlans: number;
-  activeRelationships: number;
+  activeDisciples: number;
+  activeDiscipulados: number;
   avgStreak: number;
   usersWithStreak: number;
 }
@@ -42,7 +43,7 @@ export function AdminDashboard() {
       supabase.from('lessons').select('id', { count: 'exact', head: true }),
       supabase.from('resources').select('id', { count: 'exact', head: true }),
       supabase.from('reading_plans').select('id', { count: 'exact', head: true }),
-      supabase.from('discipleship_relationships').select('discipulador_id').eq('status', 'active'),
+      supabase.from('discipleship_relationships').select('discipulador_id, discipulo_id').eq('status', 'active'),
       supabase.from('profiles').select('current_streak').gt('current_streak', 0),
       supabase.from('profiles').select('id, nome, created_at').order('created_at', { ascending: false }).limit(5)
     ]);
@@ -52,7 +53,12 @@ export function AdminDashboard() {
       ? Math.round(streakData.reduce((sum, p) => sum + (p.current_streak || 0), 0) / streakData.length)
       : 0;
 
-    // Count unique discipuladores (each discipulador = 1 discipulado)
+    // Count unique discípulos (people being discipled)
+    const uniqueDiscipulos = new Set(
+      (relationshipsRes.data || []).map(r => r.discipulo_id)
+    ).size;
+
+    // Count unique discipuladores (each discipulador with relationship = 1 discipulado)
     const uniqueDiscipuladores = new Set(
       (relationshipsRes.data || []).map(r => r.discipulador_id)
     ).size;
@@ -64,7 +70,8 @@ export function AdminDashboard() {
       totalLessons: lessonsRes.count || 0,
       totalResources: resourcesRes.count || 0,
       totalReadingPlans: plansRes.count || 0,
-      activeRelationships: uniqueDiscipuladores,
+      activeDisciples: uniqueDiscipulos,
+      activeDiscipulados: uniqueDiscipuladores,
       avgStreak,
       usersWithStreak: streakData.length
     });
@@ -96,7 +103,8 @@ export function AdminDashboard() {
     { label: 'Aulas', value: stats.totalLessons, icon: FileText, color: 'green-500' },
     { label: 'Recursos S.O.S.', value: stats.totalResources, icon: FileText, color: 'orange-500' },
     { label: 'Planos de Leitura', value: stats.totalReadingPlans, icon: Calendar, color: 'cyan-500' },
-    { label: 'Discipulados Ativos', value: stats.activeRelationships, icon: Heart, color: 'red-500' },
+    { label: 'Discípulos Ativos', value: stats.activeDisciples, icon: Users, color: 'red-500' },
+    { label: 'Discipulados Ativos', value: stats.activeDiscipulados, icon: Heart, color: 'pink-500' },
     { label: 'Com Streak Ativo', value: stats.usersWithStreak, icon: Flame, color: 'amber-500' },
   ];
 
