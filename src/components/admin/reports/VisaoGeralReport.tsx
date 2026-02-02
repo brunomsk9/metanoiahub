@@ -404,48 +404,57 @@ export function VisaoGeralReport() {
       </div>
 
       {/* Quick Stats - Row 1: Usuários e Discipulado */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
         {[
           {
             title: "Total de Membros",
             value: stats?.totalUsers || 0,
-            subtitle: <div className="flex items-center gap-2 mt-1">
+            subtitle: <div className="flex items-center gap-1.5 mt-1">
               <TrendIndicator value={stats?.usersGrowth || 0} />
-              <span className="text-xs text-muted-foreground">+{stats?.newUsersThisPeriod || 0} no período</span>
+              <span className="text-[10px] text-muted-foreground">+{stats?.newUsersThisPeriod || 0} no período</span>
             </div>,
             Icon: Users,
-            iconClass: "text-primary",
-            highlight: true
+            gradient: "from-primary/20 to-primary/5",
+            iconBg: "bg-primary/20",
+            iconClass: "text-primary"
           },
           {
             title: "Discípulos Ativos",
             value: stats?.activeDisciples || 0,
-            subtitle: <p className="text-xs text-muted-foreground">Pessoas sendo discipuladas</p>,
+            subtitle: <p className="text-[10px] text-muted-foreground mt-1">Pessoas em discipulado</p>,
             Icon: Users,
+            gradient: "from-orange-500/20 to-orange-500/5",
+            iconBg: "bg-orange-500/20",
             iconClass: "text-orange-500"
           },
           {
             title: "Discipulados Ativos",
             value: stats?.activeDiscipulados || 0,
-            subtitle: <p className="text-xs text-muted-foreground">{stats?.totalDiscipuladores || 0} discipuladores • {stats?.avgDiscipulosPerMentor || 0} média</p>,
+            subtitle: <p className="text-[10px] text-muted-foreground mt-1">{stats?.totalDiscipuladores || 0} mentores • {stats?.avgDiscipulosPerMentor || 0} média</p>,
             Icon: Heart,
+            gradient: "from-pink-500/20 to-pink-500/5",
+            iconBg: "bg-pink-500/20",
             iconClass: "text-pink-500"
           },
           {
             title: "Jornada Metanoia",
             value: stats?.jornadaCompletedCount || 0,
-            subtitle: <div className="flex items-center gap-2 mt-1">
-              <Progress value={stats?.jornadaCompletionRate || 0} className="h-1.5 flex-1" />
-              <span className="text-xs text-muted-foreground">{stats?.jornadaCompletionRate || 0}%</span>
+            subtitle: <div className="flex items-center gap-1.5 mt-1">
+              <Progress value={stats?.jornadaCompletionRate || 0} className="h-1 flex-1" />
+              <span className="text-[10px] text-muted-foreground">{stats?.jornadaCompletionRate || 0}%</span>
             </div>,
             Icon: Target,
+            gradient: "from-green-500/20 to-green-500/5",
+            iconBg: "bg-green-500/20",
             iconClass: "text-green-500"
           },
           {
             title: "Encontros",
             value: stats?.totalMeetings || 0,
-            subtitle: <p className="text-xs text-muted-foreground">~{stats?.avgMeetingsPerWeek || 0}/semana • {stats?.meetingsIndividual || 0} ind. / {stats?.meetingsCelula || 0} cél.</p>,
+            subtitle: <p className="text-[10px] text-muted-foreground mt-1">~{stats?.avgMeetingsPerWeek || 0}/sem • {stats?.meetingsIndividual || 0} ind. / {stats?.meetingsCelula || 0} cél.</p>,
             Icon: Calendar,
+            gradient: "from-blue-500/20 to-blue-500/5",
+            iconBg: "bg-blue-500/20",
             iconClass: "text-blue-500"
           }
         ].map((card, i) => (
@@ -456,13 +465,15 @@ export function VisaoGeralReport() {
             animate="visible"
             variants={chartAnimationVariants.card}
           >
-            <Card className={card.highlight ? "border-primary/20" : ""}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                <card.Icon className={`h-4 w-4 ${card.iconClass}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
+            <Card className={`overflow-hidden bg-gradient-to-br ${card.gradient} border-0 shadow-sm hover:shadow-md transition-shadow`}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                  <div className={`p-1.5 rounded-lg ${card.iconBg}`}>
+                    <card.Icon className={`h-3.5 w-3.5 ${card.iconClass}`} />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold tracking-tight">{card.value}</div>
                 {card.subtitle}
               </CardContent>
             </Card>
@@ -471,53 +482,63 @@ export function VisaoGeralReport() {
       </div>
 
       {/* Quick Stats - Row 2: Engajamento e Conteúdo */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {[
           {
             title: "Streak Médio",
             value: <>{stats?.avgStreak || 0} <span className="text-sm font-normal text-muted-foreground">dias</span></>,
-            subtitle: <p className="text-xs text-muted-foreground">{stats?.usersWithStreak || 0} com streak ativo</p>,
+            subtitle: <p className="text-[10px] text-muted-foreground mt-1">{stats?.usersWithStreak || 0} com streak ativo</p>,
             Icon: Flame,
-            iconClass: "text-orange-500"
+            gradient: "from-amber-500/15 to-amber-500/5",
+            iconBg: "bg-amber-500/20",
+            iconClass: "text-amber-500"
           },
           {
             title: "XP Total",
             value: (stats?.totalXP || 0).toLocaleString(),
-            subtitle: <p className="text-xs text-muted-foreground">média {stats?.avgXP || 0} XP/membro</p>,
+            subtitle: <p className="text-[10px] text-muted-foreground mt-1">média {stats?.avgXP || 0} XP/membro</p>,
             Icon: Award,
+            gradient: "from-yellow-500/15 to-yellow-500/5",
+            iconBg: "bg-yellow-500/20",
             iconClass: "text-yellow-500"
           },
           {
             title: "Conteúdo",
             value: <>{stats?.totalLessons || 0} <span className="text-sm font-normal text-muted-foreground">aulas</span></>,
-            subtitle: <p className="text-xs text-muted-foreground">{stats?.totalTracks || 0} trilhas • {stats?.totalCourses || 0} cursos</p>,
+            subtitle: <p className="text-[10px] text-muted-foreground mt-1">{stats?.totalTracks || 0} trilhas • {stats?.totalCourses || 0} cursos</p>,
             Icon: BookOpen,
+            gradient: "from-muted/50 to-muted/20",
+            iconBg: "bg-muted",
             iconClass: "text-muted-foreground"
           },
           {
             title: "Checklist Semanal",
             value: `${stats?.avgChecklistCompliance || 0}%`,
-            subtitle: <div className="flex items-center gap-2 mt-1">
-              <Progress value={stats?.avgChecklistCompliance || 0} className="h-1.5 flex-1" />
+            subtitle: <div className="flex items-center gap-1.5 mt-1">
+              <Progress value={stats?.avgChecklistCompliance || 0} className="h-1 flex-1" />
             </div>,
             Icon: CheckCircle2,
-            iconClass: "text-muted-foreground"
+            gradient: "from-teal-500/15 to-teal-500/5",
+            iconBg: "bg-teal-500/20",
+            iconClass: "text-teal-500"
           }
         ].map((card, i) => (
           <motion.div
             key={card.title}
-            custom={i + 4}
+            custom={i + 5}
             initial="hidden"
             animate="visible"
             variants={chartAnimationVariants.card}
           >
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                <card.Icon className={`h-4 w-4 ${card.iconClass}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
+            <Card className={`overflow-hidden bg-gradient-to-br ${card.gradient} border-0 shadow-sm hover:shadow-md transition-shadow`}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                  <div className={`p-1.5 rounded-lg ${card.iconBg}`}>
+                    <card.Icon className={`h-3.5 w-3.5 ${card.iconClass}`} />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold tracking-tight">{card.value}</div>
                 {card.subtitle}
               </CardContent>
             </Card>
