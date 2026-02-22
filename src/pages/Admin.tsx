@@ -10,6 +10,7 @@ import { AdminDiscipleship } from '@/components/admin/AdminDiscipleship';
 import { AdminReadingPlanDays } from '@/components/admin/AdminReadingPlanDays';
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { AdminWeeklyChecklist } from '@/components/admin/AdminWeeklyChecklist';
+import { AdminServiceChecklist } from '@/components/admin/AdminServiceChecklist';
 import { AdminChecklistCompliance } from '@/components/admin/AdminChecklistCompliance';
 import { AdminAISettings } from '@/components/admin/AdminAISettings';
 import { AdminHabits } from '@/components/admin/AdminHabits';
@@ -20,7 +21,7 @@ import { AdminSchedules } from '@/components/admin/AdminSchedules';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
 import { AppShell } from '@/components/layout/AppShell';
-import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, BarChart3, Bot, Presentation, Sparkles, PieChart, Calendar, Building2 } from 'lucide-react';
+import { Loader2, ShieldAlert, ArrowLeft, BookOpen, GraduationCap, FileText, LifeBuoy, LogOut, Users, Heart, CalendarDays, LayoutDashboard, ChevronDown, ClipboardList, ClipboardCheck, BarChart3, Bot, Presentation, Sparkles, PieChart, Calendar, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,7 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules';
+type AdminSection = 'dashboard' | 'tracks' | 'courses' | 'lessons' | 'users' | 'reading-plans' | 'discipleship' | 'weekly-checklist' | 'checklist-compliance' | 'ai-settings' | 'presentation' | 'habits' | 'reports' | 'ministries' | 'schedules' | 'service-checklist';
 
 const contentSections = [
   { id: 'tracks' as const, label: 'Trilhas', icon: BookOpen },
@@ -39,6 +40,7 @@ const contentSections = [
   { id: 'reading-plans' as const, label: 'Planos de Leitura', icon: CalendarDays },
   { id: 'habits' as const, label: 'Hábitos Diários', icon: Sparkles },
   { id: 'weekly-checklist' as const, label: 'Checklist Semanal', icon: ClipboardList },
+  { id: 'service-checklist' as const, label: 'Checklist do Culto', icon: ClipboardCheck },
   { id: 'checklist-compliance' as const, label: 'Relatório Compliance', icon: BarChart3 },
   { id: 'ai-settings' as const, label: 'Configurações IA', icon: Bot },
   { id: 'presentation' as const, label: 'Apresentação', icon: Presentation },
@@ -147,6 +149,7 @@ export default function Admin() {
       case 'reading-plans': return <AdminReadingPlanDays />;
       case 'discipleship': return <AdminDiscipleship />;
       case 'weekly-checklist': return <AdminWeeklyChecklist />;
+      case 'service-checklist': return <AdminServiceChecklist />;
       case 'checklist-compliance': return <AdminChecklistCompliance />;
       case 'ai-settings': return <AdminAISettings />;
       case 'habits': return <AdminHabits />;
