@@ -1295,6 +1295,102 @@ export type Database = {
           },
         ]
       }
+      service_checklist_items: {
+        Row: {
+          ativo: boolean
+          church_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          church_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          church_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_checklist_items_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_checklist_responses: {
+        Row: {
+          church_id: string
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          item_id: string
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          church_id: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          church_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_checklist_responses_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_checklist_responses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "service_checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_checklist_responses_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_type_ministries: {
         Row: {
           church_id: string
@@ -2065,6 +2161,7 @@ export type Database = {
         Args: { _ministry_id: string; _user_id: string }
         Returns: boolean
       }
+      is_oficiais_volunteer: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       match_resources: {
         Args: {

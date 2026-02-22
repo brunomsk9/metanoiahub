@@ -18,6 +18,7 @@ import {
   Network,
   CalendarDays,
   Sparkles,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -72,6 +73,12 @@ export const DesktopSidebar = memo(function DesktopSidebar() {
       label: "Rede Ministerial", 
       icon: Network,
       active: location.pathname === "/ministerio" && location.search.includes("rede")
+    },
+    { 
+      path: "/ministerio?tab=checklist", 
+      label: "Checklist do Culto", 
+      icon: ClipboardCheck,
+      active: location.pathname === "/ministerio" && location.search.includes("checklist")
     },
   ];
 

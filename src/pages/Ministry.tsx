@@ -3,9 +3,10 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminMinistries } from '@/components/admin/AdminMinistries';
 import { AdminSchedules } from '@/components/admin/AdminSchedules';
+import { ServiceChecklist } from '@/components/ServiceChecklist';
 import { PageTransition } from '@/components/PageTransition';
 import { PageBreadcrumb } from '@/components/PageBreadcrumb';
-import { ShieldAlert, ArrowLeft, Building2, Calendar, Users2, Sparkles } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Building2, Calendar, Users2, Sparkles, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { MinistrySkeleton } from '@/components/skeletons/PageSkeletons';
@@ -18,6 +19,11 @@ export default function Ministry() {
   const [isAdmin, setIsAdmin] = useState(false);
   
   const currentSection = searchParams.get('tab') || 'escalas';
+  const sectionLabels: Record<string, string> = {
+    escalas: 'Escalas',
+    rede: 'Rede Ministerial',
+    checklist: 'Checklist do Culto',
+  };
 
   useEffect(() => {
     checkAccess();
@@ -84,29 +90,26 @@ export default function Ministry() {
       <PageTransition>
         <div className="space-y-6">
           {/* Breadcrumb */}
-          <PageBreadcrumb items={[{ label: currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial' }]} />
+          <PageBreadcrumb items={[{ label: sectionLabels[currentSection] || 'Ministério' }]} />
 
           {/* Header */}
           <header className="section-pattern rounded-2xl p-5 md:p-6 border border-border/50">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                {currentSection === 'escalas' ? (
-                  <Calendar className="w-6 h-6 md:w-7 md:h-7 text-primary" />
-                ) : (
-                  <Users2 className="w-6 h-6 md:w-7 md:h-7 text-primary" />
-                )}
+                {currentSection === 'escalas' && <Calendar className="w-6 h-6 md:w-7 md:h-7 text-primary" />}
+                {currentSection === 'rede' && <Users2 className="w-6 h-6 md:w-7 md:h-7 text-primary" />}
+                {currentSection === 'checklist' && <ClipboardCheck className="w-6 h-6 md:w-7 md:h-7 text-primary" />}
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl md:text-2xl lg:text-3xl font-display font-bold">
                   <span className="text-gradient">
-                    {currentSection === 'escalas' ? 'Escalas' : 'Rede Ministerial'}
+                    {sectionLabels[currentSection] || 'Ministério'}
                   </span>
                 </h1>
                 <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1 line-clamp-2">
-                  {currentSection === 'escalas' 
-                    ? 'Gerencie as escalas de voluntários para cultos e eventos'
-                    : 'Gerencie ministérios, líderes e voluntários'
-                  }
+                  {currentSection === 'escalas' && 'Gerencie as escalas de voluntários para cultos e eventos'}
+                  {currentSection === 'rede' && 'Gerencie ministérios, líderes e voluntários'}
+                  {currentSection === 'checklist' && 'Verifique os itens antes do culto começar'}
                 </p>
               </div>
             </div>
@@ -115,6 +118,7 @@ export default function Ministry() {
           {/* Content */}
           {currentSection === 'escalas' && <AdminSchedules />}
           {currentSection === 'rede' && <AdminMinistries />}
+          {currentSection === 'checklist' && <ServiceChecklist />}
         </div>
       </PageTransition>
     </AppShell>
