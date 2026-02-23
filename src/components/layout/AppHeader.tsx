@@ -18,7 +18,8 @@ import {
   ChevronDown,
   Network,
   CalendarDays,
-  Sparkles
+  Sparkles,
+  ClipboardCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MetanoiaLogo } from "@/components/MetanoiaLogo";
@@ -109,6 +110,12 @@ export const AppHeader = memo(function AppHeader({
       label: "Rede Ministerial", 
       icon: Network,
       active: location.pathname === "/ministerio" && location.search.includes("rede")
+    },
+    { 
+      path: "/ministerio?tab=checklist", 
+      label: "Checklist do Culto", 
+      icon: ClipboardCheck,
+      active: location.pathname === "/ministerio" && location.search.includes("checklist")
     },
   ];
 
