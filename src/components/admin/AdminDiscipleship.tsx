@@ -899,19 +899,68 @@ export function AdminDiscipleship() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5" />
-              Cadastrar Novo Discípulo
+              Gerenciar Discípulos
             </CardTitle>
             <CardDescription>
-              Cadastre um novo usuário que será automaticamente vinculado ao seu discipulado
+              Cadastre um novo discípulo ou vincule um membro existente ao seu discipulado
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Link existing disciple */}
+            {availableDisciples.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="flex-1 min-w-[200px] justify-between"
+                    >
+                      {selectedDisciple
+                        ? availableDisciples.find(d => d.id === selectedDisciple)?.nome || 'Sem nome'
+                        : "Vincular discípulo existente..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Buscar discípulo..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum discípulo disponível.</CommandEmpty>
+                        <CommandGroup>
+                          {availableDisciples.map(d => (
+                            <CommandItem
+                              key={d.id}
+                              value={d.nome || 'Sem nome'}
+                              onSelect={() => setSelectedDisciple(d.id)}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedDisciple === d.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {d.nome || 'Sem nome'}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <Button onClick={handleAddDisciple} disabled={!selectedDisciple}>
+                  <Link className="w-4 h-4 mr-2" />
+                  Vincular
+                </Button>
+              </div>
+            )}
+
             <ActionButtons
               layout="stack"
               buttons={[
                 {
                   id: 'create-user',
-                  label: 'Cadastrar Usuário',
+                  label: 'Cadastrar Novo Usuário',
                   shortLabel: 'Cadastrar',
                   icon: <UserPlus />,
                   onClick: () => setCreateUserModalOpen(true),
